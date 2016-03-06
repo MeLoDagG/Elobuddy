@@ -35,7 +35,7 @@ namespace ezEvade
             Menu drawMenu = menu.IsSubMenu ? menu.Parent.AddSubMenuEx("Draw", "Draw") : menu.AddSubMenuEx("Draw", "Draw");
             drawMenu.Add("DrawSkillShots", new CheckBox("Draw SkillShots", true));
             drawMenu.Add("ShowStatus", new CheckBox("Show Evade Status", true));
-            drawMenu.Add("DrawSpellPos", new CheckBox("Draw Spell Position", false));
+            drawMenu.Add("DrawSpellPos", new CheckBox("Draw Spell Position", true));
             drawMenu.Add("DrawEvadePosition", new CheckBox("Draw Evade Position", false));
 
             Menu dangerMenu = drawMenu.Parent.AddSubMenuEx("DangerLevel Drawings", "DangerLevelDrawings");

@@ -111,7 +111,7 @@ namespace ezEvade
                 mainMenu.Add("ActivateEvadeSpells",
                     new KeyBind("Use Evade Spells", true, KeyBind.BindTypes.PressToggle, 'K'));
                 mainMenu.Add("DodgeDangerous", new CheckBox("Dodge Only Dangerous", false));
-                mainMenu.Add("DodgeFOWSpells", new CheckBox("Dodge FOW SkillShots", true));
+                mainMenu.Add("DodgeFOWSpells", new CheckBox("Dodge FOW SkillShots", false));
                 mainMenu.Add("DodgeCircularSpells", new CheckBox("Dodge Circular SkillShots", true));                
 
                 spellDetector = new SpellDetector(menu);
@@ -126,7 +126,7 @@ namespace ezEvade
                 Menu miscMenu = menu.AddSubMenuEx("Misc Settings", "MiscSettings");
                 miscMenu.Add("HigherPrecision", new CheckBox("Enhanced Dodge Precision", false));
                 miscMenu.Add("RecalculatePosition", new CheckBox("Recalculate Path", true));
-                miscMenu.Add("ContinueMovement", new CheckBox("Continue Last Movement", true));
+                miscMenu.Add("ContinueMovement", new CheckBox("Continue Last Movement", false));
                 miscMenu.Add("CalculateWindupDelay", new CheckBox("Calculate Windup Delay", true));
                 miscMenu.Add("CheckSpellCollision", new CheckBox("Check Spell Collision", false));
              
