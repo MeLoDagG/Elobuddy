@@ -126,7 +126,7 @@ namespace ezEvade
                 Menu miscMenu = menu.AddSubMenuEx("Misc Settings", "MiscSettings");
                 miscMenu.Add("HigherPrecision", new CheckBox("Enhanced Dodge Precision", false));
                 miscMenu.Add("RecalculatePosition", new CheckBox("Recalculate Path", true));
-                miscMenu.Add("ContinueMovement", new CheckBox("Continue Last Movement", true));
+                miscMenu.Add("ContinueMovement", new CheckBox("Continue Last Movement", false));
                 miscMenu.Add("CalculateWindupDelay", new CheckBox("Calculate Windup Delay", true));
                 miscMenu.Add("CheckSpellCollision", new CheckBox("Check Spell Collision", false));
              
@@ -147,7 +147,7 @@ namespace ezEvade
 
                 Menu limiterMenu = menu.AddSubMenuEx("Humanizer", "Limiter");
                 limiterMenu.Add("ClickOnlyOnce", new CheckBox("Click Only Once", true));
-                limiterMenu.Add("EnableEvadeDistance", new CheckBox("Extended Evade", false));
+              //  limiterMenu.Add("EnableEvadeDistance", new CheckBox("Extended Evade", false));
                 limiterMenu.Add("TickLimiter", new Slider("Tick Limiter", 100, 0, 500));
                 limiterMenu.Add("SpellDetectionTime", new Slider("Spell Detection Time", 0, 0, 1000));
                 limiterMenu.Add("ReactionTime", new Slider("Reaction Time", 0, 0, 500));
@@ -164,7 +164,7 @@ namespace ezEvade
                 bufferMenu.Add("ExtraPingBuffer", new Slider("Extra Ping Buffer", 65, 0, 200));
                 bufferMenu.Add("ExtraCPADistance", new Slider("Extra Collision Distance", 10, 0, 150));
                 bufferMenu.Add("ExtraSpellRadius", new Slider("Extra Spell Radius", 0, 0, 100));
-                bufferMenu.Add("ExtraEvadeDistance", new Slider("Extra Evade Distance", 100, 0, 300));
+              //  bufferMenu.Add("ExtraEvadeDistance", new Slider("Extra Evade Distance", 100, 0, 300));
                 bufferMenu.Add("ExtraAvoidDistance", new Slider("Extra Avoid Distance", 50, 0, 300));
                 bufferMenu.Add("MinComfortZone", new Slider("Min Distance to Champion", 550, 0, 1000));
 
