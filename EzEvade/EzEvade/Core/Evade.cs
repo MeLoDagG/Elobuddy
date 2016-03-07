@@ -111,7 +111,7 @@ namespace ezEvade
                 mainMenu.Add("ActivateEvadeSpells",
                     new KeyBind("Use Evade Spells", true, KeyBind.BindTypes.PressToggle, 'K'));
                 mainMenu.Add("DodgeDangerous", new CheckBox("Dodge Only Dangerous", false));
-                mainMenu.Add("DodgeFOWSpells", new CheckBox("Dodge FOW SkillShots", true));
+                mainMenu.Add("DodgeFOWSpells", new CheckBox("Dodge FOW SkillShots", false));
                 mainMenu.Add("DodgeCircularSpells", new CheckBox("Dodge Circular SkillShots", true));                
 
                 spellDetector = new SpellDetector(menu);
@@ -147,7 +147,7 @@ namespace ezEvade
 
                 Menu limiterMenu = menu.AddSubMenuEx("Humanizer", "Limiter");
                 limiterMenu.Add("ClickOnlyOnce", new CheckBox("Click Only Once", true));
-              //  limiterMenu.Add("EnableEvadeDistance", new CheckBox("Extended Evade", false));
+                limiterMenu.Add("EnableEvadeDistance", new CheckBox("Extended Evade", true));
                 limiterMenu.Add("TickLimiter", new Slider("Tick Limiter", 100, 0, 500));
                 limiterMenu.Add("SpellDetectionTime", new Slider("Spell Detection Time", 0, 0, 1000));
                 limiterMenu.Add("ReactionTime", new Slider("Reaction Time", 0, 0, 500));
@@ -164,7 +164,7 @@ namespace ezEvade
                 bufferMenu.Add("ExtraPingBuffer", new Slider("Extra Ping Buffer", 65, 0, 200));
                 bufferMenu.Add("ExtraCPADistance", new Slider("Extra Collision Distance", 10, 0, 150));
                 bufferMenu.Add("ExtraSpellRadius", new Slider("Extra Spell Radius", 0, 0, 100));
-              //  bufferMenu.Add("ExtraEvadeDistance", new Slider("Extra Evade Distance", 100, 0, 300));
+                bufferMenu.Add("ExtraEvadeDistance", new Slider("Extra Evade Distance", 100, 0, 300));
                 bufferMenu.Add("ExtraAvoidDistance", new Slider("Extra Avoid Distance", 50, 0, 300));
                 bufferMenu.Add("MinComfortZone", new Slider("Min Distance to Champion", 550, 0, 1000));
 

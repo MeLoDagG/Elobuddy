@@ -34,7 +34,7 @@ namespace ezEvade
           
 
              LoadEvadeSpellList();
-            DelayAction.Add(100, () => CheckForItems());
+            DelayAction.Add(100, CheckForItems);
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -476,7 +476,7 @@ namespace ezEvade
 
                 evadeSpells.Add(spell);
 
-                var newSpellMenu = CreateEvadeSpellMenu(spell);
+                var evadeSpellMenu = CreateEvadeSpellMenu(spell);
             }
 
             evadeSpells.Sort((a, b) => a.dangerlevel.CompareTo(b.dangerlevel));
