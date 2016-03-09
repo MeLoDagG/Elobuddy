@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 using EloBuddy;
 using EloBuddy.SDK;
+using SharpDX;
 
 namespace ezEvade.SpecialSpells
 {
@@ -48,7 +53,7 @@ namespace ezEvade.SpecialSpells
                 {
                     var spell = entry.Value;
 
-                    if (spell.info.spellName == "jayceshockblast")
+                    if (spell.info.spellName == "JayceShockBlast")
                     {
                         var tHero = spell.heroID;
 
@@ -80,7 +85,7 @@ namespace ezEvade.SpecialSpells
 
         private static void ProcessSpell_jayceshockblast(Obj_AI_Base hero, GameObjectProcessSpellCastEventArgs args, SpellData spellData, SpecialSpellEventArgs specialSpellArgs)
         {
-            if (spellData.spellName == "jayceshockblast")
+            if (spellData.spellName == "JayceShockBlast")
             {
             }
         }

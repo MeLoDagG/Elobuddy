@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+
+using Color = System.Drawing.Color;
 
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu.Values;
+using Microsoft.SqlServer.Server;
 using SharpDX;
 
 namespace ezEvade
@@ -29,7 +33,7 @@ namespace ezEvade
             var extraDist = ObjectCache.menuCache.cache["ExtraCPADistance"].Cast<Slider>().CurrentValue;
 
             var posInfo = CanHeroWalkToPos(pos, ObjectCache.myHeroCache.moveSpeed, extraDelayBuffer + ObjectCache.gamePing, extraDist);
-            posInfo.isDangerousPos = pos.CheckDangerousPos(6);
+        //    posInfo.isDangerousPos = pos.CheckDangerousPos(6);
             posInfo.hasExtraDistance = extraEvadeDistance > 0 ? pos.CheckDangerousPos(extraEvadeDistance) : false;// ? 1 : 0;            
             posInfo.closestDistance = posInfo.distanceToMouse; //GetMovementBlockPositionValue(pos, lastMovePos);
             posInfo.intersectionTime = GetMinCPADistance(pos);
@@ -223,8 +227,7 @@ namespace ezEvade
                && ObjectCache.menuCache.cache["FastEvadeActivationTime"].Cast<Slider>().CurrentValue + ObjectCache.gamePing + extraDelayBuffer > lowestEvadeTime)
             {
                 sortedPosTable =
-                posTable.OrderBy(p => p.isDangerousPos)
-                        .ThenByDescending(p => p.intersectionTime)
+                posTable.OrderBy(p => p.intersectionTime)
                         .ThenBy(p => p.posDangerLevel)
                         .ThenBy(p => p.posDangerCount);
 
@@ -237,7 +240,7 @@ namespace ezEvade
                 posTable.OrderBy(p => p.rejectPosition)
                         .ThenBy(p => p.posDangerLevel)
                         .ThenBy(p => p.posDangerCount)
-                        //.ThenBy(p => p.hasExtraDistance)
+                    //.ThenBy(p => p.hasExtraDistance)
                         .ThenBy(p => p.distanceToMouse);
 
                 if (sortedPosTable.First().posDangerCount != 0) //if can't dodge smoothly, dodge fast
@@ -265,7 +268,7 @@ namespace ezEvade
             //};
 
 
-            sortedPosTable.OrderByDescending(p => p.position.Distance(myHero));
+           sortedPosTable.OrderByDescending(p => p.position.Distance(myHero));
 
             foreach (var posInfo in sortedPosTable)
             {
@@ -323,7 +326,7 @@ namespace ezEvade
                     posChecked++;
                     var cRadians = (2 * Math.PI / (curCircleChecks - 1)) * i; //check decimals
                     var pos = new Vector2((float)Math.Floor(heroPoint.X + curRadius * Math.Cos(cRadians)), (float)Math.Floor(heroPoint.Y + curRadius * Math.Sin(cRadians)));
-
+                                                            
                     //if (pos.Distance(myHero.Position.To2D()) < 100)
                     //    dist = 0;
 
@@ -331,7 +334,7 @@ namespace ezEvade
                     posInfo.isDangerousPos = pos.CheckDangerousPos(6) || CheckMovePath(pos);
                     posInfo.distanceToMouse = pos.GetPositionValue();
                     posInfo.hasExtraDistance = extraEvadeDistance > 0 ? pos.HasExtraAvoidDistance(extraEvadeDistance) : false;
-
+                    
                     posTable.Add(posInfo);
                 }
             }
@@ -485,13 +488,13 @@ namespace ezEvade
 
         public static PositionInfo GetBestPositionTargetedDash(EvadeSpellData spell)
         {
-            if (spell.spellDelay > 0)
+            /*if (spell.spellDelay > 0)
             {
                 if (CheckWindupTime(spell.spellDelay))
                 {
                     return null;
                 }
-            }
+            }*/
 
             var extraDelayBuffer = ObjectCache.menuCache.cache["ExtraPingBuffer"].Cast<Slider>().CurrentValue;
             var extraEvadeDistance = 100;// Evade.menu.SubMenu("MiscSettings").SubMenu("ExtraBuffers").Item("ExtraEvadeDistance").Cast<Slider>().CurrentValue;
@@ -649,8 +652,8 @@ namespace ezEvade
             {
                 var sortedPosTable =
                 posTable.OrderBy(p => p.isDangerousPos)
-                        //.ThenByDescending(p => p.hasComfortZone)
-                        //.ThenBy(p => p.hasExtraDistance)
+                    //.ThenByDescending(p => p.hasComfortZone)
+                    //.ThenBy(p => p.hasExtraDistance)
                         .ThenBy(p => p.distanceToMouse);
 
                 var first = sortedPosTable.FirstOrDefault();
@@ -889,7 +892,7 @@ namespace ezEvade
                 //GetIntersectTime(spell, ObjectCache.myHeroCache.serverPos2D, pos);
                 //Math.Min(closestDistance, GetClosestDistanceApproach(spell, pos, ObjectCache.myHeroCache.moveSpeed, delay, ObjectCache.myHeroCache.serverPos2D));
 
-                if (pos.InSkillShot(spell, ObjectCache.myHeroCache.boundingRadius - 6)
+                if (pos.InSkillShot(spell, ObjectCache.myHeroCache.boundingRadius + 6)
                     || PredictSpellCollision(spell, pos, speed, delay, heroPos, extraDist, useServerPosition)
                     || (spell.info.spellType != SpellType.Line && pos.isNearEnemy(minComfortDistance)))
                 {

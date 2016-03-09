@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 using EloBuddy;
 using EloBuddy.SDK;
@@ -158,8 +159,8 @@ namespace ezEvade
                 foreach (var minion in ObjectManager.Get<Obj_AI_Minion>()
                     .Where(h => h.Team == Evade.myHero.Team && h.IsValidTarget()))
                 {
-                    if (minion.BaseSkinName.ToLower() == "teemomushroom"
-                        || minion.BaseSkinName.ToLower() == "shacobox")
+                    if (minion.CharData.BaseSkinName.ToLower() == "teemomushroom"
+                        || minion.CharData.BaseSkinName.ToLower() == "shacobox")
                     {
                         continue;
                     }

@@ -1,4 +1,10 @@
-﻿using SharpDX;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using SharpDX;
 using Color = System.Drawing.Color;
 
 namespace EzEvade

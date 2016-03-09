@@ -1,6 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 using EloBuddy;
+using EloBuddy.SDK;
+using SharpDX;
 
 namespace ezEvade
 {
@@ -652,23 +657,22 @@ namespace ezEvade
 
             #region AllChampions
 
-         //   Spells.Add(
-      /*     new EvadeSpellData
-           {
-
-               charName = "AllChampions",
-               dangerlevel = 4,
-               name = "Flash",
-               spellName = "SummonerFlash",
-               range = 400,
-               fixedRange = true, //test
-               spellDelay = 50,
-               isSummonerSpell = true,
-               spellKey = SpellSlot.R,
-               evadeType = EvadeType.Blink,
-               castType = CastType.Position,
-           });
-           */
+          /*  Spells.Add(
+            new EvadeSpellData
+            {
+                charName = "AllChampions",
+                dangerlevel = 4,
+                name = "Flash",
+                spellName = "SummonerFlash",
+                range = 400,
+                fixedRange = true, //test
+                spellDelay = 50,
+                isSummonerSpell = true,
+                spellKey = SpellSlot.R,
+                evadeType = EvadeType.Blink,
+                castType = CastType.Position,
+            });
+            */
             Spells.Add(
             new EvadeSpellData
             {

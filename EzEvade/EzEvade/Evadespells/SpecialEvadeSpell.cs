@@ -1,4 +1,9 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 using EloBuddy;
 using EloBuddy.SDK;
 using SharpDX;
@@ -20,9 +25,8 @@ namespace ezEvade
             {
                 spellData.useSpellFunc = UseEkkoR;
             }
-         }
+        }
 
-       
         public static bool UseEkkoE2(EvadeSpellData evadeSpell, bool process = true)
         {
             if (myHero.HasBuff("ekkoeattackbuff"))

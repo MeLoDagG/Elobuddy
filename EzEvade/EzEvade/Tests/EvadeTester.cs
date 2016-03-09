@@ -1,6 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 using Color = System.Drawing.Color;
 
@@ -9,7 +11,9 @@ using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
+using EloBuddy.SDK.Rendering;
 using EzEvade;
+using Microsoft.SqlServer.Server;
 using SharpDX;
 
 namespace ezEvade
@@ -116,11 +120,6 @@ namespace ezEvade
             Game_OnGameLoad();
         }
 
-        private void Game_onSendPacket(GamePacketEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
-
         private void Game_OnWndProc(WndEventArgs args)
         {
             if (args.Msg == (uint) WindowMessages.RightButtonDown)
@@ -129,7 +128,33 @@ namespace ezEvade
             }
         }
 
-    
+        private void Game_onRecvPacket(GamePacketEventArgs args)
+        {
+           // if (args.Header == 178)
+            {
+                /*
+                //ConsolePrinter.Print(args.GetPacketId());
+
+                foreach (var data in args.PacketData)
+                {
+                    Console.Write(" " + data);
+                }
+                ConsolePrinter.Print("");*/
+
+                lastProcessPacketTime = EvadeUtils.TickCount;
+            }
+        }
+
+        private void Game_onSendPacket(GamePacketEventArgs args)
+        {
+        //    if (args.HashAlgorithm == 160)
+            {
+                if (testMenu.Get<CheckBox>("EvadeTesterPing").CurrentValue)
+                {
+                    ConsolePrinter.Print("Send Path ClickTime: " + (EvadeUtils.TickCount - lastRightMouseClickTime));
+                }
+            }
+        }
 
         private void Game_OnGameLoad()
         {
@@ -830,7 +855,7 @@ namespace ezEvade
             {
                 var target = myHero;
 
-                foreach (var hero in HeroManager.Enemies)
+                foreach (var hero in EntityManager.Heroes.Enemies)
                 {
                     target = hero;
                 }
