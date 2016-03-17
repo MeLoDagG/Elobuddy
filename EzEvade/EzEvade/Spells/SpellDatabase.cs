@@ -677,7 +677,8 @@ namespace ezEvade
                 projectileSpeed = 2000,
                 radius = 160,
                 range = 25000,
-                spellDelay = 500,
+                spellDelay = 250,
+                fixedRange = true,//beta
                 spellKey = SpellSlot.R,
                 spellName = "DravenRCast",
                 spellType = SpellType.Line,
@@ -721,7 +722,7 @@ namespace ezEvade
                 extraMissileNames = new[] { "EkkoQMissileReturn" },
                 collisionObjects = new[] { CollisionObjectType.EnemyChampions },
             });
-
+            
             Spells.Add(
             new SpellData
             {
@@ -794,10 +795,10 @@ namespace ezEvade
             #region Ezreal
 
             Spells.Add(
-            new SpellData
-            {
-                charName = "Ezreal",
-                dangerlevel = 2,
+                new SpellData
+              {
+                  charName = "Ezreal",
+                dangerlevel = 3,
                 missileName = "EzrealMysticShotMissile",
                 name = "Mystic Shot",
                 projectileSpeed = 2000,
@@ -806,17 +807,36 @@ namespace ezEvade
                 spellDelay = 250,
                 spellKey = SpellSlot.Q,
                 spellName = "EzrealMysticShot",
-              //  extraSpellNames = new[] { "EzrealmMsticshotWrapper", },
                 spellType = SpellType.Line,
-                collisionObjects = new[] { CollisionObjectType.EnemyChampions, CollisionObjectType.EnemyMinions },
+                });
 
-            });
+            /* Spells.Add(
+             new SpellData
+             {
+                 charName = "Ezreal",
+                 dangerlevel = 3,
+                 missileName = "EzrealMysticShotMissile",
+                 name = "Mystic Shot",
+                 projectileSpeed = 2000,
+                 radius = 60,
+                 range = 1200,
+                 spellDelay = 250,
+                 fixedRange = true,
+                 extraEndTime = 10,
+                 extraDistance = 10,
+                 spellKey = SpellSlot.Q,
+                 spellName = "EzrealMysticShot",
+                 extraSpellNames = new[] { "EzrealmMsticshotWrapper", },
+                 spellType = SpellType.Line,
+                 collisionObjects = new[] { CollisionObjectType.EnemyChampions, CollisionObjectType.EnemyMinions },
+
+             });*/
 
             Spells.Add(
             new SpellData
             {
                 charName = "Ezreal",
-                dangerlevel = 2,
+                dangerlevel = 3,
                 name = "Trueshot Barrage",
                 projectileSpeed = 2000,
                 radius = 160,
@@ -2158,6 +2178,7 @@ namespace ezEvade
                 radius = 90,
                 range = 1250,
                 spellDelay = 250,
+                fixedRange = true,//beta
                 spellKey = SpellSlot.Q,
                 spellName = "NautilusAnchorDrag",
                 spellType = SpellType.Line,
@@ -3286,7 +3307,7 @@ namespace ezEvade
                 spellDelay = 250,
                 spellKey = SpellSlot.Q,
                 spellName = "YasuoQ3W",
-          //      extraSpellNames = new[] { "YasuoQ3" },
+            //    extraSpellNames = new[] { "YasuoQ3" },
                 spellType = SpellType.Line,
             });
 
@@ -3294,15 +3315,15 @@ namespace ezEvade
             new SpellData
             {
                 charName = "Yasuo",
-                dangerlevel = 2,
+                dangerlevel = 3,
                 name = "Steel Tempest",
-                projectileSpeed = float.MaxValue,
+                projectileSpeed = 1200,
                 radius = 35,
                 range = 500,
                 spellDelay = 250,
                 spellKey = SpellSlot.Q,
                 spellName = "YasuoQ",
-           //     extraSpellNames = new[] { "YasuoQ2", "YasuoQ2W" },
+              //  extraSpellNames = new[] { "YasuoQ2"},
                 spellType = SpellType.Line
             });
 

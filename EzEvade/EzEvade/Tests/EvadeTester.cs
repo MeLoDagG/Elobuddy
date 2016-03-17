@@ -30,7 +30,6 @@ namespace ezEvade
         private static Vector2 startWalkPos;
         private static float startWalkTime = 0;
 
-        private static Vector2 testCollisionPos;
         private static bool testingCollision = false;
 
         private static float lastStopingTime = 0;

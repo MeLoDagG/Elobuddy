@@ -657,7 +657,7 @@ namespace ezEvade
 
             #region AllChampions
 
-          /*  Spells.Add(
+         /*   Spells.Add(
             new EvadeSpellData
             {
                 charName = "AllChampions",
@@ -671,8 +671,8 @@ namespace ezEvade
                 spellKey = SpellSlot.R,
                 evadeType = EvadeType.Blink,
                 castType = CastType.Position,
-            });
-            */
+            });*/
+            
             Spells.Add(
             new EvadeSpellData
             {
