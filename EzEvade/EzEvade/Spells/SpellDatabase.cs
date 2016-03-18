@@ -3295,35 +3295,51 @@ namespace ezEvade
             #region Yasuo
 
             Spells.Add(
+           new SpellData
+           {
+               charName = "Yasuo",
+               dangerlevel = 3,
+               missileName = "YasuoQ3",
+               name = "Steel Tempest 3",
+               projectileSpeed = 1200,
+               radius = 90,
+               range = 1100,
+               spellDelay = 250,
+               spellKey = SpellSlot.Q,
+               spellName = "YasuoQ3W",
+               extraMissileNames = new[] { "YasuoQ3Mis" },
+               spellType = SpellType.Line,
+           });
+
+            Spells.Add(
             new SpellData
             {
                 charName = "Yasuo",
-                dangerlevel = 3,
-                missileName = "YasuoQ3Mis",
-                name = "Steel Tempest3",
-                projectileSpeed = 1200,
-                radius = 90,
-                range = 1100,
-                spellDelay = 250,
+                dangerlevel = 2,
+                name = "Steel Tempest 2",
+                projectileSpeed = float.MaxValue,
+                radius = 35,
+                range = 525,
+                fixedRange = true,
+                spellDelay = 350,
                 spellKey = SpellSlot.Q,
-                spellName = "YasuoQ3W",
-            //    extraSpellNames = new[] { "YasuoQ3" },
-                spellType = SpellType.Line,
+                spellName = "YasuoQ2",
+                spellType = SpellType.Line
             });
 
             Spells.Add(
             new SpellData
             {
                 charName = "Yasuo",
-                dangerlevel = 3,
-                name = "Steel Tempest",
-                projectileSpeed = 1200,
+                dangerlevel = 2,
+                name = "Steel Tempest 1",
+                projectileSpeed = float.MaxValue,
                 radius = 35,
-                range = 500,
-                spellDelay = 250,
+                range = 525,
+                fixedRange = true,
+                spellDelay = 350,
                 spellKey = SpellSlot.Q,
-                spellName = "YasuoQ",
-              //  extraSpellNames = new[] { "YasuoQ2"},
+                spellName = "YasuoQ2",
                 spellType = SpellType.Line
             });
 
@@ -3501,7 +3517,7 @@ namespace ezEvade
                 range = 1474,
                 spellDelay = 500,
                 spellKey = SpellSlot.Q,
-                spellName = "ZyraPassivDeathManager",
+                spellName = "ZyraPassiveDeathManager",
                 spellType = SpellType.Line,
 
             });

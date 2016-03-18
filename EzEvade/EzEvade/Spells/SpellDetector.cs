@@ -123,7 +123,7 @@ namespace ezEvade
 
                             var dir = (missile.EndPosition.To2D() - missile.StartPosition.To2D()).Normalized();
 
-                            if (spell.info.missileName == missile.SData.Name
+                            if (spell.info.missileName.ToLower() == missile.SData.Name.ToLower()
                                 && spell.heroID == missile.SpellCaster.NetworkId
                                 && dir.AngleBetween(spell.direction) < 10)
                             {
@@ -309,7 +309,7 @@ namespace ezEvade
                                     var dir = (args.End.To2D() - args.Start.To2D()).Normalized();
 
                                     if (spell.spellObject != null
-                                        && spell.info.spellName == args.SData.Name
+                                        && spell.info.spellName.ToLower() == args.SData.Name.ToLower()
                                         && spell.heroID == hero.NetworkId
                                         && dir.AngleBetween(spell.direction) < 10)
                                     {
