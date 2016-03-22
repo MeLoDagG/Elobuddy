@@ -246,10 +246,11 @@ namespace ezEvade
                 radius = 130,
                 range = 25000,
                 spellDelay = 250,
+                fixedRange = true,
                 spellKey = SpellSlot.R,
                 spellName = "EnchantedCrystalArrow",
                 spellType = SpellType.Line,
-                //collisionObjects = new[] { CollisionObjectType.EnemyChampions, },
+                collisionObjects = new[] { CollisionObjectType.EnemyChampions, },
             });
 
             Spells.Add(
@@ -258,12 +259,12 @@ namespace ezEvade
                 angle = 5,
                 charName = "Ashe",
                 dangerlevel = 2,
-                //missileName = "VolleyAttack",
                 name = "Volley",
                 projectileSpeed = 1500,
                 radius = 20,
                 range = 1200,
                 spellDelay = 250,
+                fixedRange = true,
                 spellKey = SpellSlot.W,
                 spellName = "Volley",
                 spellType = SpellType.Line,
@@ -2482,6 +2483,26 @@ namespace ezEvade
                 collisionObjects = new[] { CollisionObjectType.EnemyChampions, CollisionObjectType.EnemyMinions },
 
             });
+
+            Spells.Add(
+                new SpellData
+                {
+                    charName = "Rumble",
+                    dangerlevel = 4,
+                    missileName = "RumbleCarpetBombM",
+                    projectileSpeed = 1600,
+                    radius = 200,
+                    range = 1200,
+                    spellDelay = 250,
+                    spellKey = SpellSlot.R,
+                    spellName = "RumbleCarpetBombMissile",
+                    spellType = SpellType.Line,
+                    fixedRange = true,
+                    collisionObjects = new[] { CollisionObjectType.EnemyChampions, CollisionObjectType.EnemyMinions },
+
+                });
+            
+           
             #endregion Rumble
 
             #region Ryze

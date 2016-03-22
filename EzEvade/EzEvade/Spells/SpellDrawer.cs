@@ -42,13 +42,13 @@ namespace ezEvade
 
             Menu dangerMenu = drawMenu.Parent.AddSubMenuEx("DangerLevel Drawings", "DangerLevelDrawings");
             Menu lowDangerMenu = dangerMenu.Parent.AddSubMenuEx("Low", "LowDrawing");
-            lowDangerMenu.Add("LowWidth", new Slider("Line Width", 3, 1, 15));
+            lowDangerMenu.Add("LowWidth", new Slider("Line Width", 1, 1, 15));
 
             Menu normalDangerMenu = dangerMenu.Parent.AddSubMenuEx("Normal", "NormalDrawing");
-            normalDangerMenu.Add("NormalWidth", new Slider("Line Width", 3, 1, 15));
+            normalDangerMenu.Add("NormalWidth", new Slider("Line Width", 2, 1, 15));
 
             Menu highDangerMenu = dangerMenu.Parent.AddSubMenuEx("High", "HighDrawing");
-            highDangerMenu.Add("HighWidth", new Slider("Line Width", 4, 1, 15));
+            highDangerMenu.Add("HighWidth", new Slider("Line Width", 3, 1, 15));
 
             Menu extremeDangerMenu = dangerMenu.Parent.AddSubMenuEx("Extreme", "ExtremeDrawing");
             extremeDangerMenu.Add("ExtremeWidth", new Slider("Line Width", 4, 1, 15));
@@ -159,7 +159,7 @@ namespace ezEvade
                         Vector2 spellPos = spell.currentSpellPosition;
                         Vector2 spellEndPos = spell.GetSpellEndPosition();
 
-                        DrawLineRectangle(spellPos, spellEndPos, (int)spell.radius, spellDrawingWidth, Color.Red);
+                        DrawLineRectangle(spellPos, spellEndPos, (int)spell.radius, spellDrawingWidth, Color.White);
 
                         /*foreach (var hero in ObjectManager.Get<AIHeroClient>())
                         {
@@ -179,17 +179,17 @@ namespace ezEvade
                             /*if (spell.spellObject != null && spell.spellObject.IsValid && spell.spellObject.IsVisible &&
                                   spell.spellObject.Position.To2D().Distance(ObjectCache.myHeroCache.serverPos2D) < spell.info.range + 1000)*/
 
-                            Render.Circle.DrawCircle(new Vector3(spellPos.X, spellPos.Y, myHero.Position.Z), (int)spell.radius, Color.Red, spellDrawingWidth);
+                            Render.Circle.DrawCircle(new Vector3(spellPos.X, spellPos.Y, myHero.Position.Z), (int)spell.radius, Color.White, spellDrawingWidth);
                         }
 
                     }
                     else if (spell.spellType == SpellType.Circular)
                     {
-                        Render.Circle.DrawCircle(new Vector3(spell.endPos.X, spell.endPos.Y, spell.height), (int)spell.radius, Color.Red, spellDrawingWidth);
+                        Render.Circle.DrawCircle(new Vector3(spell.endPos.X, spell.endPos.Y, spell.height), (int)spell.radius, Color.White, spellDrawingWidth);
 
                         if (spell.info.spellName == "VeigarEventHorizon")
                         {
-                            Render.Circle.DrawCircle(new Vector3(spell.endPos.X, spell.endPos.Y, spell.height), (int)spell.radius - 125, Color.Red, spellDrawingWidth);
+                            Render.Circle.DrawCircle(new Vector3(spell.endPos.X, spell.endPos.Y, spell.height), (int)spell.radius - 125, Color.White, spellDrawingWidth);
                         }
                     }
                     else if (spell.spellType == SpellType.Arc)
