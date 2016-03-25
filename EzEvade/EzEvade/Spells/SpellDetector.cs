@@ -190,7 +190,7 @@ namespace ezEvade
             }
         }
 
-        private void SpellMissile_OnCreateOld(GameObject obj, EventArgs args)
+        public void SpellMissile_OnCreateOld(GameObject obj, EventArgs args)
         {
 
             if (obj.GetType() != typeof (MissileClient) || !((MissileClient) obj).IsValidMissile())
@@ -245,7 +245,7 @@ namespace ezEvade
             }
         }
 
-        private void SpellMissile_OnDeleteOld(GameObject obj, EventArgs args)
+        public void SpellMissile_OnDeleteOld(GameObject obj, EventArgs args)
         {
             if (obj.GetType() != typeof (MissileClient) || !((MissileClient) obj).IsValidMissile())
                 return;

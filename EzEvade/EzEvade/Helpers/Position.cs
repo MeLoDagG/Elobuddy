@@ -13,7 +13,7 @@ namespace ezEvade
 {
     public static class Position
     {
-        private static AIHeroClient myHero { get { return ObjectManager.Player; } }
+        public static AIHeroClient myHero { get { return ObjectManager.Player; } }
 
         public static int CheckPosDangerLevel(this Vector2 pos, float extraBuffer)
         {

@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EzEvade;
-using SharpDX;
 
 namespace ezEvade
 {
@@ -40,7 +37,7 @@ namespace ezEvade
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            CheckDashing();
+         //   CheckDashing();
         }
 
         public static void CheckDashing()
@@ -91,9 +88,9 @@ namespace ezEvade
                 sender.DisplayName = array[args.NewValue];
             };
             slider.DisplayName = array[slider.CurrentValue];
-           //newSpellMenu.AddItem(new MenuItem(spell.name + "SpellActivationTime", "Spell Activation Time").SetValue(new Slider(0, 0, 1000)));
-           //Menu newSpellMiscMenu = new Menu("Misc Settings", spell.charName + spell.name + "EvadeSpellMiscSettings");
-           //newSpellMenu.AddSubMenuEx(newSpellMiscMenu);
+            //newSpellMenu.AddItem(new MenuItem(spell.name + "SpellActivationTime", "Spell Activation Time").SetValue(new Slider(0, 0, 1000)));
+            //Menu newSpellMiscMenu = new Menu("Misc Settings", spell.charName + spell.name + "EvadeSpellMiscSettings");
+            //newSpellMenu.AddSubMenuEx(newSpellMiscMenu);
 
             return evadeSpellMenu;
         }
@@ -408,21 +405,21 @@ namespace ezEvade
         {
             var dangerStr = ObjectCache.menuCache.cache[spell.name + "EvadeSpellDangerLevel"].Cast<Slider>().DisplayName;
 
-            var dangerlevel = 1;
+            int dangerlevel;
 
             switch (dangerStr)
             {
                 case "Low":
-                    dangerlevel = 1;
+                    dangerlevel = 0;
                     break;
                 case "High":
-                    dangerlevel = 3;
+                    dangerlevel = 2;
                     break;
                 case "Extreme":
-                    dangerlevel = 4;
+                    dangerlevel = 3;
                     break;
                 default:
-                    dangerlevel = 2;
+                    dangerlevel = 1;
                     break;
             }
 
