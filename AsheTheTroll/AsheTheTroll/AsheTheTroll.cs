@@ -173,15 +173,13 @@ namespace AsheTheTroll
         private static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
             Interrupter.InterruptableSpellEventArgs e)
         {
-            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
-            {
-                if (sender.IsEnemy && _r.IsReady() && sender.Distance(_Player) <= _Player.AttackRange)
+           if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
+             e.DangerLevel == EloBuddy.SDK.Enumerations.DangerLevel.High && sender.IsValidTarget(850))
                 {
                     _r.Cast(sender);
                 }
-            }
-        }
-    
+         }
+        
         private static void Game_OnTick(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
