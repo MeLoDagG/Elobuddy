@@ -175,13 +175,13 @@ namespace AsheTheTroll
         {
             if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
             {
-                if (sender.IsEnemy && _r.IsReady() && sender.Distance(_Player) <= _r.Range)
+                if (sender.IsEnemy && _r.IsReady() && sender.Distance(_Player) <= _Player.AttackRange)
                 {
                     _r.Cast(sender);
                 }
             }
         }
-
+    
         private static void Game_OnTick(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
