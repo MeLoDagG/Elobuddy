@@ -59,6 +59,7 @@ namespace ChogathTheTroll
             _comboMenu.Add("useQCombo", new CheckBox("Use Q"));
             _comboMenu.Add("useWCombo", new CheckBox("Use W"));
             _comboMenu.Add("useRCombo", new CheckBox("Use R"));
+         //   _comboMenu.Add("Qssmode", new ComboBox(" ", 0, "Medium", "HIgh"));
 
 
 
@@ -286,35 +287,42 @@ namespace ChogathTheTroll
 
         private static void CastQ()
         {
-            _target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
-           {
-                var qPrediction = Q.GetPrediction(_target);
-                if (qPrediction.HitChance == HitChance.High)
-                if (qPrediction.HitChance == HitChance.Immobile || qPrediction.HitChance == HitChance.High ||
-                   qPrediction.HitChance == HitChance.Dashing || qPrediction.Collision)
+            var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
+            if (target == null) return;
+            var qPrediction = Q.GetPrediction(target);
+            if (qPrediction.HitChance == HitChance.Unknown)
                 {
-                    Q.Cast(_target);
+                    Q.Cast(qPrediction.CastPosition);
                 }
             }
-       }
-
-        private static void CastW()
+   
+        private static
+            void CastW()
         {
-            if (W.IsReady())
+            var targetW = TargetSelector.GetTarget(W.Range, DamageType.Physical);
+            if (targetW == null) return;
             {
-                W.Cast(_target);
+                if (W.IsReady())
+                {
+                    W.Cast(targetW);
+                }
             }
         }
 
         private static void CastR()
         {
-            if (R.IsReady())
+            var targetR = TargetSelector.GetTarget(R.Range, DamageType.Physical);
+            if (targetR == null) return;
             {
-                if (_Player.GetSpellDamage(_target, SpellSlot.R, 0) > _target.Health)
+                if (R.IsReady())
                 {
-                    R.Cast(_target);
+                    if (_Player.GetSpellDamage(targetR, SpellSlot.R, 0) > targetR.Health)
+                    {
+                        R.Cast(targetR);
+                    }
                 }
             }
+
         }
 
         private static void Drawing_OnDraw(EventArgs args)
