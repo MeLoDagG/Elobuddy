@@ -290,9 +290,9 @@ namespace ChogathTheTroll
             var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
             if (target == null) return;
             var qPrediction = Q.GetPrediction(target);
-            if (qPrediction.HitChance == HitChance.Unknown)
+            if (qPrediction.HitChance == HitChance.High)
                 {
-                    Q.Cast(qPrediction.CastPosition);
+                    Q.Cast(target);
                 }
             }
    
