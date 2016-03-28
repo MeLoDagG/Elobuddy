@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Diagnostics;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
-using EloBuddy.SDK.Rendering;
-using SharpDX;
+using Color = System.Drawing.Color;
 
 namespace AsheTheTroll
 {
@@ -17,6 +17,8 @@ namespace AsheTheTroll
         {
             get { return ObjectManager.Player; }
         }
+    
+        private static AIHeroClient _target;
 
         private static void Main(string[] args)
         {
@@ -27,13 +29,20 @@ namespace AsheTheTroll
         private static Spell.Skillshot _w;
         private static Spell.Skillshot _e;
         private static Spell.Skillshot _r;
-        private static Item _healthpot;
+        private static Item HealthPotion;
+        private static Item CorruptingPotion;
+        private static Item RefillablePotion;
+        private static Item HuntersPotion;
+        private static Item TotalBiscuit;
+       // public static Spell.Active Heal;
+    //    public static bool PlayerHasHeal;
         public static Item Youmuu = new Item(ItemId.Youmuus_Ghostblade);
         public static Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
         public static Item Cutlass = new Item(ItemId.Bilgewater_Cutlass);
         public static Item Tear = new Item(ItemId.Tear_of_the_Goddess);
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
+        
 
         public static Menu Menu,
             ComboMenu,
@@ -54,7 +63,7 @@ namespace AsheTheTroll
                 return;
             }
 
-            _healthpot = new Item(2003, 0);
+
             _q = new Spell.Active(SpellSlot.Q);
             _w = new Spell.Skillshot(SpellSlot.W, 1200, SkillShotType.Linear, 0, int.MaxValue, 60);
             _w.AllowedCollisionCount = 0;
@@ -68,34 +77,33 @@ namespace AsheTheTroll
 
             Menu = MainMenu.AddMenu("AsheTheTroll", "AsheTheTroll");
 
-            ComboMenu = Menu.AddSubMenu("Combo Settings", "_ComboMenu");
+            ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.Add("useQCombo", new CheckBox("Use Q"));
             ComboMenu.Add("useWCombo", new CheckBox("Use W"));
-            ComboMenu.Add("useRCombo", new CheckBox("Use R"));
+            ComboMenu.Add("useRCombo", new CheckBox("Use R [45%hp]"));
+            //  ComboMenu.Add("AutoR", new CheckBox("Auto R"));
+            //     ComboMenu.Add("Rminenemies", new Slider("Min enemies R", 2, 1, 5));
+            //      ComboMenu.AddSeparator();
             ComboMenu.AddSeparator();
-            ComboMenu.AddSeparator();
-            ComboMenu.Add("useRComboFinisher", new CheckBox("Use R[FinisherMode]"));
+            ComboMenu.Add("useRComboFinisher", new CheckBox("Use R [FinisherMode]"));
             ComboMenu.Add("ForceR",
-               new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
+                new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
             ComboMenu.Add("useRComboRange", new Slider("R Max Range ", 1000, 500, 2000));
 
-            HarassMenu = Menu.AddSubMenu("Harass Settings", "_HarassMenu");
+            HarassMenu = Menu.AddSubMenu("Harass Settings", "Harass");
             HarassMenu.Add("useQHarass", new CheckBox("Use Q"));
-
             HarassMenu.Add("useWHarass", new CheckBox("Use W"));
             HarassMenu.Add("useWHarassMana", new Slider("W Mana > %", 70, 0, 100));
-            HarassMenu.AddSeparator();
-            HarassMenu.AddLabel("Auto Harass");
+            HarassMenu.AddLabel("AutoHarass");
             HarassMenu.Add("autoWHarass", new CheckBox("Auto W for Harass", false));
             HarassMenu.Add("autoWHarassMana", new Slider("W Mana > %", 70, 0, 100));
 
             JungleLaneMenu = Menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             JungleLaneMenu.AddLabel("Lane Clear");
-            JungleLaneMenu.Add("useQFarm", new CheckBox("Use Q"));
             JungleLaneMenu.Add("useWFarm", new CheckBox("Use W"));
             JungleLaneMenu.AddSeparator();
             JungleLaneMenu.AddLabel("Jungle Clear");
-            JungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
+           // JungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             JungleLaneMenu.Add("useWJungle", new CheckBox("Use W"));
             JungleLaneMenu.Add("useWMana", new Slider("W Mana > %", 70, 0, 100));
 
@@ -103,36 +111,58 @@ namespace AsheTheTroll
             MiscMenu.Add("gapcloser", new CheckBox("Auto W for Gapcloser"));
             MiscMenu.Add("interrupter", new CheckBox("Auto R for Interrupter"));
             MiscMenu.Add("CCE", new CheckBox("Auto W on Enemy CC"));
+            MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
 
             SkinMenu = Menu.AddSubMenu("Skin Changer", "SkinChanger");
             SkinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
             SkinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 8));
 
-            ItemMenu = Menu.AddSubMenu("Item Settings", "_ItemMenuettings");
-            ItemMenu.Add("useHP", new CheckBox("Use Health Potion"));
-            ItemMenu.Add("useHPV", new Slider("HP < %", 40, 0, 100));
-            ItemMenu.AddSeparator();
+            ItemMenu = Menu.AddSubMenu("Item Settings", "ItemMenuettings");
+            //   ItemMenu.AddGroupLabel("Auto pot usage");
+            //    ItemMenu.Add("potion", new CheckBox("Use potions"));
+            //    ItemMenu.Add("potionminHP", new Slider("Minimum Health % to use potion", 70));
+            //    ItemMenu.Add("potionMinMP", new Slider("Minimum Mana % to use potion", 20));
+            //    ItemMenu.AddSeparator();
             ItemMenu.Add("useBOTRK", new CheckBox("Use BOTRK"));
             ItemMenu.Add("useBotrkMyHP", new Slider("My Health < ", 60, 1, 100));
             ItemMenu.Add("useBotrkEnemyHP", new Slider("Enemy Health < ", 60, 1, 100));
             ItemMenu.Add("useYoumu", new CheckBox("Use Youmu"));
+            ItemMenu.AddSeparator();
             ItemMenu.Add("useQSS", new CheckBox("Use QSS"));
+            ItemMenu.Add("Qssmode", new ComboBox(" ", 0, "Auto", "Combo"));
+            ItemMenu.Add("Stun", new CheckBox("Stun", true));
+            ItemMenu.Add("Blind", new CheckBox("Blind", true));
+            ItemMenu.Add("Charm", new CheckBox("Charm", true));
+            ItemMenu.Add("Suppression", new CheckBox("Suppression", true));
+            ItemMenu.Add("Polymorph", new CheckBox("Polymorph", true));
+            ItemMenu.Add("Fear", new CheckBox("Fear", true));
+            ItemMenu.Add("Taunt", new CheckBox("Taunt", true));
+            ItemMenu.Add("Silence", new CheckBox("Silence", false));
+            ItemMenu.Add("QssDelay", new Slider("Use QSS Delay(ms)", 250, 0, 1000));
+            ItemMenu.AddGroupLabel("Qqs Utly");
+            ItemMenu.Add("ZedUlt", new CheckBox("Zed R", true));
+            ItemMenu.Add("VladUlt", new CheckBox("Vladimir R", true));
+            ItemMenu.Add("FizzUlt", new CheckBox("Fizz R", true));
+            ItemMenu.Add("MordUlt", new CheckBox("Mordekaiser R", true));
+            ItemMenu.Add("PoppyUlt", new CheckBox("Poppy R", true));
+            ItemMenu.Add("QssUltDelay", new Slider("Use QSS Delay(ms) for Ult", 250, 0, 1000));
 
             PrediMenu = Menu.AddSubMenu("Prediction Settings", "_PrediMenuettings");
             var style = PrediMenu.Add("style", new Slider("Min Prediction", 1, 0, 2));
             style.OnValueChange += delegate
             {
-                style.DisplayName = "Min Prediction: " + new[] { "Low", "Medium", "High" }[style.CurrentValue];
+                style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
             };
-            style.DisplayName = "Min Prediction: " + new[] { "Low", "Medium", "High" }[style.CurrentValue];
+            style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
 
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
-            DrawMenu.Add("drawRange", new CheckBox("Draw AA Range"));
+            DrawMenu.Add("drawRange", new CheckBox("Draw Q Range"));
             DrawMenu.Add("drawW", new CheckBox("Draw W Range"));
             DrawMenu.Add("drawR", new CheckBox("Draw R Range"));
 
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
+            Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
             Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Drawing.OnDraw += Drawing_OnDraw;
@@ -143,22 +173,24 @@ namespace AsheTheTroll
         private static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
             Interrupter.InterruptableSpellEventArgs e)
         {
-            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.DangerLevel == DangerLevel.High && sender.IsValidTarget(900))
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
             {
-                _r.Cast(sender);
+                if (sender.IsEnemy && _r.IsReady() && sender.Distance(_Player) <= _r.Range)
+                {
+                    _r.Cast(sender);
+                }
             }
         }
 
         private static void Game_OnTick(EventArgs args)
         {
-            var hPpot = ItemMenu["useHP"].Cast<CheckBox>().CurrentValue;
-            var hPv = ItemMenu["useHPv"].Cast<Slider>().CurrentValue;
             Orbwalker.ForcedTarget = null;
 
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
                 Combo();
+                ItemUsage();
+               
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
@@ -168,10 +200,6 @@ namespace AsheTheTroll
             {
                 WaveClear();
             }
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
-            {
-
-            }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
             {
                 Flee();
@@ -180,16 +208,198 @@ namespace AsheTheTroll
             {
                 JungleClear();
             }
-            Auto();
-            Ks();
-            AutoW();
-            if (hPpot && _Player.HealthPercent < hPv)
+         
+                Ks();
+                Auto();
+                AutoW();
+                UseRTarget();
+                ItemUsage();
+            
+       }
+
+        //Gredit GuTenTak
+        public static
+            void ItemUsage()
+        {
+            var target = TargetSelector.GetTarget(550, DamageType.Physical); // 550 = Botrk.Range
+
+
+            if (ItemMenu["useYoumu"].Cast<CheckBox>().CurrentValue && Youmuu.IsOwned() && Youmuu.IsReady())
             {
-                if (Item.HasItem(_healthpot.Id) && Item.CanUseItem(_healthpot.Id) &&
-                    !_Player.HasBuff("RegenerationPotion"))
+                if (ObjectManager.Player.CountEnemiesInRange(1500) == 1)
                 {
-                    _healthpot.Cast();
+                    Youmuu.Cast();
                 }
+            }
+            if (target != null)
+            {
+                if (ItemMenu["useBOTRK"].Cast<CheckBox>().CurrentValue && Item.HasItem(Cutlass.Id) &&
+                    Item.CanUseItem(Cutlass.Id) &&
+                    Player.Instance.HealthPercent < ItemMenu["useBotrkMyHP"].Cast<Slider>().CurrentValue &&
+                    target.HealthPercent < ItemMenu["useBotrkEnemyHP"].Cast<Slider>().CurrentValue)
+                {
+                    Item.UseItem(Cutlass.Id, target);
+                }
+                if (ItemMenu["useBOTRK"].Cast<CheckBox>().CurrentValue && Item.HasItem(Botrk.Id) &&
+                    Item.CanUseItem(Botrk.Id) &&
+                    Player.Instance.HealthPercent < ItemMenu["useBotrkMyHP"].Cast<Slider>().CurrentValue &&
+                    target.HealthPercent < ItemMenu["useBotrkEnemyHP"].Cast<Slider>().CurrentValue)
+                {
+                    Botrk.Cast(target);
+                }
+            }
+        }
+
+        private static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
+        {
+            if (!sender.IsMe) return;
+            var type = args.Buff.Type;
+            var duration = args.Buff.EndTime - Game.Time;
+            var Name = args.Buff.Name.ToLower();
+
+            if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 0)
+            {
+                if (type == BuffType.Taunt && ItemMenu["Taunt"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Stun && ItemMenu["Stun"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Snare && ItemMenu["Snare"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Polymorph && ItemMenu["Polymorph"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Blind && ItemMenu["Blind"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Charm && ItemMenu["Charm"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Suppression && ItemMenu["Suppression"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Silence && ItemMenu["Silence"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (Name == "zedrdeathmark" && ItemMenu["ZedUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "vladimirhemoplague" && ItemMenu["VladUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "fizzmarinerdoom" && ItemMenu["FizzUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "mordekaiserchildrenofthegrave" && ItemMenu["MordUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "poppydiplomaticimmunity" && ItemMenu["PoppyUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+            }
+            if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 1 &&
+                Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+            {
+                if (type == BuffType.Taunt && ItemMenu["Taunt"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Stun && ItemMenu["Stun"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Snare && ItemMenu["Snare"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Polymorph && ItemMenu["Polymorph"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Blind && ItemMenu["Blind"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Charm && ItemMenu["Charm"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Suppression && ItemMenu["Suppression"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (type == BuffType.Silence && ItemMenu["Silence"].Cast<CheckBox>().CurrentValue)
+                {
+                    DoQSS();
+                }
+                if (Name == "zedrdeathmark" && ItemMenu["ZedUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "vladimirhemoplague" && ItemMenu["VladUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "fizzmarinerdoom" && ItemMenu["FizzUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "mordekaiserchildrenofthegrave" && ItemMenu["MordUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+                if (Name == "poppydiplomaticimmunity" && ItemMenu["PoppyUlt"].Cast<CheckBox>().CurrentValue)
+                {
+                    UltQSS();
+                }
+            }
+        }
+
+        private static void DoQSS()
+        {
+            if (ItemMenu["useQSS"].Cast<CheckBox>().CurrentValue && Qss.IsOwned() && Qss.IsReady() &&
+                ObjectManager.Player.CountEnemiesInRange(1800) > 0)
+            {
+                Core.DelayAction(() => Qss.Cast(), ItemMenu["QssDelay"].Cast<Slider>().CurrentValue);
+            }
+            if (Simitar.IsOwned() && Simitar.IsReady() && ObjectManager.Player.CountEnemiesInRange(1800) > 0)
+            {
+                Core.DelayAction(() => Simitar.Cast(), ItemMenu["QssDelay"].Cast<Slider>().CurrentValue);
+            }
+        }
+
+        private static void UltQSS()
+        {
+            if (ItemMenu["useQSS"].Cast<CheckBox>().CurrentValue && Qss.IsOwned() && Qss.IsReady())
+            {
+                Core.DelayAction(() => Qss.Cast(), ItemMenu["QssUltDelay"].Cast<Slider>().CurrentValue);
+            }
+            if (Simitar.IsOwned() && Simitar.IsReady())
+            {
+                Core.DelayAction(() => Simitar.Cast(), ItemMenu["QssUltDelay"].Cast<Slider>().CurrentValue);
             }
         }
 
@@ -242,29 +452,29 @@ namespace AsheTheTroll
             }
             if (target != null)
             {
-                if (ComboMenu["useRCombo"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
-                    (Player.Instance.CountEnemiesInRange(600) == 0 || Player.Instance.HealthPercent < 25))
-                {
-                    var Rpred = _r.GetPrediction(target);
-                    // var target = TargetSelector.GetTarget(1500, DamageType.Magical);
-                    var Predslider = PrediMenu["style"].Cast<Slider>().CurrentValue;
-                    if (Rpred.HitChancePercent >= Predslider)
+               if (ComboMenu["useRCombo"].Cast<CheckBox>().CurrentValue && _r.IsReady() && (Player.Instance.CountEnemiesInRange(600) == 0 || Player.Instance.HealthPercent < 70))
                     {
-                        _r.Cast(Rpred.CastPosition);
+                        var targetR = TargetSelector.GetTarget(1500, DamageType.Magical);
+                        if (targetR != null && _r.GetPrediction(target).HitChance >= HitChance.High)
+                        {
+                        _r.Cast(targetR);
+                        }
                     }
-                }
             }
         }
+
 
         public static
             void UseRTarget()
         {
             var target = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
-            if (target != null && (ComboMenu["ForceR"].Cast<KeyBind>().CurrentValue && _r.IsReady() && target.IsValid && !Player.HasBuff("AsheR"))) _r.Cast(target.Position);
+            if (target != null &&
+                (ComboMenu["ForceR"].Cast<KeyBind>().CurrentValue && _r.IsReady() && target.IsValid &&
+                 !Player.HasBuff("AsheR"))) _r.Cast(target.Position);
         }
 
 
-        private static
+       private static
             void OnGameUpdate(EventArgs args)
         {
             if (CheckSkin())
@@ -285,7 +495,6 @@ namespace AsheTheTroll
 
         public static void Auto()
         {
-            var useQss = ItemMenu["useQSS"].Cast<CheckBox>().CurrentValue;
             var eonCc = MiscMenu["CCE"].Cast<CheckBox>().CurrentValue;
             if (eonCc)
             {
@@ -302,24 +511,15 @@ namespace AsheTheTroll
                     }
                 }
             }
-            if (_Player.HasBuffOfType(BuffType.Fear) || _Player.HasBuffOfType(BuffType.Stun) ||
-                _Player.HasBuffOfType(BuffType.Taunt) || _Player.HasBuffOfType(BuffType.Polymorph))
-            {
-
-                if (useQss && Item.HasItem(3140) && Item.CanUseItem(3140))
-                    Item.UseItem(3140);
-
-                if (useQss && Item.HasItem(3139) && Item.CanUseItem(3139))
-                    Item.UseItem(3139);
-            }
         }
+
 
         public static void AutoW()
         {
             var targetW = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
             if (HarassMenu["autoWHarass"].Cast<CheckBox>().CurrentValue &&
-              _w.IsReady() && targetW.IsValidTarget(_w.Range) &&
-              _Player.ManaPercent > HarassMenu["autoWHarassMana"].Cast<Slider>().CurrentValue)
+                _w.IsReady() && targetW.IsValidTarget(_w.Range) &&
+                Player.Instance.ManaPercent > HarassMenu["autoWHarassMana"].Cast<Slider>().CurrentValue)
             {
                 _w.Cast(targetW);
             }
@@ -328,9 +528,8 @@ namespace AsheTheTroll
         public static void Flee()
         {
             var targetW = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
-            var wPred = _w.GetPrediction(targetW);
 
-            if (wPred.HitChance >= HitChance.Medium && _w.IsReady() && targetW.IsValidTarget(_w.Range))
+            if (_w.IsReady() && targetW.IsValidTarget(_w.Range))
             {
                 _w.Cast(targetW);
             }
@@ -338,21 +537,16 @@ namespace AsheTheTroll
 
         public static void JungleClear()
         {
-            var useQ = JungleLaneMenu["useQJungle"].Cast<CheckBox>().CurrentValue;
-            var useW = JungleLaneMenu["useWJungle"].Cast<CheckBox>().CurrentValue;
+           var useW = JungleLaneMenu["useWJungle"].Cast<CheckBox>().CurrentValue;
+           var junglemana = HarassMenu["useWMana"].Cast<Slider>().CurrentValue;
 
             if (Orbwalker.IsAutoAttacking) return;
-            if (useQ)
-            {
-                foreach (var b in Player.Instance.Buffs)
-                    if (b.Name == "asheqcastready")
-                    {
-                        _q.Cast();
-                    }
-
-                if (useW)
+            { 
+            if (useW && Player.Instance.ManaPercent > junglemana)
                 {
-                    var minions = EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, _w.Range).Where(t => !t.IsDead && t.IsValid && !t.IsInvulnerable);
+                    var minions =
+                        EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, _w.Range)
+                            .Where(t => !t.IsDead && t.IsValid && !t.IsInvulnerable);
                     if (minions.Count() > 0)
                     {
                         _w.Cast(minions.First());
@@ -363,18 +557,11 @@ namespace AsheTheTroll
 
         public static void WaveClear()
         {
-            var useQ = JungleLaneMenu["useQFarm"].Cast<CheckBox>().CurrentValue;
             var useW = JungleLaneMenu["useWFarm"].Cast<CheckBox>().CurrentValue;
 
+
             if (Orbwalker.IsAutoAttacking) return;
-            if (useQ)
-            {
-                foreach (var b in Player.Instance.Buffs)
-                    if (b.Name == "asheqcastready")
-                    {
-                        _q.Cast();
-                    }
-            }
+
             if (useW)
             {
                 var minions =
@@ -413,7 +600,7 @@ namespace AsheTheTroll
 
                 if (HarassMenu["useWHarass"].Cast<CheckBox>().CurrentValue && _w.IsReady() &&
                     target.Distance(_Player) > _Player.AttackRange &&
-                    targetW.IsValidTarget(_w.Range) && _Player.ManaPercent > wmana)
+                    targetW.IsValidTarget(_w.Range) && Player.Instance.ManaPercent > wmana)
                 {
                     _w.Cast(targetW);
                 }
@@ -421,19 +608,15 @@ namespace AsheTheTroll
 
             if (target != null)
             {
-                if (HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue)
+                if (ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
                 {
-                    if (ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
+                    if (target.Distance(_Player) <= Player.Instance.AttackRange)
                     {
-                        if (target.Distance(_Player) <= _Player.AttackRange)
-                        {
-                            _q.Cast();
-                        }
+                        _q.Cast();
                     }
                 }
             }
         }
-
 
         public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
@@ -442,11 +625,12 @@ namespace AsheTheTroll
             {
                 _w.Cast(e.End);
             }
+
         }
 
         public static void Ks()
         {
-
+            var usewks = MiscMenu["UseWks"].Cast<CheckBox>().CurrentValue;
             var distance = ComboMenu["useRComboRange"].Cast<Slider>().CurrentValue;
             foreach (var enemy in EntityManager.Heroes.Enemies)
             {
@@ -457,14 +641,19 @@ namespace AsheTheTroll
                     _r.Cast(enemy);
                 }
             }
+            foreach (var enemy in EntityManager.Heroes.Enemies)
+                if (usewks && _w.IsReady() && WDamage(enemy) >= enemy.Health && !enemy.IsZombie && !enemy.IsDead)
+                {
+                    _w.Cast(enemy);
+                }
         }
 
         public static int WDamage(Obj_AI_Base target)
         {
             return
                 (int)
-                    (new[] { 10, 60, 110, 160, 210 }[_w.Level - 1] +
-                     1.4 * (_Player.TotalAttackDamage));
+                    (new[] {10, 60, 110, 160, 210}[_w.Level - 1] +
+                     1.4*(_Player.TotalAttackDamage));
         }
 
         public static float RDamage(Obj_AI_Base target)
@@ -472,26 +661,48 @@ namespace AsheTheTroll
 
             if (!Player.GetSpell(SpellSlot.R).IsLearned) return 0;
             return Player.Instance.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float)new double[] { 250, 425, 600 }[_r.Level - 1] + 1 * Player.Instance.FlatMagicDamageMod);
+                (float) new double[] {250, 425, 600}[_r.Level - 1] + 1*Player.Instance.FlatMagicDamageMod);
 
         }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (DrawMenu["drawRange"].Cast<CheckBox>().CurrentValue)
+            if (_target != null && _target.IsValid)
             {
-                Circle.Draw(_q.IsReady() ? Color.Aqua : Color.Aqua, _q.Range, _Player.Position);
+
             }
 
-            if (DrawMenu["drawW"].Cast<CheckBox>().CurrentValue)
+            //   if (DrawMenu["drawRange"].Cast<CheckBox>().CurrentValue)
+            //       {
+            // Drawing.DrawCircle(_Player.Position, _q.Range, Color.Aqua);
+            //     }
+            else
             {
-                Circle.Draw(_w.IsReady() ? Color.Aqua : Color.Aqua, _w.Range, _Player.Position);
+                if (DrawMenu["drawRange"].Cast<CheckBox>().CurrentValue)
+                    Drawing.DrawCircle(_Player.Position, _q.Range, Color.Aqua);
             }
-            if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
+
+            //     if (_w.IsReady() && DrawMenu["drawW"].Cast<CheckBox>().CurrentValue)
+            //     {
+            //        Drawing.DrawCircle(_Player.Position, _w.Range, Color.Aqua);
+            //     }
+            //      else
             {
-                Circle.Draw(_r.IsReady() ? Color.Aqua : Color.Aqua, _r.Range, _Player.Position);
+                if (DrawMenu["drawW"].Cast<CheckBox>().CurrentValue)
+                    Drawing.DrawCircle(_Player.Position, _w.Range, Color.Aqua);
+            }
+
+            //      if (_r.IsReady() && DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
+            //       {
+            //           Drawing.DrawCircle(_Player.Position, _r.Range, Color.Aqua);
+            //       }
+            //         else
+            {
+                if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
+                    Drawing.DrawCircle(_Player.Position, _r.Range, Color.Aqua);
             }
         }
     }
-
 }
+
+   
