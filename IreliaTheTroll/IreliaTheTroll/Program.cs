@@ -205,6 +205,7 @@ namespace IreliaTheTroll
             Game.OnTick += OnTick;
             Orbwalker.OnPreAttack += OnPreAttack;
             Drawing.OnDraw += OnDraw;
+            Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += OnGapcloser;
             Interrupter.OnInterruptableSpell += OnInterruptableSpell;
             Orbwalker.OnPostAttack += (unit, target) =>
