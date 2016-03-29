@@ -23,7 +23,8 @@ namespace ChogathTheTroll
         public static Spell.Active E;
         public static Spell.Skillshot W;
         public static Spell.Targeted R;
-
+        public static Spell.Targeted Ignite;
+    //    private const float Hitchance = 56f;
         private static Menu _menu,
             _comboMenu,
             _jungleLaneMenu,
@@ -51,15 +52,17 @@ namespace ChogathTheTroll
             W = new Spell.Skillshot(SpellSlot.W, 650, SkillShotType.Cone, (int) .25f, int.MaxValue, (int) (30*0.5));
             R = new Spell.Targeted(SpellSlot.R, 250);
 
-
-
+        //    if ("summonerdot"))
+            {
+                Ignite = new Spell.Targeted(ObjectManager.Player.GetSpellSlotFromName("summonerdot"), 600);
+            }
 
             _menu = MainMenu.AddMenu("ChogathThetroll", "ChogathThetroll");
             _comboMenu = _menu.AddSubMenu("Combo", "Combo");
             _comboMenu.Add("useQCombo", new CheckBox("Use Q"));
             _comboMenu.Add("useWCombo", new CheckBox("Use W"));
             _comboMenu.Add("useRCombo", new CheckBox("Use R"));
-         //   _comboMenu.Add("Qssmode", new ComboBox(" ", 0, "Medium", "HIgh"));
+            //   _comboMenu.Add("Qssmode", new ComboBox(" ", 0, "Medium", "HIgh"));
 
 
 
@@ -79,6 +82,7 @@ namespace ChogathTheTroll
             _miscMenu.Add("interrupterW", new CheckBox("Auto W for Interrupter"));
             _miscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
+            _miscMenu.Add("useIgnite", new CheckBox("Use Ignite"));
 
             _skinMenu = _menu.AddSubMenu("Skin Changer", "SkinChanger");
             _skinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
@@ -166,7 +170,7 @@ namespace ChogathTheTroll
             Auto();
         }
 
-        private static void Auto()
+      private static void Auto()
         {
             var QonCc = _miscMenu["CCQ"].Cast<CheckBox>().CurrentValue;
             var WonCc = _miscMenu["CCW"].Cast<CheckBox>().CurrentValue;
@@ -287,15 +291,29 @@ namespace ChogathTheTroll
 
         private static void CastQ()
         {
-            var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
-            if (target == null) return;
-            var qPrediction = Q.GetPrediction(target);
-            if (qPrediction.HitChance == HitChance.High)
+            var Target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+            if (Target == null) return;
+            var useQ = _comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
+          var Qp = Q.GetPrediction(Target);
+
+            if (!Target.IsValid()) return;
+            if (Q.IsInRange(Target) && Q.IsReady()  && useQ  && Qp.HitChance >= HitChance.High)
+            {
+                if (_comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue &&
+                    !ObjectManager.Player.IsInAutoAttackRange(Target) && !Target.IsInvulnerable)
                 {
-                    Q.Cast(target);
+                    Q.Cast(Qp.CastPosition);
+                }
+                else
+                {
+                    if (!_comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
+                    {
+                        Q.Cast(Qp.CastPosition);
+                    }
                 }
             }
-   
+        }
+
         private static
             void CastW()
         {
@@ -309,7 +327,10 @@ namespace ChogathTheTroll
             }
         }
 
-        private static void CastR()
+
+
+        private static
+            void CastR()
         {
             var targetR = TargetSelector.GetTarget(R.Range, DamageType.Physical);
             if (targetR == null) return;
