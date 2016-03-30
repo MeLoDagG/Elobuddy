@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
@@ -10,7 +7,6 @@ using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
-using SharpDX;
 using Color = System.Drawing.Color;
 
 namespace IreliaTheTroll
@@ -186,9 +182,9 @@ namespace IreliaTheTroll
             ItemMenu.Add("PoppyUlt", new CheckBox("Poppy R", true));
             ItemMenu.Add("QssUltDelay", new Slider("Use QSS Delay(ms) for Ult", 250, 0, 1000));
 
-            SkinMenu = Menu.AddSubMenu("Skin Changer", "SkinChanger");
+         /*   SkinMenu = Menu.AddSubMenu("Skin Changer", "SkinChanger");
             SkinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
-            SkinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 5));
+            SkinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 5)); */
 
 
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
@@ -201,7 +197,7 @@ namespace IreliaTheTroll
 
             Bootstrap.Init(null);
 
-            Game.OnUpdate += OnGameUpdate;
+        //    Game.OnUpdate += OnGameUpdate;
             Game.OnTick += OnTick;
             Orbwalker.OnPreAttack += OnPreAttack;
             Drawing.OnDraw += OnDraw;
@@ -494,7 +490,7 @@ namespace IreliaTheTroll
                 Core.DelayAction(() => Simitar.Cast(), ItemMenu["QssUltDelay"].Cast<Slider>().CurrentValue);
             }
         }
-        private static
+   /*     private static
                void OnGameUpdate(EventArgs args)
         {
             if (CheckSkin())
@@ -513,7 +509,7 @@ namespace IreliaTheTroll
             return SkinMenu["checkSkin"].Cast<CheckBox>().CurrentValue;
         }
 
-
+    */
 
 
         private static void Clear()
