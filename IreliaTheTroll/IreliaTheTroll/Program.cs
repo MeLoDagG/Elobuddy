@@ -38,6 +38,11 @@ namespace IreliaTheTroll
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
         public static Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
+        private static Item HealthPotion;
+        private static Item CorruptingPotion;
+        private static Item RefillablePotion;
+        private static Item TotalBiscuit;
+        private static Item HuntersPotion;
 
         public static Menu Menu,
             ComboMenu,
@@ -47,7 +52,8 @@ namespace IreliaTheTroll
             DrawMenu,
             PrediMenu,
             ItemMenu,
-            SkinMenu;
+            SkinMenu,
+            AutoPotHealMenu;
 
         private static void Loading_OnLoadingComplete(EventArgs args)
         {
@@ -67,6 +73,12 @@ namespace IreliaTheTroll
             Blade = new Item(3153, 450f);
             Tiamat = new Item(3077, 400f);
             Hydra = new Item(3074, 400f);
+            HealthPotion = new Item(2003, 0);
+            TotalBiscuit = new Item(2010, 0);
+            CorruptingPotion = new Item(2033, 0);
+            RefillablePotion = new Item(2031, 0);
+            HuntersPotion = new Item(2032, 0);
+
 
             Chat.Print(
                 "<font color=\"#ac1616\" >MeLoDag Presents </font><font color=\"#CCFFFF\" >IreLia </font><font color=\"#ac1616\" >Kappa Kippo</font>");
@@ -182,9 +194,15 @@ namespace IreliaTheTroll
             ItemMenu.Add("PoppyUlt", new CheckBox("Poppy R", true));
             ItemMenu.Add("QssUltDelay", new Slider("Use QSS Delay(ms) for Ult", 250, 0, 1000));
 
-         /*   SkinMenu = Menu.AddSubMenu("Skin Changer", "SkinChanger");
-            SkinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
-            SkinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 5)); */
+            AutoPotHealMenu = Menu.AddSubMenu("Potion", "Potion");
+            AutoPotHealMenu.AddGroupLabel("Auto pot usage");
+            AutoPotHealMenu.Add("potion", new CheckBox("Use potions"));
+            AutoPotHealMenu.Add("potionminHP", new Slider("Minimum Health % to use potion", 70));
+            AutoPotHealMenu.Add("potionMinMP", new Slider("Minimum Mana % to use potion", 20));
+
+            /*   SkinMenu = Menu.AddSubMenu("Skin Changer", "SkinChanger");
+               SkinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
+               SkinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 5)); */
 
 
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
@@ -204,6 +222,9 @@ namespace IreliaTheTroll
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += OnGapcloser;
             Interrupter.OnInterruptableSpell += OnInterruptableSpell;
+
+
+
             Orbwalker.OnPostAttack += (unit, target) =>
             {
                 if (ComboMenu["combo.items"].Cast<CheckBox>().CurrentValue && unit.IsMe && target != null &&
@@ -304,10 +325,51 @@ namespace IreliaTheTroll
             }
             ItemUsage();
             RCount();
+            AutoPot();
         }
 
-        //Gredit GuTenTak
-        public static
+        private static void AutoPot()
+        {
+            if (AutoPotHealMenu["potion"].Cast<CheckBox>().CurrentValue && !Player.Instance.IsInShopRange() &&
+                  Player.Instance.HealthPercent <= AutoPotHealMenu["potionminHP"].Cast<Slider>().CurrentValue &&
+                  !(Player.Instance.HasBuff("RegenerationPotion") || Player.Instance.HasBuff("ItemCrystalFlaskJungle") ||
+                    Player.Instance.HasBuff("ItemMiniRegenPotion") || Player.Instance.HasBuff("ItemCrystalFlask") ||
+                    Player.Instance.HasBuff("ItemDarkCrystalFlask")))
+            {
+                if (Item.HasItem(HealthPotion.Id) && Item.CanUseItem(HealthPotion.Id))
+                {
+                    HealthPotion.Cast();
+                    return;
+                }
+                if (Item.HasItem(TotalBiscuit.Id) && Item.CanUseItem(TotalBiscuit.Id))
+                {
+                    TotalBiscuit.Cast();
+                    return;
+                }
+                if (Item.HasItem(RefillablePotion.Id) && Item.CanUseItem(RefillablePotion.Id))
+                {
+                    RefillablePotion.Cast();
+                    return;
+                }
+                if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
+                {
+                    CorruptingPotion.Cast();
+                    return;
+                }
+            }
+            if (Player.Instance.ManaPercent <= AutoPotHealMenu["potionMinMP"].Cast<Slider>().CurrentValue &&
+                !(Player.Instance.HasBuff("RegenerationPotion") || Player.Instance.HasBuff("ItemMiniRegenPotion") ||
+                  Player.Instance.HasBuff("ItemCrystalFlask") || Player.Instance.HasBuff("ItemDarkCrystalFlask")))
+            {
+                if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
+                {
+                    CorruptingPotion.Cast();
+                }
+            }
+        }
+
+    //Gredit GuTenTak
+    public static
             void ItemUsage()
         {
             var target = TargetSelector.GetTarget(550, DamageType.Physical); // 550 = Botrk.Range
