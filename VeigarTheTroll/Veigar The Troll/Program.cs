@@ -291,7 +291,7 @@ namespace Veigar_The_Troll
                      .FirstOrDefault(
                          m =>
                              m.Distance(_Player) <= Q.Range &&
-                              m.Health <= QDamage(m) - 25 &&
+                              m.Health <= QDamage(m) - 20 &&
                              m.IsValidTarget());
 
             if (Q.IsReady() && useQ && qminion != null && !Orbwalker.IsAutoAttacking)
