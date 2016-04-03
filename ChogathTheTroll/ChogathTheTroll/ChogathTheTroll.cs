@@ -291,29 +291,32 @@ namespace ChogathTheTroll
 
         private static void CastQ()
         {
-            var Target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
-            if (Target == null) return;
-            var useQ = _comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
-          var Qp = Q.GetPrediction(Target);
+            var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
 
-            if (!Target.IsValid()) return;
-            if (Q.IsInRange(Target) && Q.IsReady()  && useQ  && Qp.HitChance >= HitChance.High)
+            if (target == null || !target.IsValidTarget()) return;
+
+            Orbwalker.ForcedTarget = target;
+
+            var useQ = _comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
+
+
             {
-                if (_comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue &&
-                    !ObjectManager.Player.IsInAutoAttackRange(Target) && !Target.IsInvulnerable)
+                if (Q.IsReady() && useQ)
                 {
-                    Q.Cast(Qp.CastPosition);
-                }
-                else
-                {
-                    if (!_comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
+                    var predQ = Q.GetPrediction(target);
+                    if (predQ.HitChance >= HitChance.Immobile)
                     {
-                        Q.Cast(Qp.CastPosition);
+                        Q.Cast(predQ.CastPosition);
+                    }
+                    else if (predQ.HitChance >= HitChance.High)
+                    {
+                        Q.Cast(predQ.CastPosition);
                     }
                 }
             }
         }
 
+        
         private static
             void CastW()
         {
