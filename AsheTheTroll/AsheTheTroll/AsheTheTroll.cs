@@ -33,7 +33,8 @@ namespace AsheTheTroll
         private static Spell.Skillshot _w;
         private static Spell.Skillshot _e;
         private static Spell.Skillshot _r;
-        public static Spell.Active heal;
+        public static Spell.Active Heal;
+        public static float HealthPercent { get { return _Player.Health / _Player.MaxHealth * 100; } }
         private static Item HealthPotion;
         private static Item CorruptingPotion;
         private static Item RefillablePotion;
@@ -76,10 +77,10 @@ namespace AsheTheTroll
             _e = new Spell.Skillshot(SpellSlot.E, 15000, SkillShotType.Linear, 0, int.MaxValue, 0);
             _r = new Spell.Skillshot(SpellSlot.R, 15000, SkillShotType.Linear, 500, 1000, 250);
             _r.AllowedCollisionCount = int.MaxValue;
-            var slot = ObjectManager.Player.GetSpellSlotFromName("summonerheal");
+            var slot = _Player.GetSpellSlotFromName("summonerheal");
             if (slot != SpellSlot.Unknown)
             {
-                heal = new Spell.Active(slot, 850);
+                Heal = new Spell.Active(slot, 600);
             }
             HealthPotion = new Item(2003, 0);
             TotalBiscuit = new Item(2010, 0);
@@ -88,7 +89,7 @@ namespace AsheTheTroll
             HuntersPotion = new Item(2032, 0);
 
             Chat.Print(
-                "<font color=\"#4dd5ea\" >MeLoDag Presents </font><font color=\"#4dd5ea\" >AsheTheToLL </font><font color=\"#4dd5ea\" >Kappa Kippo</font>");
+                "<font color=\"#4dd5ea\" >MeLoDag Presents </font><font color=\"#ffffff\" >AsheTheToLL </font><font color=\"#4dd5ea\" >Kappa Kippo</font>");
 
 
             Menu = MainMenu.AddMenu("AsheTheTroll", "AsheTheTroll");
@@ -97,9 +98,8 @@ namespace AsheTheTroll
             ComboMenu.Add("useQCombo", new CheckBox("Use Q"));
             ComboMenu.Add("useWCombo", new CheckBox("Use W"));
             ComboMenu.Add("useRCombo", new CheckBox("Use R [45%hp]"));
-            //  ComboMenu.Add("AutoR", new CheckBox("Auto R"));
-            //     ComboMenu.Add("Rminenemies", new Slider("Min enemies R", 2, 1, 5));
-            //      ComboMenu.AddSeparator();
+            ComboMenu.Add("useRComboENEMIES", new CheckBox("Use R[Count]"));
+            ComboMenu.Add("Rcount", new Slider("R when enemies >= ", 1, 1, 5));
             ComboMenu.AddSeparator();
             ComboMenu.Add("useRComboFinisher", new CheckBox("Use R [FinisherMode]"));
             ComboMenu.Add("ForceR",
@@ -129,14 +129,14 @@ namespace AsheTheTroll
             MiscMenu.Add("CCE", new CheckBox("Auto W on Enemy CC"));
             MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
 
-            AutoPotHealMenu = Menu.AddSubMenu("Potion", "Potion");
+            AutoPotHealMenu = Menu.AddSubMenu("Potion & HeaL", "Potion & HeaL");
             AutoPotHealMenu.AddGroupLabel("Auto pot usage");
             AutoPotHealMenu.Add("potion", new CheckBox("Use potions"));
             AutoPotHealMenu.Add("potionminHP", new Slider("Minimum Health % to use potion", 70));
             AutoPotHealMenu.Add("potionMinMP", new Slider("Minimum Mana % to use potion", 20));
-            //    AutoPotHealMenu.AddGroupLabel("AUto Heal Usage");
-            //    AutoPotHealMenu.Add("UseHeal", new CheckBox("Use Heal"));
-            //   AutoPotHealMenu.Add("useHealHP", new Slider("Minimum Health % to use Heal", 70));
+            AutoPotHealMenu.AddGroupLabel("AUto Heal Usage");
+            AutoPotHealMenu.Add("UseHeal", new CheckBox("Use Heal"));
+            AutoPotHealMenu.Add("useHealHP", new Slider("Minimum Health % to use Heal", 70));
 
             ItemMenu = Menu.AddSubMenu("Item Settings", "ItemMenuettings");
             ItemMenu.Add("useBOTRK", new CheckBox("Use BOTRK"));
@@ -209,6 +209,7 @@ namespace AsheTheTroll
             {
                 Combo();
                 ItemUsage();
+                AUtoheal();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
@@ -226,8 +227,7 @@ namespace AsheTheTroll
             {
                 JungleClear();
             }
-
-            AUtoheal();
+            
             Ks();
             Auto();
             AutoW();
@@ -238,6 +238,12 @@ namespace AsheTheTroll
 
         private static void AUtoheal()
         {
+            if (Heal != null && AutoPotHealMenu["UseHeal"].Cast<CheckBox>().CurrentValue && Heal.IsReady() &&
+              HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
+              && _Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
+            {
+                Heal.Cast();
+            }
         }
 
         private static
@@ -469,6 +475,9 @@ namespace AsheTheTroll
 
         private static void Combo()
         {
+            var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
+            var comboR = ComboMenu["useRComboENEMIES"].Cast<CheckBox>().CurrentValue;
+            var TargetR = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
 
             var target = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
 
@@ -511,8 +520,15 @@ namespace AsheTheTroll
                         _r.Cast(predR.CastPosition);
                     }
                 }
+
+                if (comboR && _Player.CountEnemiesInRange(_r.Range) >= rCount && _r.IsReady()
+               && TargetR.IsValidTarget(_r.Range))
+                {
+                    _r.Cast(TargetR);
+                }
             }
         }
+      
 
         public static
             void UseRTarget()
@@ -658,7 +674,7 @@ namespace AsheTheTroll
 
             if (target != null)
             {
-                if (ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
+                if (HarassMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
                 {
                     if (target.Distance(_Player) <= Player.Instance.AttackRange)
                     {
