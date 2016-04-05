@@ -82,7 +82,9 @@ namespace Veigar_The_Troll
             _miscMenu = _menu.AddSubMenu("Misc Settings", "MiscSettings");
             _miscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
-       
+            _miscMenu.Add("misc.ks.q", new CheckBox("Killsteal Q"));
+            _miscMenu.Add("misc.ks.r", new CheckBox("Killsteal R"));
+
 
             _skinMenu = _menu.AddSubMenu("Skin Changer", "SkinChanger");
             _skinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
@@ -117,7 +119,7 @@ namespace Veigar_The_Troll
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
-               FarmQ();
+                FarmQ();
                 FarmW();
 
              }
@@ -134,9 +136,39 @@ namespace Veigar_The_Troll
                  FarmQ();
               }
             Auto();
+            Killsteal();
         }
 
+        private static void Killsteal()
+        {
+            foreach (
+                var enemy in
+                    EntityManager.Heroes.Enemies.Where(
+                        e => e.Distance(_Player) <= R.Range && e.IsValidTarget() && !e.IsInvulnerable))
+            {
+                if (Q.IsReady() && _miscMenu["misc.ks.q"].Cast<CheckBox>().CurrentValue &&
+                    E.IsReady() && _miscMenu["misc.ks.e"].Cast<CheckBox>().CurrentValue &&
+                    RDamage(enemy) + QDamage(enemy) >=
+                    enemy.Health)
+                {
 
+                    if (_miscMenu["misc.ks.q"].Cast<CheckBox>().CurrentValue && Q.IsReady() &&
+                        QDamage(enemy) >= enemy.Health &&
+                        enemy.Distance(_Player) <= Q.Range)
+                    {
+                        Q.Cast(enemy);
+                        return;
+                    }
+
+                    if (_miscMenu["misc.ks.r"].Cast<CheckBox>().CurrentValue && R.IsReady() &&
+                        RDamage(enemy) >= enemy.Health)
+                    {
+                        R.Cast(enemy);
+                    }
+
+                }
+            }
+        }
 
         private static void Combo()
         {
