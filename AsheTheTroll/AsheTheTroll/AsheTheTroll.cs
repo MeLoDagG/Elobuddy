@@ -22,7 +22,7 @@ namespace AsheTheTroll
             get { return ObjectManager.Player; }
         }
 
-        //    private static AIHeroClient _target;
+            private static AIHeroClient _target;
 
         private static void Main(string[] args)
         {
@@ -480,8 +480,8 @@ namespace AsheTheTroll
             {
                 if (Player.Instance.CountEnemiesInRange(700) > 0)
                 {
-                    foreach (var b in Player.Instance.Buffs)
-                        if (b.Name == "asheqcastready")
+                    foreach (var a in Player.Instance.Buffs)
+                        if (a.Name == "asheqcastready" && a.Count == 4)
                         {
                             _q.Cast();
                         }
@@ -499,7 +499,7 @@ namespace AsheTheTroll
 
             if (target == null || !target.IsValidTarget()) return;
 
-            Orbwalker.ForcedTarget = target;
+           // Orbwalker.ForcedTarget = target;
 
             if (_w.IsReady() && ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue)
             {
