@@ -107,10 +107,7 @@ namespace Veigar_The_Troll
         
         private static void Game_OnTick(EventArgs args)
         {
-            if (_Player.IsDead)
-                return;
-
-
+            Orbwalker.ForcedTarget = null;
             {
                 if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
                 {
@@ -120,7 +117,7 @@ namespace Veigar_The_Troll
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
-                FarmQ();
+               FarmQ();
                 FarmW();
 
              }
@@ -163,10 +160,10 @@ namespace Veigar_The_Troll
                     {
                         E.Cast(predE.CastPosition);
                     }
-                 else if (predE.HitChance >= HitChance.Immobile)
-                   {
-                        E.Cast(predE.CastPosition);
-                   }
+            //     else if (predE.HitChance >= HitChance.Immobile)
+             //      {
+             //           E.Cast(predE.CastPosition);
+             //      }
                 }
             }
 
@@ -280,12 +277,12 @@ namespace Veigar_The_Troll
             }
         }
 
-       
+
 
 
         private static void FarmQ()
         {
-          var useQ = _jungleLaneMenu["qFarm"].Cast<CheckBox>().CurrentValue;
+            var useQ = _jungleLaneMenu["qFarm"].Cast<CheckBox>().CurrentValue;
             var qminion =
                  EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _Player.Position, Q.Range)
                      .FirstOrDefault(
@@ -299,6 +296,7 @@ namespace Veigar_The_Troll
                 Q.Cast(qminion);
             }
         }
+
         private static
             void FarmW()
         {
