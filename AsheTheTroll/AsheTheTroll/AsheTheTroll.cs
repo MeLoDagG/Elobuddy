@@ -208,6 +208,7 @@ namespace AsheTheTroll
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
                 Combo();
+                UseQ();
                 ItemUsage();
                 AUtoheal();
             }
@@ -473,6 +474,21 @@ namespace AsheTheTroll
             }
         }
 
+        private static void UseQ()
+        {
+            if (ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue && _q.IsReady())
+            {
+                if (Player.Instance.CountEnemiesInRange(700) > 0)
+                {
+                    foreach (var b in Player.Instance.Buffs)
+                        if (b.Name == "asheqcastready")
+                        {
+                            _q.Cast();
+                        }
+                }
+            }
+        }
+
         private static void Combo()
         {
             var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
@@ -496,22 +512,8 @@ namespace AsheTheTroll
                 {
                     _w.Cast(predW.CastPosition);
                 }
-            }
-
-            if (ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue && _q.IsReady())
-            {
-                if (Player.Instance.CountEnemiesInRange(700) > 0)
-                {
-                    foreach (var b in Player.Instance.Buffs)
-                        if (b.Name == "asheqcastready")
-                        {
-                            _q.Cast();
-                        }
-                }
-            }
-            if (target != null)
-            {
-                if (ComboMenu["useRCombo"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
+            
+               if (ComboMenu["useRCombo"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
                     (Player.Instance.CountEnemiesInRange(600) == 0 || Player.Instance.HealthPercent < 60))
                 {
                     var predR = _r.GetPrediction(target);
@@ -522,13 +524,13 @@ namespace AsheTheTroll
                 }
 
                 if (comboR && _Player.CountEnemiesInRange(_r.Range) >= rCount && _r.IsReady()
-               && TargetR.IsValidTarget(_r.Range))
+                    && TargetR != null && _r.GetPrediction(TargetR).HitChance >= HitChance.Medium)
                 {
-                    _r.Cast(TargetR);
+                    _r.Cast(_r.GetPrediction(TargetR).CastPosition);
                 }
             }
         }
-      
+
 
         public static
             void UseRTarget()
@@ -674,7 +676,7 @@ namespace AsheTheTroll
 
             if (target != null)
             {
-                if (HarassMenu["useQCombo"].Cast<CheckBox>().CurrentValue)
+                if (HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue)
                 {
                     if (target.Distance(_Player) <= Player.Instance.AttackRange)
                     {
