@@ -215,7 +215,7 @@ namespace IreliaTheTroll
 
             Bootstrap.Init(null);
 
-        //    Game.OnUpdate += OnGameUpdate;
+            //    Game.OnUpdate += OnGameUpdate;
             Game.OnTick += OnTick;
             Orbwalker.OnPreAttack += OnPreAttack;
             Drawing.OnDraw += OnDraw;
@@ -987,7 +987,7 @@ namespace IreliaTheTroll
                     target,
                     DamageType.Physical,
                     new float[] { 20, 50, 80, 110, 140 }[Q.Level - 1]
-                    + _Player.TotalAttackDamage)
+                    + 1.2F * _Player.TotalAttackDamage)
                 : 0d;
         }
 
