@@ -630,7 +630,7 @@ namespace AsheTheTroll
 
             if (Orbwalker.IsAutoAttacking) return;
 
-            if (useW)
+            if (useW && Player.Instance.ManaPercent > JungleLaneMenu["useWFarm"].Cast<Slider>().CurrentValue)
             {
                 var minions =
                     EntityManager.MinionsAndMonsters.EnemyMinions.Where(
