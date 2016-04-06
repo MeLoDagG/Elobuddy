@@ -117,7 +117,8 @@ namespace AsheTheTroll
             JungleLaneMenu = Menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             JungleLaneMenu.AddLabel("Lane Clear");
             JungleLaneMenu.Add("useWFarm", new CheckBox("Use W"));
-            JungleLaneMenu.AddSeparator();
+            JungleLaneMenu.Add("useWManalane", new Slider("W Mana > %", 70, 0, 100));
+            JungleLaneMenu.AddSeparator(14);
             JungleLaneMenu.AddLabel("Jungle Clear");
             // JungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             JungleLaneMenu.Add("useWJungle", new CheckBox("Use W"));
@@ -201,7 +202,8 @@ namespace AsheTheTroll
             }
         }
 
-        private static void Game_OnTick(EventArgs args)
+        private static
+          void OnGameUpdate(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
 
@@ -542,8 +544,7 @@ namespace AsheTheTroll
         }
 
 
-        private static
-            void OnGameUpdate(EventArgs args)
+        private static void Game_OnTick(EventArgs args)
         {
             if (CheckSkin())
             {
@@ -626,11 +627,12 @@ namespace AsheTheTroll
         public static void WaveClear()
         {
             var useW = JungleLaneMenu["useWFarm"].Cast<CheckBox>().CurrentValue;
+            var junglemana = JungleLaneMenu["useWManalane"].Cast<Slider>().CurrentValue;
 
 
             if (Orbwalker.IsAutoAttacking) return;
 
-            if (useW && Player.Instance.ManaPercent > JungleLaneMenu["useWFarm"].Cast<Slider>().CurrentValue)
+            if (useW && Player.Instance.ManaPercent > junglemana)
             {
                 var minions =
                     EntityManager.MinionsAndMonsters.EnemyMinions.Where(
