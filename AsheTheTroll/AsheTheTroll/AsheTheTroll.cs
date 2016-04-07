@@ -235,7 +235,6 @@ namespace AsheTheTroll
             Auto();
             AutoW();
             UseRTarget();
-            ItemUsage();
             AutoPot();
         }
 
@@ -352,7 +351,7 @@ namespace AsheTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }
@@ -412,7 +411,7 @@ namespace AsheTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }

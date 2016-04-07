@@ -212,7 +212,8 @@ namespace VarusTheTroll
             }
         }
 
-        private static void Game_OnTick(EventArgs args)
+        private static
+            void OnGameUpdate(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
 
@@ -240,7 +241,6 @@ namespace VarusTheTroll
             Ks();
             Auto();
             UseRTarget();
-            ItemUsage();
             AutoPot();
         }
 
@@ -347,7 +347,7 @@ namespace VarusTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }
@@ -407,7 +407,7 @@ namespace VarusTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }
@@ -582,8 +582,7 @@ namespace VarusTheTroll
         }
 
 
-        private static
-            void OnGameUpdate(EventArgs args)
+        private static void Game_OnTick(EventArgs args)
         {
             if (CheckSkin())
             {

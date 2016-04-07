@@ -183,7 +183,7 @@ namespace IreliaTheTroll
             ItemMenu.Add("FizzUlt", new CheckBox("Fizz R", true));
             ItemMenu.Add("MordUlt", new CheckBox("Mordekaiser R", true));
             ItemMenu.Add("PoppyUlt", new CheckBox("Poppy R", true));
-            ItemMenu.Add("QssUltDelay", new Slider("Use QSS Delay(ms) for Ult", 250, 0, 1000));
+            ItemMenu.Add("QssUltDelay", new Slider("Use QSS Delay(ms) for Ult", 250, 0, 1000)); 
 
             AutoPotHealMenu = Menu.AddSubMenu("Potion", "Potion");
             AutoPotHealMenu.AddGroupLabel("Auto pot usage");
@@ -301,7 +301,7 @@ namespace IreliaTheTroll
             {
                 Clear();
             }
-            ItemUsage();
+        //    ItemUsage();
             RCount();
             AutoPot();
             Killsteal();
@@ -498,7 +498,7 @@ namespace IreliaTheTroll
                     UltQSS();
                 }
             }
-        }
+        } 
         private static void DoQSS()
         {
             if (ItemMenu["useQSS"].Cast<CheckBox>().CurrentValue && Qss.IsOwned() && Qss.IsReady() &&
