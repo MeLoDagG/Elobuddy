@@ -7,6 +7,7 @@ using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
+
 using Color = System.Drawing.Color;
 
 namespace IreliaTheTroll
@@ -30,19 +31,15 @@ namespace IreliaTheTroll
         public static Spell.Targeted E { get; private set; }
         public static Spell.Skillshot R { get; private set; }
         public static SpellSlot Ignite { get; private set; }
-        public static Item Youmuu { get; private set; }
-        public static Item Cutlass { get; private set; }
-        public static Item Blade { get; private set; }
-        public static Item Tiamat { get; private set; }
-        public static Item Hydra { get; private set; }
+        public static Item Cutlass  = new Item(3144, 450f);
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
         public static Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
-        private static Item HealthPotion;
-        private static Item CorruptingPotion;
-        private static Item RefillablePotion;
-        private static Item TotalBiscuit;
-        private static Item HuntersPotion;
+        public static Item HealthPotion;
+        public static Item CorruptingPotion;
+        public static Item RefillablePotion;
+        public static Item TotalBiscuit;
+        public static Item HuntersPotion;
 
         public static Menu Menu,
             ComboMenu,
@@ -68,11 +65,6 @@ namespace IreliaTheTroll
             R = new Spell.Skillshot(SpellSlot.R, 1200, SkillShotType.Linear, 0, 1600, 65);
 
             Ignite = ObjectManager.Player.GetSpellSlotFromName("summonerdot");
-            Youmuu = new Item(3142, Q.Range);
-            Cutlass = new Item(3144, 450f);
-            Blade = new Item(3153, 450f);
-            Tiamat = new Item(3077, 400f);
-            Hydra = new Item(3074, 400f);
             HealthPotion = new Item(2003, 0);
             TotalBiscuit = new Item(2010, 0);
             CorruptingPotion = new Item(2033, 0);
@@ -125,7 +117,6 @@ namespace IreliaTheTroll
             ComboMenu.Add("combo.r.selfactivated", new CheckBox("only if self activated", false));
             ComboMenu.AddSeparator(12);
             ComboMenu.AddGroupLabel("Extra");
-            ComboMenu.Add("combo.items", new CheckBox("Use items"));
             ComboMenu.Add("combo.ignite", new CheckBox("Use ignite if combo killable"));
 
             HarassMenu = Menu.AddSubMenu("Harass Settings", "Harass");
@@ -215,30 +206,16 @@ namespace IreliaTheTroll
 
             Bootstrap.Init(null);
 
-            //    Game.OnUpdate += OnGameUpdate;
-            Game.OnTick += OnTick;
+            Game.OnUpdate += OnGameUpdate;
+           // Game.OnTick += OnTick;
             Orbwalker.OnPreAttack += OnPreAttack;
             Drawing.OnDraw += OnDraw;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += OnGapcloser;
             Interrupter.OnInterruptableSpell += OnInterruptableSpell;
-
-
-
-            Orbwalker.OnPostAttack += (unit, target) =>
-            {
-                if (ComboMenu["combo.items"].Cast<CheckBox>().CurrentValue && unit.IsMe && target != null &&
-                    Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.Combo)
-                {
-                    if (Tiamat.IsReady())
-                        Tiamat.Cast();
-
-                    if (Hydra.IsReady())
-                        Hydra.Cast();
-                }
-            };
         }
-
+        
+        
         private static void OnInterruptableSpell(Obj_AI_Base sender, Interrupter.InterruptableSpellEventArgs e)
         {
             if (!MiscMenu["misc.interrupt"].Cast<CheckBox>().CurrentValue) return;
@@ -285,6 +262,7 @@ namespace IreliaTheTroll
 
         }
 
+
         private static void OnPreAttack(AttackableUnit target, Orbwalker.PreAttackArgs args)
         {
             if (ComboMenu["combo.w"].Cast<CheckBox>().CurrentValue &&
@@ -302,11 +280,11 @@ namespace IreliaTheTroll
                     W.Cast();
         }
 
-        private static void OnTick(EventArgs args)
+        private static void OnGameUpdate(EventArgs args)
         {
-            Killsteal();
+            Orbwalker.ForcedTarget = null;
 
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+          if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
                 Combo();
                 ItemUsage();
@@ -326,6 +304,7 @@ namespace IreliaTheTroll
             ItemUsage();
             RCount();
             AutoPot();
+            Killsteal();
         }
 
         private static void AutoPot()
@@ -373,15 +352,7 @@ namespace IreliaTheTroll
             void ItemUsage()
         {
             var target = TargetSelector.GetTarget(550, DamageType.Physical); // 550 = Botrk.Range
-
-
-            if (ItemMenu["useYoumu"].Cast<CheckBox>().CurrentValue && Youmuu.IsOwned() && Youmuu.IsReady())
-            {
-                if (ObjectManager.Player.CountEnemiesInRange(1500) == 1)
-                {
-                    Youmuu.Cast();
-                }
-            }
+            
             if (target != null)
             {
                 if (ItemMenu["useBOTRK"].Cast<CheckBox>().CurrentValue && Item.HasItem(Cutlass.Id) &&
@@ -406,7 +377,7 @@ namespace IreliaTheTroll
             if (!sender.IsMe) return;
             var type = args.Buff.Type;
             var duration = args.Buff.EndTime - Game.Time;
-            var Name = args.Buff.Name.ToLower();
+            var name = args.Buff.Name.ToLower();
 
             if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 0)
             {
@@ -446,23 +417,23 @@ namespace IreliaTheTroll
                 {
                     DoQSS();
                 }
-                if (Name == "zedrdeathmark" && ItemMenu["ZedUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "zedrdeathmark" && ItemMenu["ZedUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "vladimirhemoplague" && ItemMenu["VladUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "vladimirhemoplague" && ItemMenu["VladUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "fizzmarinerdoom" && ItemMenu["FizzUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "fizzmarinerdoom" && ItemMenu["FizzUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "mordekaiserchildrenofthegrave" && ItemMenu["MordUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "mordekaiserchildrenofthegrave" && ItemMenu["MordUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "poppydiplomaticimmunity" && ItemMenu["PoppyUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "poppydiplomaticimmunity" && ItemMenu["PoppyUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
@@ -506,23 +477,23 @@ namespace IreliaTheTroll
                 {
                     DoQSS();
                 }
-                if (Name == "zedrdeathmark" && ItemMenu["ZedUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "zedrdeathmark" && ItemMenu["ZedUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "vladimirhemoplague" && ItemMenu["VladUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "vladimirhemoplague" && ItemMenu["VladUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "fizzmarinerdoom" && ItemMenu["FizzUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "fizzmarinerdoom" && ItemMenu["FizzUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "mordekaiserchildrenofthegrave" && ItemMenu["MordUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "mordekaiserchildrenofthegrave" && ItemMenu["MordUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
-                if (Name == "poppydiplomaticimmunity" && ItemMenu["PoppyUlt"].Cast<CheckBox>().CurrentValue)
+                if (name == "poppydiplomaticimmunity" && ItemMenu["PoppyUlt"].Cast<CheckBox>().CurrentValue)
                 {
                     UltQSS();
                 }
@@ -671,17 +642,18 @@ namespace IreliaTheTroll
 
         private static void Combo()
         {
-            var gctarget = TargetSelector.GetTarget(Q.Range * 2.5f, DamageType.Physical);
+            var gctarget = TargetSelector.GetTarget(Q.Range*2.5f, DamageType.Physical);
             var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
             if (gctarget == null) return;
 
             var qminion =
-                EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _Player.Position, Q.Range + 350)
+                EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _Player.Position,
+                    Q.Range + 350)
                     .Where(
                         m =>
-                        m.IsValidTarget()
-                        && Prediction.Health.GetPrediction(m, 1000 * (int)(m.Distance(_Player) / 2200))
-                        <= QDamage(m) + ExtraWDamage() + SheenDamage(m) - 10)
+                            m.IsValidTarget()
+                            && Prediction.Health.GetPrediction(m, 1000*(int) (m.Distance(_Player)/2200))
+                            <= QDamage(m) + ExtraWDamage() + SheenDamage(m) - 10)
                     .OrderBy(m => m.Distance(gctarget))
                     .FirstOrDefault();
 
@@ -716,7 +688,9 @@ namespace IreliaTheTroll
                     ComboMenu["combo.q.lastsecond"].Cast<CheckBox>().CurrentValue && target != null)
                 {
                     var buff = _Player.Buffs.FirstOrDefault(b => b.Name == "ireliahitenstylecharged" && b.IsValid);
-                    if (buff != null && buff.EndTime - Game.Time <= (_Player.Distance(target) / 2200 + .500 + _Player.AttackCastDelay) && !Orbwalker.IsAutoAttacking)
+                    if (buff != null &&
+                        buff.EndTime - Game.Time <= (_Player.Distance(target)/2200 + .500 + _Player.AttackCastDelay) &&
+                        !Orbwalker.IsAutoAttacking)
                     {
                         if (UnderTheirTower(target))
                             if (target.HealthPercent >=
@@ -736,7 +710,7 @@ namespace IreliaTheTroll
                     {
                         E.Cast(target);
                     }
-                    else if (!target.IsAttackingPlayer && !_Player.IsDashing() && target.Distance(_Player) >= E.Range * .5)
+                    else if (!target.IsAttackingPlayer && !_Player.IsDashing() && target.Distance(_Player) >= E.Range*.5)
                     {
                         E.Cast(target);
                     }
@@ -747,11 +721,13 @@ namespace IreliaTheTroll
                 }
             }
 
-            if (R.IsReady() && ComboMenu["combo.r"].Cast<CheckBox>().CurrentValue && !ComboMenu["combo.r.selfactivated"].Cast<CheckBox>().CurrentValue)
+            if (R.IsReady() && ComboMenu["combo.r"].Cast<CheckBox>().CurrentValue &&
+                !ComboMenu["combo.r.selfactivated"].Cast<CheckBox>().CurrentValue)
             {
                 if (ComboMenu["combo.r.weave"].Cast<CheckBox>().CurrentValue)
                 {
-                    if (Item.HasItem((int)ItemId.Sheen, _Player) && Item.CanUseItem((int)ItemId.Sheen) || Item.HasItem((int)ItemId.Trinity_Force, _Player) && Item.CanUseItem((int)ItemId.Trinity_Force))
+                    if (Item.HasItem((int) ItemId.Sheen, _Player) && Item.CanUseItem((int) ItemId.Sheen) ||
+                        Item.HasItem((int) ItemId.Trinity_Force, _Player) && Item.CanUseItem((int) ItemId.Trinity_Force))
                         if (target != null && !_Player.HasBuff("sheen") &&
                             target.Distance(_Player) <= R.Range)
                         {
@@ -764,11 +740,14 @@ namespace IreliaTheTroll
 
                 }
             }
-            else if (R.IsReady() && ComboMenu["combo.r"].Cast<CheckBox>().CurrentValue && ComboMenu["combo.r.selfactivated"].Cast<CheckBox>().CurrentValue && rcount <= 3)
+            else if (R.IsReady() && ComboMenu["combo.r"].Cast<CheckBox>().CurrentValue &&
+                     ComboMenu["combo.r.selfactivated"].Cast<CheckBox>().CurrentValue && rcount <= 3)
             {
                 if (ComboMenu["combo.r.weave"].Cast<CheckBox>().CurrentValue)
                 {
-                    if (Item.HasItem((int)ItemId.Sheen, _Player) && Item.CanUseItem((int)ItemId.Sheen) || Item.HasItem((int)ItemId.Trinity_Force, _Player) && Item.CanUseItem((int)ItemId.Trinity_Force))
+                    if (Item.HasItem((int) ItemId.Sheen, _Player) && Item.CanUseItem((int) ItemId.Sheen) ||
+                        Item.HasItem((int) ItemId.Trinity_Force, _Player) &&
+                        Item.CanUseItem((int) ItemId.Trinity_Force))
                         if (target != null && !Player.HasBuff("sheen") &&
                             target.Distance(_Player) <= R.Range)
                         {
@@ -787,25 +766,8 @@ namespace IreliaTheTroll
                 if (_Player.Distance(target) <= 600 && ComboDamage(target) >= target.Health)
                     _Player.Spellbook.CastSpell(Ignite, target);
             }
-
-            if (ComboMenu["combo.items"].Cast<CheckBox>().CurrentValue && target != null)
-            {
-                if (Youmuu.IsReady() && target.IsValidTarget(Q.Range))
-                {
-                    Youmuu.Cast();
-                }
-
-                if (_Player.Distance(target) <= 450 && Cutlass.IsReady())
-                {
-                    Cutlass.Cast(target);
-                }
-
-                if (_Player.Distance(target) <= 450 && Blade.IsReady())
-                {
-                    Blade.Cast(target);
-                }
-            }
         }
+
         private static void Harass()
         {
             var gctarget = TargetSelector.GetTarget(Q.Range * 2.5f, DamageType.Physical);
