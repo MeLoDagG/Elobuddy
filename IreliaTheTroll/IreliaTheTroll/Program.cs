@@ -461,7 +461,7 @@ namespace IreliaTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }
