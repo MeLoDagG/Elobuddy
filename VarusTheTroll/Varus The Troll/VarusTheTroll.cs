@@ -20,11 +20,11 @@ namespace VarusTheTroll
         public static Spell.Active Heal;
 
         public static bool isCharging = false;
-        private static Item HealthPotion;
-        private static Item CorruptingPotion;
-        private static Item RefillablePotion;
-        private static Item TotalBiscuit;
-        private static Item HuntersPotion;
+        public static Item HealthPotion;
+        public static Item CorruptingPotion;
+        public static Item RefillablePotion;
+        public static Item TotalBiscuit;
+        public static Item HuntersPotion;
         public static Item Youmuu = new Item(ItemId.Youmuus_Ghostblade);
         public static Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
         public static Item Cutlass = new Item(ItemId.Bilgewater_Cutlass);
@@ -121,6 +121,7 @@ namespace VarusTheTroll
             HarassMenu.Add("useQHarass", new CheckBox("Use Q"));
             HarassMenu.Add("useEHarass", new CheckBox("Use E"));
             HarassMenu.Add("useEHarassMana", new Slider("E Mana > %", 70, 0, 100));
+            HarassMenu.Add("useQHarassMana", new Slider("Q Mana > %", 70, 0, 100));
 
             JungleLaneMenu = Menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             JungleLaneMenu.AddLabel("Lane Clear");
@@ -515,19 +516,18 @@ namespace VarusTheTroll
                 _q.StartCharging();
                 return;
             }
-            var qpred = _q.GetPrediction(target);
+        
             if (comboQ)
             {
                 if (target.GetBuffCount("varuswdebuff") >= stackCount)
                 {
-                    if (_q.IsCharging && qpred.HitChance >= HitChance.Medium)
+                    if (_q.IsCharging)
                     {
-                        _q.Cast(qpred.CastPosition);
+                        _q.Cast(target);
+                        return;
                     }
-                    else
-                    {
-                        _q.StartCharging();
-                    }
+                    _q.StartCharging();
+                    return;
                 }
             }
         }
@@ -656,6 +656,7 @@ namespace VarusTheTroll
             var targetE = TargetSelector.GetTarget(_e.Range, DamageType.Physical);
             var targetQ = TargetSelector.GetTarget(_q.MaximumRange, DamageType.Physical);
             var Emana = HarassMenu["useEHarassMana"].Cast<Slider>().CurrentValue;
+            var Qmana = HarassMenu["useQHarassMana"].Cast<Slider>().CurrentValue;
 
             Orbwalker.ForcedTarget = null;
 
@@ -673,18 +674,17 @@ namespace VarusTheTroll
 
             if (targetQ != null)
             {
-                if (HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue)
+                if (HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue && _q.IsReady() &&
+                    targetQ.Distance(_Player) > _Player.AttackRange && targetE.IsValidTarget(_q.Range)
+                    && Player.Instance.ManaPercent > Qmana)
                 {
-                    if (targetQ.Distance(_Player) <= Player.Instance.AttackRange)
+                    if (_q.IsCharging)
                     {
-                        if (_q.IsCharging)
-                        {
-                            _q.Cast(targetQ);
-                        }
-                        else
-                        {
-                            _q.StartCharging();
-                        }
+                        _q.Cast(targetQ);
+                    }
+                    else
+                    {
+                        _q.StartCharging();
                     }
                 }
             }
@@ -714,12 +714,17 @@ namespace VarusTheTroll
                 }
             }
         }
+         
 
-        public static float QDamage(Obj_AI_Base target)
+        private static double QDamage(Obj_AI_Base target)
         {
-            if (!Player.GetSpell(SpellSlot.Q).IsLearned) return 0;
-            return Player.Instance.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float) new double[] {70, 125, 180, 23}[_r.Level - 1] + 1*Player.Instance.FlatPhysicalDamageMod);
+            return _q.IsReady()
+                ? _Player.CalculateDamageOnUnit(
+                    target,
+                    DamageType.Physical,
+                    new float[] {70, 125, 180, 23}[_q.Level - 1]
+                         + 1.2F * _Player.TotalAttackDamage)
+                : 0d;
         }
 
         public static float RDamage(Obj_AI_Base target)
