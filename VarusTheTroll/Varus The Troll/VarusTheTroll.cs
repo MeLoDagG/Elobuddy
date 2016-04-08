@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -7,34 +8,16 @@ using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
-using Color = System.Drawing.Color;
 
 namespace VarusTheTroll
 {
     internal class VarusTheTroll
     {
-        public static AIHeroClient _Player
-        {
-            get { return ObjectManager.Player; }
-        }
-
-
-        private static void Main(string[] args)
-        {
-            Loading.OnLoadingComplete += Loading_OnLoadingComplete;
-        }
-
         private static Spell.Chargeable _q;
         private static Spell.Active _w;
         private static Spell.Skillshot _e;
         private static Spell.Skillshot _r;
         public static Spell.Active Heal;
-        public static SpellSlot Ignite { get; private set; }
-
-        public static float HealthPercent
-        {
-            get { return _Player.Health/_Player.MaxHealth*100; }
-        }
 
         public static bool isCharging = false;
         private static Item HealthPotion;
@@ -61,8 +44,23 @@ namespace VarusTheTroll
             SkinMenu,
             AutoPotHealMenu;
 
+        public static AIHeroClient _Player
+        {
+            get { return ObjectManager.Player; }
+        }
+
+        public static SpellSlot Ignite { get; private set; }
+
+        public static float HealthPercent
+        {
+            get { return _Player.Health/_Player.MaxHealth*100; }
+        }
 
 
+        private static void Main(string[] args)
+        {
+            Loading.OnLoadingComplete += Loading_OnLoadingComplete;
+        }
 
 
         private static void Loading_OnLoadingComplete(EventArgs args)
@@ -138,7 +136,7 @@ namespace VarusTheTroll
             MiscMenu.Add("gapcloser", new CheckBox("Auto E for Gapcloser"));
             MiscMenu.Add("interrupter", new CheckBox("Auto R for Interrupter"));
             MiscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
-       //     MiscMenu.Add("UseQks", new CheckBox("Use Q ks"));
+            //     MiscMenu.Add("UseQks", new CheckBox("Use Q ks"));
 
             AutoPotHealMenu = Menu.AddSubMenu("Potion & Heal", "Potion & Heal");
             AutoPotHealMenu.AddGroupLabel("Auto pot usage");
@@ -180,10 +178,11 @@ namespace VarusTheTroll
 
             PrediMenu = Menu.AddSubMenu("Prediction Settings", "_PrediMenuettings");
             var style = PrediMenu.Add("style", new Slider("Min Prediction", 1, 0, 2));
-            style.OnValueChange += delegate
-            {
-                style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
-            };
+            style.OnValueChange +=
+                delegate
+                {
+                    style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
+                };
             style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
 
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
@@ -197,16 +196,14 @@ namespace VarusTheTroll
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
             Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Drawing.OnDraw += Drawing_OnDraw;
-
         }
-
 
 
         private static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
             Interrupter.InterruptableSpellEventArgs e)
         {
             if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.DangerLevel == EloBuddy.SDK.Enumerations.DangerLevel.High && sender.IsValidTarget(850))
+                e.DangerLevel == DangerLevel.High && sender.IsValidTarget(850))
             {
                 _r.Cast(sender);
             }
@@ -347,7 +344,7 @@ namespace VarusTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }
@@ -407,7 +404,7 @@ namespace VarusTheTroll
                 {
                     DoQSS();
                 }
-                if (type == BuffType.Fear && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
+                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
                 {
                     DoQSS();
                 }
@@ -473,7 +470,6 @@ namespace VarusTheTroll
 
         private static void Combo()
         {
-
             var wTarget =
                 EntityManager.Heroes.Enemies.Find(
                     x => x.HasBuff("varuswdebuff") && x.IsValidTarget(_Player.CastRange));
@@ -484,18 +480,16 @@ namespace VarusTheTroll
             {
                 return;
             }
-            if (wTarget != null && ComboMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue) 
+            if (wTarget != null && ComboMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue)
 
-                  {
-               TargetSelector.GetTarget(_w.Range, DamageType.Magical);
-               }
-        
+            {
+                TargetSelector.GetTarget(_w.Range, DamageType.Magical);
+            }
+
             var stackCount = ComboMenu["StackCount"].Cast<Slider>().CurrentValue;
             var comboQ = ComboMenu["useQcombo"].Cast<CheckBox>().CurrentValue;
             var comboQalways = ComboMenu["useQComboAlways"].Cast<CheckBox>().CurrentValue;
             var comboE = ComboMenu["useEcombo"].Cast<CheckBox>().CurrentValue;
-            
-
 
 
             if (Heal != null && AutoPotHealMenu["UseHeal"].Cast<CheckBox>().CurrentValue && Heal.IsReady() &&
@@ -518,11 +512,8 @@ namespace VarusTheTroll
                     _q.Cast(target);
                     return;
                 }
-                else
-                {
-                    _q.StartCharging();
-                    return;
-                }
+                _q.StartCharging();
+                return;
             }
             var qpred = _q.GetPrediction(target);
             if (comboQ)
@@ -540,13 +531,13 @@ namespace VarusTheTroll
                 }
             }
         }
-    
 
-    public static
+
+        public static
             void UseIgnite()
-         {
+        {
             var useIgnite = ComboMenu["combo.ignite"].Cast<CheckBox>().CurrentValue;
-            var targetIgnite =TargetSelector.GetTarget(_Player.AttackRange, DamageType.Physical); 
+            var targetIgnite = TargetSelector.GetTarget(_Player.AttackRange, DamageType.Physical);
 
             if (useIgnite && targetIgnite != null)
             {
@@ -556,7 +547,6 @@ namespace VarusTheTroll
         }
 
 
-
         public static void comboR()
         {
             var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
@@ -564,16 +554,15 @@ namespace VarusTheTroll
             var TargetR = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
 
             if (comboR && _Player.CountEnemiesInRange(_r.Range) >= rCount && _r.IsReady()
-                && TargetR != null && _r.GetPrediction(TargetR).HitChance >= HitChance.Medium) 
+                && TargetR != null && _r.GetPrediction(TargetR).HitChance >= HitChance.Medium)
             {
                 _r.Cast(_r.GetPrediction(TargetR).CastPosition);
             }
         }
 
 
-
         public static
-          void UseRTarget()
+            void UseRTarget()
         {
             var target = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
             if (target != null &&
@@ -619,11 +608,8 @@ namespace VarusTheTroll
                             _q.Cast(enemy);
                             return;
                         }
-                        else
-                        {
-                            _q.StartCharging();
-                            return;
-                        }
+                        _q.StartCharging();
+                        return;
                     }
                 }
             }
@@ -664,7 +650,6 @@ namespace VarusTheTroll
         }
 
 
-
         public static
             void Harass()
         {
@@ -678,7 +663,6 @@ namespace VarusTheTroll
 
             if (targetE != null)
             {
-
                 if (HarassMenu["useEHarass"].Cast<CheckBox>().CurrentValue && _e.IsReady() &&
                     targetE.Distance(_Player) > _Player.AttackRange &&
                     targetE.IsValidTarget(_e.Range) && Player.Instance.ManaPercent > Emana)
@@ -696,12 +680,10 @@ namespace VarusTheTroll
                         if (_q.IsCharging)
                         {
                             _q.Cast(targetQ);
-                            return;
                         }
                         else
                         {
                             _q.StartCharging();
-                            return;
                         }
                     }
                 }
@@ -716,7 +698,6 @@ namespace VarusTheTroll
             {
                 _e.Cast(e.End);
             }
-
         }
 
         public static void Ks()
@@ -725,13 +706,12 @@ namespace VarusTheTroll
                 var enemy in
                     EntityManager.Heroes.Enemies.Where(
                         e => e.Distance(_Player) <= _q.Range && e.IsValidTarget() && !e.IsInvulnerable))
-              { 
-              if (ComboMenu["useRComboFinisher"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
+            {
+                if (ComboMenu["useRComboFinisher"].Cast<CheckBox>().CurrentValue && _r.IsReady() &&
                     RDamage(enemy) >= enemy.Health)
                 {
                     _r.Cast(enemy);
                 }
-
             }
         }
 
@@ -744,14 +724,12 @@ namespace VarusTheTroll
 
         public static float RDamage(Obj_AI_Base target)
         {
-
             if (!Player.GetSpell(SpellSlot.R).IsLearned) return 0;
             return Player.Instance.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float)new double[] { 100 , 175 , 250 }[_r.Level - 1] + 1 * Player.Instance.FlatMagicDamageMod);
-
+                (float) new double[] {100, 175, 250}[_r.Level - 1] + 1*Player.Instance.FlatMagicDamageMod);
         }
 
-   
+
         private static void Drawing_OnDraw(EventArgs args)
         {
 
@@ -759,31 +737,25 @@ namespace VarusTheTroll
             {
                 if (DrawMenu["drawRange"].Cast<CheckBox>().CurrentValue)
                 {
-                    if (_q.IsReady()) new Circle { Color = Color.Purple, Radius = _q.Range }.Draw(_Player.Position);
+                    if (_q.IsReady()) new Circle {Color = Color.Purple, Radius = _q.Range}.Draw(_Player.Position);
                     else if (_q.IsOnCooldown)
-                        new Circle { Color = Color.Gray, Radius = _q.Range }.Draw(_Player.Position);
+                        new Circle {Color = Color.Gray, Radius = _q.Range}.Draw(_Player.Position);
                 }
 
                 if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
                 {
-                    if (_e.IsReady()) new Circle { Color = Color.Purple, Radius = _e.Range }.Draw(_Player.Position);
+                    if (_e.IsReady()) new Circle {Color = Color.Purple, Radius = _e.Range}.Draw(_Player.Position);
                     else if (_w.IsOnCooldown)
-                        new Circle { Color = Color.Gray, Radius = _e.Range }.Draw(_Player.Position);
+                        new Circle {Color = Color.Gray, Radius = _e.Range}.Draw(_Player.Position);
                 }
 
                 if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
                 {
-                    if (_r.IsReady()) new Circle { Color = Color.Purple, Radius = _r.Range }.Draw(_Player.Position);
+                    if (_r.IsReady()) new Circle {Color = Color.Purple, Radius = _r.Range}.Draw(_Player.Position);
                     else if (_r.IsOnCooldown)
-                        new Circle { Color = Color.Gray, Radius = _r.Range }.Draw(_Player.Position);
+                        new Circle {Color = Color.Gray, Radius = _r.Range}.Draw(_Player.Position);
                 }
             }
         }
     }
 }
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
+using System.Drawing;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -7,24 +7,16 @@ using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
-using SharpDX;
-using Color = System.Drawing.Color;
 
 namespace Veigar_The_Troll
 {
     internal class Program
     {
-        public static AIHeroClient _Player
-        {
-            get { return ObjectManager.Player; }
-        }
-
-
         public static Spell.Skillshot Q;
         public static Spell.Skillshot E;
         public static Spell.Skillshot W;
         public static Spell.Targeted R;
-        public static SpellSlot Ignite { get; private set; }
+
         private static Menu _menu,
             _comboMenu,
             _jungleLaneMenu,
@@ -33,6 +25,13 @@ namespace Veigar_The_Troll
             _skinMenu;
 
         private static AIHeroClient _target;
+
+        public static AIHeroClient _Player
+        {
+            get { return ObjectManager.Player; }
+        }
+
+        public static SpellSlot Ignite { get; private set; }
 
         private static void Main(string[] args)
         {
@@ -64,8 +63,8 @@ namespace Veigar_The_Troll
             _comboMenu.Add("useECombo", new CheckBox("Use E"));
             _comboMenu.Add("useRCombo", new CheckBox("Use R"));
             _comboMenu.Add("combo.ignite", new CheckBox("Use ignite if combo killable"));
-          
-            
+
+
             _jungleLaneMenu = _menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             _jungleLaneMenu.AddSeparator(12);
             _jungleLaneMenu.AddLabel("Lane Clear");
@@ -76,7 +75,6 @@ namespace Veigar_The_Troll
             _jungleLaneMenu.AddLabel("Jungle Clear");
             _jungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             _jungleLaneMenu.Add("useWJungle", new CheckBox("Use W"));
-
 
 
             _miscMenu = _menu.AddSubMenu("Misc Settings", "MiscSettings");
@@ -96,8 +94,8 @@ namespace Veigar_The_Troll
             _drawMenu.Add("drawW", new CheckBox("Draw W Range"));
             _drawMenu.Add("drawE", new CheckBox("Draw E Range"));
             _drawMenu.Add("drawR", new CheckBox("Draw R Range"));
-            
-           
+
+
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
@@ -106,7 +104,7 @@ namespace Veigar_The_Troll
                 "<font color=\"#6909aa\" >MeLoDag Presents </font><font color=\"#4dd5ea\" >VeiGar </font><font color=\"#6909aa\" >Kappa Kippo</font>");
         }
 
-        
+
         private static void Game_OnTick(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
@@ -114,15 +112,13 @@ namespace Veigar_The_Troll
                 if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
                 {
                     Combo();
-                   
                 }
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
                 FarmQ();
                 FarmW();
-
-             }
+            }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
             {
                 FarmQ();
@@ -132,9 +128,9 @@ namespace Veigar_The_Troll
                 JungleClear();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
-              {
-                 FarmQ();
-              }
+            {
+                FarmQ();
+            }
             Auto();
             Killsteal();
         }
@@ -151,7 +147,6 @@ namespace Veigar_The_Troll
                     RDamage(enemy) + QDamage(enemy) >=
                     enemy.Health)
                 {
-
                     if (_miscMenu["misc.ks.q"].Cast<CheckBox>().CurrentValue && Q.IsReady() &&
                         QDamage(enemy) >= enemy.Health &&
                         enemy.Distance(_Player) <= Q.Range)
@@ -165,7 +160,6 @@ namespace Veigar_The_Troll
                     {
                         R.Cast(enemy);
                     }
-
                 }
             }
         }
@@ -192,10 +186,10 @@ namespace Veigar_The_Troll
                     {
                         E.Cast(predE.CastPosition);
                     }
-            //     else if (predE.HitChance >= HitChance.Immobile)
-             //      {
-             //           E.Cast(predE.CastPosition);
-             //      }
+                    //     else if (predE.HitChance >= HitChance.Immobile)
+                    //      {
+                    //           E.Cast(predE.CastPosition);
+                    //      }
                 }
             }
 
@@ -215,10 +209,10 @@ namespace Veigar_The_Troll
                 {
                     W.Cast(predW.CastPosition);
                 }
-         //       else if (predW.HitChance >= HitChance.High)
-          //      {
-         //           W.Cast(predW.CastPosition);
-        //        }
+                //       else if (predW.HitChance >= HitChance.High)
+                //      {
+                //           W.Cast(predW.CastPosition);
+                //        }
             }
 
 
@@ -239,20 +233,19 @@ namespace Veigar_The_Troll
         public static float RDamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Magical, (float)
-                (new[] { 0, 250, 375, 500 }[R.Level] +
-                0.8 * target.FlatMagicDamageMod +
-                1.0 * _Player.FlatMagicDamageMod));
-
+                (new[] {0, 250, 375, 500}[R.Level] +
+                 0.8*target.FlatMagicDamageMod +
+                 1.0*_Player.FlatMagicDamageMod));
         }
 
         public static float QDamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Magical, (float)
-                (new[] { 0, 80, 125, 170, 215, 260 }[Q.Level] +
-                 0.6 * _Player.FlatMagicDamageMod));
+                (new[] {0, 80, 125, 170, 215, 260}[Q.Level] +
+                 0.6*_Player.FlatMagicDamageMod));
         }
 
-      
+
         private static void Auto()
         {
             var QonCc = _miscMenu["CCQ"].Cast<CheckBox>().CurrentValue;
@@ -310,18 +303,16 @@ namespace Veigar_The_Troll
         }
 
 
-
-
         private static void FarmQ()
         {
             var useQ = _jungleLaneMenu["qFarm"].Cast<CheckBox>().CurrentValue;
             var qminion =
-                 EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _Player.Position, Q.Range)
-                     .FirstOrDefault(
-                         m =>
-                             m.Distance(_Player) <= Q.Range &&
-                              m.Health <= QDamage(m) - 20 &&
-                             m.IsValidTarget());
+                EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _Player.Position, Q.Range)
+                    .FirstOrDefault(
+                        m =>
+                            m.Distance(_Player) <= Q.Range &&
+                            m.Health <= QDamage(m) - 20 &&
+                            m.IsValidTarget());
 
             if (Q.IsReady() && useQ && qminion != null && !Orbwalker.IsAutoAttacking)
             {
@@ -355,7 +346,6 @@ namespace Veigar_The_Troll
         {
             if (_target != null && _target.IsValid)
             {
-
             }
 
             if (Q.IsReady() && _drawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
