@@ -147,7 +147,7 @@ namespace Veigar_The_Troll
                         e => e.Distance(_Player) <= R.Range && e.IsValidTarget() && !e.IsInvulnerable))
             {
                 if (Q.IsReady() && _miscMenu["misc.ks.q"].Cast<CheckBox>().CurrentValue &&
-                    E.IsReady() && _miscMenu["misc.ks.e"].Cast<CheckBox>().CurrentValue &&
+                    R.IsReady() && _miscMenu["misc.ks.r"].Cast<CheckBox>().CurrentValue &&
                     RDamage(enemy) + QDamage(enemy) >=
                     enemy.Health)
                 {
@@ -211,14 +211,14 @@ namespace Veigar_The_Troll
             if (W.IsReady() && useW)
             {
                 var predW = W.GetPrediction(target);
-                if (predW.HitChance >= HitChance.Immobile)
+                if (predW.HitChance >= HitChance.High)
                 {
                     W.Cast(predW.CastPosition);
                 }
-                else if (predW.HitChance >= HitChance.High)
-                {
-                    W.Cast(predW.CastPosition);
-                }
+         //       else if (predW.HitChance >= HitChance.High)
+          //      {
+         //           W.Cast(predW.CastPosition);
+        //        }
             }
 
 
