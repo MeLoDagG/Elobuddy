@@ -490,8 +490,7 @@ namespace VayneTheTroll
         {
             var comboE = ComboMenu["useEcombo"].Cast<CheckBox>().CurrentValue;
             var distance = ComboMenu["pushDistance"].Cast<Slider>().CurrentValue;
-          //  if (!_e.IsReady()) return;
-
+         
             if (comboE && _e.IsReady())
                 foreach (
                     var enemy in
