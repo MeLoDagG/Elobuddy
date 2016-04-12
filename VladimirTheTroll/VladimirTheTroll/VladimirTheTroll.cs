@@ -80,6 +80,9 @@ namespace VladimirTheTroll
             _HarassMenu = _menu.AddSubMenu("Harass", "Harass");
             _HarassMenu.Add("useQHarass", new CheckBox("Use Q"));
             _HarassMenu.Add("useEHarass", new CheckBox("Use E"));
+            _HarassMenu.AddSeparator(14);
+            _HarassMenu.AddGroupLabel("AutoHarass");
+            _HarassMenu.Add("useQAuto", new CheckBox("Use Q"));
 
             _jungleLaneMenu = _menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             _jungleLaneMenu.AddSeparator(12);
@@ -147,13 +150,32 @@ namespace VladimirTheTroll
                 if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
                 {
                     Harass();
-                    FarmQ();
                 }
                 AutoPot();
+                AutoHarass();
                 Killsteal();
             }
         }
 
+        private static
+            void AutoHarass()
+        {
+            var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+
+            if (target == null || !target.IsValidTarget()) return;
+
+            Orbwalker.ForcedTarget = target;
+
+           var AutoQharass = _HarassMenu["useQAuto"].Cast<CheckBox>().CurrentValue;
+
+            {
+              if (Q.IsReady() && AutoQharass)
+                {
+                    Q.Cast(target);
+                }
+            }
+        }
+    
         private static
             void AutoPot()
         {
