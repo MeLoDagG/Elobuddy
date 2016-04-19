@@ -708,7 +708,7 @@ namespace VayneTheTroll
             var useQgap = MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue;
 
             if (useQgap && sender.IsEnemy &&
-                e.End.Distance(_Player) < 650)
+                e.End.Distance(_Player) < 200)
             {
                 _q.Cast(e.End);
                 Chat.Print("<font color=\"#ffffff\" > USe Q Gapclose </font>");
