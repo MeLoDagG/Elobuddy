@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using EloBuddy;
 using EloBuddy.SDK;
-using EloBuddy.SDK.Constants;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
@@ -22,7 +18,7 @@ namespace AsheTheTroll
             get { return ObjectManager.Player; }
         }
 
-       private static AIHeroClient _target;
+        private static AIHeroClient _target;
 
         private static void Main(string[] args)
         {
@@ -59,7 +55,6 @@ namespace AsheTheTroll
             JungleLaneMenu,
             MiscMenu,
             DrawMenu,
-            PrediMenu,
             ItemMenu,
             SkinMenu,
             AutoPotHealMenu,
@@ -79,7 +74,9 @@ namespace AsheTheTroll
 
             _q = new Spell.Active(SpellSlot.Q);
             _w = new Spell.Skillshot(SpellSlot.W, 1200, SkillShotType.Linear, 0, int.MaxValue, 60);
-            _w.AllowedCollisionCount = 0;
+            {
+                _w.AllowedCollisionCount = 0;
+            }
             _e = new Spell.Skillshot(SpellSlot.E, 15000, SkillShotType.Linear, 0, int.MaxValue, 0);
             _r = new Spell.Skillshot(SpellSlot.R, 15000, SkillShotType.Linear, 500, 1000, 250);
             _r.AllowedCollisionCount = int.MaxValue;
@@ -103,7 +100,6 @@ namespace AsheTheTroll
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.Add("useQCombo", new CheckBox("Use Q"));
             ComboMenu.Add("useWCombo", new CheckBox("Use W"));
-            ComboMenu.AddSeparator();
             ComboMenu.AddGroupLabel("R Logics");
             ComboMenu.Add("useRCombo", new CheckBox("Use R [Hp%]"));
             ComboMenu.Add("Hp", new Slider("Use R Enemy Health %", 45, 0, 100));
@@ -112,7 +108,8 @@ namespace AsheTheTroll
             ComboMenu.Add("useRComboFinisher", new CheckBox("Use R [FinisherMode]"));
             ComboMenu.Add("ForceR",
                 new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
-            ComboMenu.Add("useRRange", new Slider("Use Ulty Max Range", 3000, 1000, 4000));
+            ComboMenu.Add("useRRange", new Slider("Use Ulty Max Range", 1000, 500, 2000));
+
             HarassMenu = Menu.AddSubMenu("Harass Settings", "Harass");
             HarassMenu.Add("useQHarass", new CheckBox("Use Q"));
             HarassMenu.Add("useWHarass", new CheckBox("Use W"));
@@ -134,10 +131,15 @@ namespace AsheTheTroll
             FleeMenu.Add("FleeQ", new CheckBox("Use W"));
 
             MiscMenu = Menu.AddSubMenu("Misc Settings", "MiscSettings");
+            MiscMenu.AddGroupLabel("Gapcloser & Interrupter settings");
             MiscMenu.Add("gapcloser", new CheckBox("Auto W for Gapcloser"));
             MiscMenu.Add("interrupter", new CheckBox("Auto R for Interrupter"));
+            MiscMenu.AddGroupLabel("Auto use skils CC Enemy");
             MiscMenu.Add("CCE", new CheckBox("Auto W on Enemy CC"));
+            MiscMenu.AddGroupLabel("Ks Settings");
             MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
+            MiscMenu.Add("UseRks", new CheckBox("Use R ks"));
+            MiscMenu.Add("UseRksRange", new Slider("Use Ulty Max Range[KS]", 1000, 500, 2000));
 
             AutoPotHealMenu = Menu.AddSubMenu("Potion & HeaL", "Potion & HeaL");
             AutoPotHealMenu.AddGroupLabel("Auto pot usage");
@@ -153,7 +155,7 @@ namespace AsheTheTroll
             ItemMenu.Add("useBotrkMyHP", new Slider("My Health < ", 60, 1, 100));
             ItemMenu.Add("useBotrkEnemyHP", new Slider("Enemy Health < ", 60, 1, 100));
             ItemMenu.Add("useYoumu", new CheckBox("Use Youmu"));
-            ItemMenu.AddSeparator();
+            ItemMenu.AddGroupLabel("QQs Settings");
             ItemMenu.Add("useQSS", new CheckBox("Use QSS"));
             ItemMenu.Add("Qssmode", new ComboBox(" ", 0, "Auto", "Combo"));
             ItemMenu.Add("Stun", new CheckBox("Stun", true));
@@ -177,18 +179,12 @@ namespace AsheTheTroll
             SkinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
             SkinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 8));
 
-            PrediMenu = Menu.AddSubMenu("Prediction Settings", "_PrediMenuettings");
-            var style = PrediMenu.Add("style", new Slider("Min Prediction", 1, 0, 2));
-            style.OnValueChange += delegate
-            {
-                style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
-            };
-            style.DisplayName = "Min Prediction: " + new[] {"Low", "Medium", "High"}[style.CurrentValue];
-
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
             DrawMenu.Add("drawRange", new CheckBox("Draw Q Range"));
             DrawMenu.Add("drawW", new CheckBox("Draw W Range"));
             DrawMenu.Add("drawR", new CheckBox("Draw R Range"));
+            DrawMenu.Add("ShowStatus", new CheckBox("ShowStatus"));
+            DrawMenu.Add("AutoHarass", new CheckBox("AutoHarass"));
 
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
@@ -212,7 +208,7 @@ namespace AsheTheTroll
         }
 
         private static
-          void OnGameUpdate(EventArgs args)
+            void OnGameUpdate(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
 
@@ -239,7 +235,7 @@ namespace AsheTheTroll
             {
                 JungleClear();
             }
-            
+
             Ks();
             Auto();
             AutoW();
@@ -250,10 +246,11 @@ namespace AsheTheTroll
         private static void AUtoheal()
         {
             if (Heal != null && AutoPotHealMenu["UseHeal"].Cast<CheckBox>().CurrentValue && Heal.IsReady() &&
-              HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
-              && _Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
+                HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
+                && _Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
             {
                 Heal.Cast();
+                Chat.Print("<font color=\"#fffffff\" > Use HeaL Kappa kippo</font>");
             }
         }
 
@@ -269,21 +266,25 @@ namespace AsheTheTroll
                 if (Item.HasItem(HealthPotion.Id) && Item.CanUseItem(HealthPotion.Id))
                 {
                     HealthPotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
                 if (Item.HasItem(TotalBiscuit.Id) && Item.CanUseItem(TotalBiscuit.Id))
                 {
                     TotalBiscuit.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
                 if (Item.HasItem(RefillablePotion.Id) && Item.CanUseItem(RefillablePotion.Id))
                 {
                     RefillablePotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
                     CorruptingPotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
             }
@@ -294,6 +295,7 @@ namespace AsheTheTroll
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
                     CorruptingPotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                 }
             }
         }
@@ -506,10 +508,10 @@ namespace AsheTheTroll
             var useR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
             var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
             var hp = ComboMenu["Hp"].Cast<Slider>().CurrentValue;
-            var UltyFinisher = ComboMenu["useRComboFinisher"].Cast<CheckBox>().CurrentValue;
-            var TargetR = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
+            var ultyFinisher = ComboMenu["useRComboFinisher"].Cast<CheckBox>().CurrentValue;
+            var targetR = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
             var target = TargetSelector.GetTarget(_q.Range, DamageType.Magical);
-            var Distance = ComboMenu["useRRange"].Cast<Slider>().CurrentValue;
+            var distance = ComboMenu["useRRange"].Cast<Slider>().CurrentValue;
 
             if (target == null || !target.IsValidTarget()) return;
 
@@ -525,24 +527,28 @@ namespace AsheTheTroll
                 {
                     _w.Cast(predW.CastPosition);
                 }
-                if (_r.IsReady() && useR && TargetR.Distance(_Player) <= Distance && _r.GetPrediction(TargetR).HitChance >= HitChance.High && target.HealthPercent <= hp)
-                 {
-                  _r.Cast(_r.GetPrediction(TargetR).CastPosition);
-                 }
+                if (_r.IsReady() && useR && targetR.Distance(_Player) <= distance &&
+                    _r.GetPrediction(targetR).HitChance >= HitChance.High && target.HealthPercent <= hp)
+                {
+                    _r.Cast(_r.GetPrediction(targetR).CastPosition);
+                }
 
                 if (comboR && _Player.CountEnemiesInRange(_Player.AttackRange) >= rCount && _r.IsReady()
-                    && TargetR.Distance(_Player) <= Distance && TargetR != null && _r.GetPrediction(TargetR).HitChance >= HitChance.High)
+                    && targetR.Distance(_Player) <= distance && targetR != null &&
+                    _r.GetPrediction(targetR).HitChance >= HitChance.High)
                 {
-                    _r.Cast(_r.GetPrediction(TargetR).CastPosition);
+                    _r.Cast(_r.GetPrediction(targetR).CastPosition);
 
                 }
-                if (_r.IsReady() && UltyFinisher && TargetR.Distance(_Player) <= Distance && RDamage(TargetR) >= TargetR.Health)
-                        {
-                            _r.Cast(TargetR);
-                        }
-                    }
+                if (_r.IsReady() && ultyFinisher && targetR.Distance(_Player) <= distance &&
+                    RDamage(targetR) >= targetR.Health)
+                {
+                    _r.Cast(targetR);
                 }
-            
+            }
+        }
+
+
         public static
             void UseRTarget()
         {
@@ -584,7 +590,7 @@ namespace AsheTheTroll
                          || enemy.HasBuffOfType(BuffType.Suppression)
                          || enemy.HasBuffOfType(BuffType.Fear)
                          || enemy.HasBuffOfType(BuffType.Knockup)))
-                    {     
+                    {
                         _w.Cast(enemy);
                     }
                 }
@@ -702,8 +708,8 @@ namespace AsheTheTroll
 
         public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
-           if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.End.Distance(_Player) < 600)
+            if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
+                e.End.Distance(_Player) < 1200)
             {
                 _w.Cast(e.End);
             }
@@ -712,17 +718,26 @@ namespace AsheTheTroll
 
         public static void Ks()
         {
+            var distance = MiscMenu["UseRksRange"].Cast<Slider>().CurrentValue;
+            var usewks = MiscMenu["UseWks"].Cast<CheckBox>().CurrentValue;
+            var useRks = MiscMenu["UseRks"].Cast<CheckBox>().CurrentValue;
             foreach (
                 var enemy in
                     EntityManager.Heroes.Enemies.Where(
                         e => e.Distance(_Player) <= _w.Range && e.IsValidTarget() && !e.IsInvulnerable))
             {
 
-                if (MiscMenu["UseWks"].Cast<CheckBox>().CurrentValue && _w.IsReady() &&
+                if (usewks && _w.IsReady() &&
                     WDamage(enemy) >= enemy.Health && enemy.Distance(_Player) <= _w.Range)
                 {
                     _w.Cast(enemy);
-                    return;
+                    Chat.Print("<font color=\"#fffffff\" > Use W Free Kill</font>");
+                }
+                if (useRks && _r.IsReady() && RDamage(enemy) >= enemy.Health &&
+                    enemy.Distance(_Player) <= distance)
+                {
+                    _r.Cast(enemy);
+                    Chat.Print("<font color=\"#fffffff\" > Use Ulty Free Kill</font>");
                 }
             }
         }
@@ -774,7 +789,7 @@ namespace AsheTheTroll
         }
     }
 }
-
+            
 
 
 
