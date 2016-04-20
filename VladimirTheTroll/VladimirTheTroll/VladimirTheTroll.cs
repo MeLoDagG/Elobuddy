@@ -16,11 +16,14 @@ namespace VladimirTheTroll
         public static Spell.Active E;
         public static Spell.Active W;
         public static Spell.Skillshot R;
-        public static Item HealthPotion;
-        public static Item CorruptingPotion;
-        public static Item RefillablePotion;
-        public static Item TotalBiscuit;
-        public static Item HuntersPotion;
+        private static Item HealthPotion;
+        private static Item CorruptingPotion;
+        private static Item RefillablePotion;
+        private static Item TotalBiscuit;
+        private static Item HuntersPotion;
+        public static Item ZhonyaHourglass { get; private set; }
+        public static AIHeroClient _target;
+        public static SpellSlot Ignite { get; private set; }
 
         public static Menu _menu,
             _comboMenu,
@@ -32,8 +35,6 @@ namespace VladimirTheTroll
             _autoPotHealMenu;
 
 
-        public static AIHeroClient _target;
-        public static SpellSlot Ignite { get; private set; }
 
         public static AIHeroClient _Player
         {
@@ -60,6 +61,7 @@ namespace VladimirTheTroll
             R = new Spell.Skillshot(SpellSlot.R, 700, SkillShotType.Circular, 250, 1200, 150);
 
             Ignite = ObjectManager.Player.GetSpellSlotFromName("summonerdot");
+            ZhonyaHourglass = new Item(ItemId.Zhonyas_Hourglass);
             HealthPotion = new Item(2003, 0);
             TotalBiscuit = new Item(2010, 0);
             CorruptingPotion = new Item(2033, 0);
@@ -70,28 +72,30 @@ namespace VladimirTheTroll
             _menu = MainMenu.AddMenu("VladimirTheTroll", "VladimirTheTroll");
             _comboMenu = _menu.AddSubMenu("Combo", "Combo");
             _comboMenu.Add("ComboMode", new ComboBox(" ", 0, "E->Q->W->R", "Burst"));
-            _comboMenu.Add("useQCombo", new CheckBox("Use Q"));
-            _comboMenu.Add("useWCombo", new CheckBox("Use W"));
-            _comboMenu.Add("useECombo", new CheckBox("Use E"));
-            _comboMenu.Add("useRCombo", new CheckBox("Use R"));
+            _comboMenu.Add("useQCombo", new CheckBox("Use Q Combo"));
+            _comboMenu.Add("useECombo", new CheckBox("Use E Combo"));
+            _comboMenu.AddLabel("Work For All Combo Logic");
+            _comboMenu.Add("useWCombo", new CheckBox("Use W Combo"));
+            _comboMenu.Add("useWcostumHP", new Slider("Use W If Your HP%", 70, 0, 100));
+            _comboMenu.AddLabel("R Locig For E->Q->W->R Logic ");
+            _comboMenu.Add("useRCombo", new CheckBox("Use R Combo"));
             _comboMenu.Add("Rcount", new Slider("Use R Only If Die >= ", 2, 1, 5));
+            _comboMenu.AddLabel("Ignite Setting Work For All combo Logic");
             _comboMenu.Add("UseIgnite", new CheckBox("Use ignite if combo killable"));
 
             _HarassMenu = _menu.AddSubMenu("Harass", "Harass");
+            _HarassMenu.AddGroupLabel("Harass Setttings");
             _HarassMenu.Add("useQHarass", new CheckBox("Use Q"));
             _HarassMenu.Add("useEHarass", new CheckBox("Use E"));
-            _HarassMenu.AddSeparator(14);
-            _HarassMenu.AddGroupLabel("AutoHarass");
+            _HarassMenu.AddLabel("AutoHarass Setttings");
             _HarassMenu.Add("useQAuto", new CheckBox("Use Q"));
 
-            _jungleLaneMenu = _menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
-            _jungleLaneMenu.AddSeparator(12);
-            _jungleLaneMenu.AddLabel("Lane Clear");
+            _jungleLaneMenu = _menu.AddSubMenu("Farm Settings", "FarmSettings");
+            _jungleLaneMenu.AddGroupLabel("Lane Clear Settings");
             _jungleLaneMenu.Add("qFarm", new CheckBox("Cast Q LastHit[ForAllMode]"));
             _jungleLaneMenu.Add("FarmE", new CheckBox("Use E"));
             _jungleLaneMenu.Add("FarmEmana", new Slider("Cast E if >= minions hit", 4, 1, 15));
-            _jungleLaneMenu.AddSeparator(12);
-            _jungleLaneMenu.AddLabel("Jungle Clear");
+            _jungleLaneMenu.AddLabel("Jungle Clear Settings");
             _jungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             _jungleLaneMenu.Add("useEJungle", new CheckBox("Use E"));
 
@@ -102,7 +106,16 @@ namespace VladimirTheTroll
             _autoPotHealMenu.Add("potionMinMP", new Slider("Minimum Mana % to use potion", 20));
 
             _miscMenu = _menu.AddSubMenu("Misc Settings", "MiscSettings");
+            _miscMenu.AddGroupLabel("Ks Settings");
             _miscMenu.Add("ksQ", new CheckBox("Killsteal Q"));
+            _miscMenu.Add("ksIgnite", new CheckBox("Use Ignite For Ks"));
+            _miscMenu.AddLabel("Auto E stuck");
+            _miscMenu.Add("AutoEstuck", new CheckBox("Auto E stuck"));
+            _miscMenu.Add("AutoEStuckHp", new Slider("Minimun Health % To use E", 80, 0, 100));
+            _miscMenu.AddLabel("Auto Zhonyas Hourglass");
+            _miscMenu.Add("Zhonyas", new CheckBox("Use Zhonyas Hourglass"));
+            _miscMenu.Add("ZhonyasHp", new Slider("Use Zhonyas Hourglass If Your HP%", 20, 0, 100));
+
 
             _skinMenu = _menu.AddSubMenu("Skin Changer", "SkinChanger");
             _skinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
@@ -114,6 +127,10 @@ namespace VladimirTheTroll
             _drawMenu.Add("drawW", new CheckBox("Draw W Range"));
             _drawMenu.Add("drawE", new CheckBox("Draw E Range"));
             _drawMenu.Add("drawR", new CheckBox("Draw R Range"));
+            _drawMenu.AddLabel("Draw Notification");
+            _drawMenu.Add("stuckE", new CheckBox("Auto Stuck E"));
+            _drawMenu.Add("Autoharass", new CheckBox("Auto harass"));
+
 
 
             Drawing.OnDraw += Drawing_OnDraw;
@@ -154,8 +171,37 @@ namespace VladimirTheTroll
                 AutoPot();
                 AutoHarass();
                 Killsteal();
+                AUtoEstuck();
+                AutoHourglass();
             }
         }
+
+        private static
+            void AutoHourglass()
+        {
+            var Zhonyas = _miscMenu["Zhonyas"].Cast<CheckBox>().CurrentValue;
+            var ZhonyasHp = _miscMenu["ZhonyasHp"].Cast<Slider>().CurrentValue;
+
+            if (Zhonyas && _Player.HealthPercent <= ZhonyasHp && ZhonyaHourglass.IsReady())
+            {
+                ZhonyaHourglass.Cast();
+                Chat.Print("<font color=\"#fffffff\" > Use Zhonyas <font>");
+            }
+        }
+
+
+        private static
+            void AUtoEstuck()
+        {
+            var AutoEstuck = _miscMenu["AutoEstuck"].Cast<CheckBox>().CurrentValue;
+            var AutoEStuckHp = _miscMenu["AutoEStuckHp"].Cast<Slider>().CurrentValue;
+
+            if (E.IsReady() && AutoEstuck && _Player.HealthPercent > AutoEStuckHp)
+            {
+                E.Cast();
+            }
+        }
+
 
         private static
             void AutoHarass()
@@ -166,16 +212,16 @@ namespace VladimirTheTroll
 
             Orbwalker.ForcedTarget = target;
 
-           var AutoQharass = _HarassMenu["useQAuto"].Cast<CheckBox>().CurrentValue;
+            var AutoQharass = _HarassMenu["useQAuto"].Cast<CheckBox>().CurrentValue;
 
             {
-              if (Q.IsReady() && AutoQharass)
+                if (Q.IsReady() && AutoQharass)
                 {
                     Q.Cast(target);
                 }
             }
         }
-    
+
         private static
             void AutoPot()
         {
@@ -221,6 +267,7 @@ namespace VladimirTheTroll
         private static void Killsteal()
         {
             var ksQ = _miscMenu["ksQ"].Cast<CheckBox>().CurrentValue;
+            var ksIgnite = _miscMenu["ksIgnite"].Cast<CheckBox>().CurrentValue;
 
             foreach (
                 var enemy in
@@ -233,6 +280,15 @@ namespace VladimirTheTroll
                     enemy.Distance(_Player) <= Q.Range)
                 {
                     Q.Cast(enemy);
+                    Chat.Print("<font color=\"#fffffff\" > Use Q Free Kill<font>");
+                }
+
+                if (ksIgnite && enemy != null)
+                {
+                    if (_Player.GetSummonerSpellDamage(enemy, DamageLibrary.SummonerSpells.Ignite) > enemy.Health)
+                    {
+                        _Player.Spellbook.CastSpell(Ignite, enemy);
+                    }
                 }
             }
         }
@@ -246,6 +302,7 @@ namespace VladimirTheTroll
 
             Orbwalker.ForcedTarget = target;
 
+            var useWcostumHP = _comboMenu["useWcostumHP"].Cast<Slider>().CurrentValue;
             var useE = _comboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
             var useQ = _comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
             var useW = _comboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
@@ -264,51 +321,48 @@ namespace VladimirTheTroll
                     Q.Cast(target);
                 }
 
-                if (W.IsReady() && useW)
+                if (W.IsReady() && useW && _Player.HealthPercent <= useWcostumHP)
                 {
                     W.Cast();
                 }
-
-                if (R.IsReady() && _Player.CountEnemiesInRange(R.Range) >= rCount && useR)
-                {
-                    if (RDamage(target) >= target.Health)
+                if (R.IsReady() && _Player.CountEnemiesInRange(R.Range) >= rCount && useR &&
+                    RDamage(target) >= target.Health)
                     {
                         R.Cast(target);
                     }
-                }
-                if (useIgnite && target != null)
-                {
-                    if (_Player.Distance(target) <= 600 && QDamage(target) >= target.Health)
-                        _Player.Spellbook.CastSpell(Ignite, target);
-                }
-            }
-
-            if (_comboMenu["ComboMode"].Cast<ComboBox>().CurrentValue == 1)
-
-                if (R.IsReady() && useR)
-                {
-                    R.Cast(target);
-                }
-            if (E.IsReady() && useE)
-            {
-                E.Cast();
-            }
-            if (Q.IsReady() && useQ)
-            {
-                Q.Cast(target);
-            }
-
-            if (W.IsReady() && useW)
-            {
-                W.Cast();
             }
             if (useIgnite && target != null)
             {
                 if (_Player.Distance(target) <= 600 && QDamage(target) >= target.Health)
                     _Player.Spellbook.CastSpell(Ignite, target);
             }
-        }
+        
+         if (_comboMenu["ComboMode"].Cast<ComboBox>().CurrentValue == 1)
+                                    
+                    if (E.IsReady() && useE)
+                    {
+                        E.Cast();
+                    }
+                    if (W.IsReady() && useW && _Player.HealthPercent <= useWcostumHP)
+                    {
+                        W.Cast();
+                    }
+                    if (Q.IsReady() && useQ)
+                    {
+                        Q.Cast(target);
+                    }
 
+                    if (R.IsReady() && useR)
+                    {
+                        R.Cast(target);
+                    }
+                    if (useIgnite && target != null)
+                    {
+                        if (_Player.Distance(target) <= 600 && QDamage(target) >= target.Health)
+                            _Player.Spellbook.CastSpell(Ignite, target);
+                    }
+                }
+            
         private static
             void Harass()
         {
@@ -318,11 +372,11 @@ namespace VladimirTheTroll
 
             Orbwalker.ForcedTarget = target;
 
-            var useEH = _HarassMenu["useEHarass"].Cast<CheckBox>().CurrentValue;
+            var useEh = _HarassMenu["useEHarass"].Cast<CheckBox>().CurrentValue;
             var useQh = _HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue;
 
             {
-                if (E.IsReady() && useEH)
+                if (E.IsReady() && useEh)
                 {
                     E.Cast();
                 }
@@ -414,6 +468,9 @@ namespace VladimirTheTroll
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            var x = _Player.HPBarPosition.X;
+            var y = _Player.HPBarPosition.Y + 200;
+
             if (_target != null && _target.IsValid)
             {
             }
@@ -438,8 +495,20 @@ namespace VladimirTheTroll
             {
                 Drawing.DrawCircle(_Player.Position, R.Range, Color.Red);
             }
-        }
+            if (_drawMenu["stuckE"].Cast<CheckBox>().CurrentValue)
+            {
+                Drawing.DrawText(x, y, Color.White,
+                    "Auto Stuck E Active " + _miscMenu["AutoEstuck"].Cast<CheckBox>().CurrentValue);
+            }
 
+            if (_drawMenu["Autoharass"].Cast<CheckBox>().CurrentValue)
+            {
+                Drawing.DrawText(x, y + 15, Color.White,
+                    "Auto Q Active " + _HarassMenu["useQAuto"].Cast<CheckBox>().CurrentValue);
+            }
+        }
+    
+        
         private static
             void OnGameUpdate(EventArgs args)
         {
