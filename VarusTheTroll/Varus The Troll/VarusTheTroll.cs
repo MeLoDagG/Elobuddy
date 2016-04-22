@@ -204,7 +204,7 @@ namespace VarusTheTroll
             Interrupter.InterruptableSpellEventArgs e)
         {
             if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.DangerLevel == DangerLevel.High && sender.IsValidTarget(850))
+                e.DangerLevel == DangerLevel.High && sender.IsValidTarget(650))
             {
                 _r.Cast(sender);
             }
@@ -471,22 +471,20 @@ namespace VarusTheTroll
 
         private static void Combo()
         {
-            var wTarget =
-                EntityManager.Heroes.Enemies.Find(
-                    x => x.HasBuff("varuswdebuff") && x.IsValidTarget(_Player.CastRange));
+            var useWcombofocus = MiscMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue;
+            var FocusWtarget = EntityManager.Heroes.Enemies.FirstOrDefault(h => h.ServerPosition.Distance(_Player.ServerPosition) < 600 && h.GetBuffCount("varuswdebuff") == 2);
+            if (useWcombofocus && FocusWtarget.IsValidTarget())
+            {
+                Orbwalker.ForcedTarget = FocusWtarget;
+                Chat.Print("<font color=\"#ffffff\" > Focus W </font>");
+            }
             var target = TargetSelector.GetTarget(_q.MaximumRange, DamageType.Physical);
-
-
             if (target == null || !target.IsValidTarget())
             {
                 return;
             }
-            if (wTarget != null && ComboMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue)
-
-            {
-                TargetSelector.GetTarget(_w.Range, DamageType.Magical);
-            }
-
+          
+        
             var stackCount = ComboMenu["StackCount"].Cast<Slider>().CurrentValue;
             var comboQ = ComboMenu["useQcombo"].Cast<CheckBox>().CurrentValue;
             var comboQalways = ComboMenu["useQComboAlways"].Cast<CheckBox>().CurrentValue;
@@ -498,6 +496,7 @@ namespace VarusTheTroll
                 && _Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
             {
                 Heal.Cast();
+                Chat.Print("<font color=\"#ffffff\" > Use Heal Noob </font>");
             }
 
             if (comboE && _e.IsReady())
@@ -517,7 +516,7 @@ namespace VarusTheTroll
                 return;
             }
         
-            if (comboQ)
+            if (comboQ && _q.IsReady())
             {
                 if (target.GetBuffCount("varuswdebuff") >= stackCount)
                 {
@@ -541,7 +540,7 @@ namespace VarusTheTroll
 
             if (useIgnite && targetIgnite != null)
             {
-                if (_Player.Distance(targetIgnite) <= 600 && QDamage(targetIgnite) >= targetIgnite.Health)
+                if (_Player.Distance(targetIgnite) <= 600 && ComboDamage(targetIgnite) >= targetIgnite.Health)
                     _Player.Spellbook.CastSpell(Ignite, targetIgnite);
             }
         }
@@ -553,7 +552,7 @@ namespace VarusTheTroll
             var comboR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
             var TargetR = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
 
-            if (comboR && _Player.CountEnemiesInRange(_r.Range) >= rCount && _r.IsReady()
+            if (comboR && _Player.CountEnemiesInRange(_Player.AttackRange + 250) >= rCount && _r.IsReady()
                 && TargetR != null && _r.GetPrediction(TargetR).HitChance >= HitChance.Medium)
             {
                 _r.Cast(_r.GetPrediction(TargetR).CastPosition);
@@ -714,8 +713,51 @@ namespace VarusTheTroll
                 }
             }
         }
-         
 
+        private static float ComboDamage(Obj_AI_Base hero)
+        {
+            var result = 0d;
+
+            {
+                result += (float)ObjectManager.Player.GetAutoAttackDamage(hero, true);
+            }
+
+            if (_q.IsReady())
+            {
+                result += QDamage(hero);
+            }
+
+            if (_e.IsReady())
+            {
+                result += EDamage(hero);
+            }
+     //       if (_w.IsReady() || Player.HasBuff("varuswdebuff"))
+      //      {
+      //          result += WDAMAGE(hero);
+         //   }
+
+            if (_r.IsReady())
+            {
+                result += RDamage(hero);
+            }
+            return (float)result;
+        }
+
+      //  private static double WDAMAGE(Obj_AI_Base target)
+     //   {
+
+   //     }
+
+        private static double EDamage(Obj_AI_Base target)
+        {
+            return _e.IsReady()
+               ? _Player.CalculateDamageOnUnit(
+                   target,
+                   DamageType.Magical,
+                   new float[] { 80, 120, 160, 200, 240 }[_e.Level - 1]
+                   + .5f * _Player.TotalMagicalDamage)
+               : 0d;
+        }
         private static double QDamage(Obj_AI_Base target)
         {
             return _q.IsReady()
