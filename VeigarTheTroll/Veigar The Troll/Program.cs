@@ -6,6 +6,7 @@ using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
+using Veigar_The_Troll;
 using SharpDX;
 using Color = System.Drawing.Color;
 
@@ -22,7 +23,6 @@ namespace Veigar_The_Troll
         public static Item RefillablePotion;
         public static Item TotalBiscuit;
         public static Item HuntersPotion;
-
         private static Menu _menu,
             _comboMenu,
             _jungleLaneMenu,
@@ -83,14 +83,14 @@ namespace Veigar_The_Troll
             _jungleLaneMenu.AddLabel("Jungle Clear");
             _jungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             _jungleLaneMenu.Add("useWJungle", new CheckBox("Use W"));
-            
+
             _miscMenu = _menu.AddSubMenu("Misc Settings", "MiscSettings");
             _miscMenu.AddGroupLabel("Auto SKills CC settings");
             _miscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
             _miscMenu.AddGroupLabel("Ks settings");
             _miscMenu.Add("ksQ", new CheckBox("Killsteal Q"));
-          
+
 
             _autoPotHealMenu = _menu.AddSubMenu("Potion", "Potion");
             _autoPotHealMenu.AddGroupLabel("Auto pot usage");
@@ -101,20 +101,27 @@ namespace Veigar_The_Troll
             _skinMenu = _menu.AddSubMenu("Skin Changer", "SkinChanger");
             _skinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
             _skinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 8));
-            
+
             _drawMenu = _menu.AddSubMenu("Drawing Settings");
             _drawMenu.Add("drawQ", new CheckBox("Draw Q Range"));
             _drawMenu.Add("drawW", new CheckBox("Draw W Range"));
             _drawMenu.Add("drawE", new CheckBox("Draw E Range"));
             _drawMenu.Add("drawR", new CheckBox("Draw R Range"));
+            _drawMenu.AddLabel("DamageIndicator");
+            _drawMenu.Add("Draw Damage", new CheckBox("Draw Damage Incidator", true));
+            _drawMenu.AddLabel("Damage indicators");
+            _drawMenu.Add("healthbar", new CheckBox("Healthbar overlay"));
+            _drawMenu.Add("percent", new CheckBox("Damage percent info"));
 
 
+            DamageIndicator.Initialize(ComboDamage);
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
+         
 
             Chat.Print(
-                "<font color=\"#6909aa\" >MeLoDag Presents </font><font color=\"#4dd5ea\" >VeiGar </font><font color=\"#6909aa\" >Kappa Kippo</font>");
+                "<font color=\"#6909aa\" >MeLoDag Presents </font><font color=\"#fffffff\" >Veigar </font><font color=\"#6909aa\" >Kappa Kippo</font>");
         }
 
 
@@ -150,8 +157,9 @@ namespace Veigar_The_Troll
             AutoPot();
             castR();
         }
+
         private static
-          void AutoPot()
+            void AutoPot()
         {
             if (_autoPotHealMenu["potion"].Cast<CheckBox>().CurrentValue && !Player.Instance.IsInShopRange() &&
                 Player.Instance.HealthPercent <= _autoPotHealMenu["potionminHP"].Cast<Slider>().CurrentValue &&
@@ -162,21 +170,25 @@ namespace Veigar_The_Troll
                 if (Item.HasItem(HealthPotion.Id) && Item.CanUseItem(HealthPotion.Id))
                 {
                     HealthPotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
                 if (Item.HasItem(TotalBiscuit.Id) && Item.CanUseItem(TotalBiscuit.Id))
                 {
                     TotalBiscuit.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
                 if (Item.HasItem(RefillablePotion.Id) && Item.CanUseItem(RefillablePotion.Id))
                 {
                     RefillablePotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
                     CorruptingPotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                     return;
                 }
             }
@@ -187,6 +199,7 @@ namespace Veigar_The_Troll
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
                     CorruptingPotion.Cast();
+                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
                 }
             }
         }
@@ -194,7 +207,7 @@ namespace Veigar_The_Troll
         private static void castR()
         {
             var useR = _comboMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
-           var target = TargetSelector.GetTarget(R.Range, DamageType.Magical);
+            var target = TargetSelector.GetTarget(R.Range, DamageType.Magical);
             if (target == null || !target.IsValidTarget()) return;
 
             Orbwalker.ForcedTarget = target;
@@ -204,6 +217,7 @@ namespace Veigar_The_Troll
                     if (Rdamage(target) >= target.Health)
                     {
                         R.Cast(target);
+                        Chat.Print("<font color=\"#fffffff\" > Use Ulty Free Kill</font>");
                     }
                 }
             }
@@ -212,7 +226,7 @@ namespace Veigar_The_Troll
         private static void Killsteal()
         {
             var ksQ = _miscMenu["ksQ"].Cast<CheckBox>().CurrentValue;
-          
+
 
             foreach (
                 var enemy in
@@ -225,6 +239,7 @@ namespace Veigar_The_Troll
                     enemy.Distance(_Player) <= Q.Range)
                 {
                     Q.Cast(enemy);
+                    Chat.Print("<font color=\"#fffffff\" > Use Q Free Kill</font>");
                 }
             }
         }
@@ -246,7 +261,7 @@ namespace Veigar_The_Troll
             {
                 if (E.IsReady() && useE)
                 {
-                   var predE = E.GetPrediction(target).CastPosition.Extend(target.ServerPosition, 360);
+                    var predE = E.GetPrediction(target).CastPosition.Extend(target.ServerPosition, 360);
                     {
                         E.Cast(predE.To3D());
                     }
@@ -271,7 +286,7 @@ namespace Veigar_The_Troll
                     if (useIgnite && target != null)
                     {
                         if (_Player.Distance(target) <= 600 &&
-                            ComboDamage(target) >= target.Health)
+                            Qdamage(target) >= target.Health)
                             _Player.Spellbook.CastSpell(Ignite, target);
                     }
                 }
@@ -295,27 +310,27 @@ namespace Veigar_The_Troll
                 result += Rdamage(hero);
             }
 
-            return (float)result;
+            return (float) result;
         }
 
         public static float Qdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float)(new[] { 0, 70, 110, 150, 190, 230 }[Q.Level] + 0.6f * _Player.FlatMagicDamageMod));
+                (float) (new[] {0, 70, 110, 150, 190, 230}[Q.Level] + 0.6f*_Player.FlatMagicDamageMod));
         }
 
         public static float Wdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float)(new[] { 0, 100, 150, 200, 250, 300 }[W.Level] + 0.99f * _Player.FlatMagicDamageMod));
+                (float) (new[] {0, 100, 150, 200, 250, 300}[W.Level] + 0.99f*_Player.FlatMagicDamageMod));
         }
 
         public static float Rdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Magical, (float)
-                           (new[] { 0, 250, 375, 500 }[R.Level] +
-                            0.99 * target.FlatMagicDamageMod +
-                            1.0 * _Player.FlatMagicDamageMod));
+                (new[] {0, 250, 375, 500}[R.Level] +
+                 0.99*target.FlatMagicDamageMod +
+                 1.0*_Player.FlatMagicDamageMod));
 
         }
 
@@ -387,7 +402,7 @@ namespace Veigar_The_Troll
                         m.Health <= _Player.GetSpellDamage(m, SpellSlot.Q) - 20 &&
                         m.IsValidTarget());
 
-        
+
             if (Q.IsReady() && useQ && qminion != null && !Orbwalker.IsAutoAttacking)
             {
                 Q.Cast(qminion);
@@ -461,6 +476,9 @@ namespace Veigar_The_Troll
                 if (_drawMenu["drawR"].Cast<CheckBox>().CurrentValue)
                     Drawing.DrawCircle(_Player.Position, R.Range, Color.DarkOliveGreen);
             }
+
+            DamageIndicator.HealthbarEnabled = _drawMenu["healthbar"].Cast<CheckBox>().CurrentValue;
+            DamageIndicator.PercentEnabled = _drawMenu["percent"].Cast<CheckBox>().CurrentValue;
         }
 
         private static
@@ -483,3 +501,4 @@ namespace Veigar_The_Troll
         }
     }
 }
+
