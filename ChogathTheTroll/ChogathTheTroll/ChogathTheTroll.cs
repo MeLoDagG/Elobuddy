@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
@@ -23,14 +24,21 @@ namespace ChogathTheTroll
         public static Spell.Active E;
         public static Spell.Skillshot W;
         public static Spell.Targeted R;
-        public static Spell.Targeted Ignite;
-    //    private const float Hitchance = 56f;
+        public static SpellSlot Ignite { get; private set; }
+        private static Item HealthPotion;
+        private static Item CorruptingPotion;
+        private static Item RefillablePotion;
+        private static Item TotalBiscuit;
+        private static Item HuntersPotion;
+
+      
         private static Menu _menu,
             _comboMenu,
             _jungleLaneMenu,
             _miscMenu,
             _drawMenu,
-            _skinMenu;
+            _skinMenu,
+            _autoPotHealMenu;
 
         private static AIHeroClient _target;
 
@@ -51,39 +59,49 @@ namespace ChogathTheTroll
             E = new Spell.Active(SpellSlot.E);
             W = new Spell.Skillshot(SpellSlot.W, 650, SkillShotType.Cone, (int) .25f, int.MaxValue, (int) (30*0.5));
             R = new Spell.Targeted(SpellSlot.R, 250);
+            HealthPotion = new Item(2003, 0);
+            TotalBiscuit = new Item(2010, 0);
+            CorruptingPotion = new Item(2033, 0);
+            RefillablePotion = new Item(2031, 0);
+            HuntersPotion = new Item(2032, 0);
 
-        //    if ("summonerdot"))
-            {
-                Ignite = new Spell.Targeted(ObjectManager.Player.GetSpellSlotFromName("summonerdot"), 600);
-            }
+
+            Ignite = ObjectManager.Player.GetSpellSlotFromName("summonerdot");
 
             _menu = MainMenu.AddMenu("ChogathThetroll", "ChogathThetroll");
             _comboMenu = _menu.AddSubMenu("Combo", "Combo");
             _comboMenu.Add("useQCombo", new CheckBox("Use Q"));
             _comboMenu.Add("useWCombo", new CheckBox("Use W"));
             _comboMenu.Add("useRCombo", new CheckBox("Use R"));
-            //   _comboMenu.Add("Qssmode", new ComboBox(" ", 0, "Medium", "HIgh"));
-
-
+            _comboMenu.Add("useIgnite", new CheckBox("Use Ignite [ks]"));
 
             _jungleLaneMenu = _menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             _jungleLaneMenu.AddLabel("Lane Clear");
+            _jungleLaneMenu.Add("UseQFarm", new CheckBox("Use Q"));
             _jungleLaneMenu.Add("qFarm", new Slider("Cast Q if >= minions hit", 3, 1, 8));
+            _jungleLaneMenu.Add("UseWFarm", new CheckBox("Use W"));
             _jungleLaneMenu.Add("wFarm", new Slider("Cast W if >= minions hit", 4, 1, 15));
             _jungleLaneMenu.AddSeparator();
             _jungleLaneMenu.AddLabel("Jungle Clear");
             _jungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             _jungleLaneMenu.Add("useWJungle", new CheckBox("Use W"));
 
-
-
+            _autoPotHealMenu = _menu.AddSubMenu("Potion", "Potion");
+            _autoPotHealMenu.AddGroupLabel("Auto pot usage");
+            _autoPotHealMenu.Add("potion", new CheckBox("Use potions"));
+            _autoPotHealMenu.Add("potionminHP", new Slider("Minimum Health % to use potion", 40));
+            _autoPotHealMenu.Add("potionMinMP", new Slider("Minimum Mana % to use potion", 20));
+           
             _miscMenu = _menu.AddSubMenu("Misc Settings", "MiscSettings");
+            _miscMenu.AddGroupLabel("Ks settings");
+            _miscMenu.Add("useRks", new CheckBox("Use R ks"));
+            _miscMenu.AddGroupLabel("Interrupter settings");
             _miscMenu.Add("interrupterQ", new CheckBox("Auto Q for Interrupter"));
             _miscMenu.Add("interrupterW", new CheckBox("Auto W for Interrupter"));
+            _miscMenu.AddGroupLabel("Auto SKills CC settings");
             _miscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
-            _miscMenu.Add("useIgnite", new CheckBox("Use Ignite"));
-
+           
             _skinMenu = _menu.AddSubMenu("Skin Changer", "SkinChanger");
             _skinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
             _skinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 7));
@@ -95,17 +113,14 @@ namespace ChogathTheTroll
             _drawMenu.Add("drawR", new CheckBox("Draw R Range"));
 
 
-
-
-
-
+            
             Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
 
             Chat.Print(
-                "<font color=\"#4dd5ea\" >MeLoDag Presents </font><font color=\"#4dd5ea\" >ChogathThetroll </font><font color=\"#4dd5ea\" >Kappa Kippo</font>");
+                "<font color=\"#ca0711\" >MeLoDag Presents </font><font color=\"#ffffff\" >ChogathThetroll </font><font color=\"#ca0711\" >Kappa Kippo</font>");
         }
 
 
@@ -135,8 +150,7 @@ namespace ChogathTheTroll
 
         private static void Game_OnTick(EventArgs args)
         {
-            if (_Player.IsDead)
-                return;
+            Orbwalker.ForcedTarget = null;
 
 
             {
@@ -145,32 +159,94 @@ namespace ChogathTheTroll
                     CastQ();
                     CastW();
                     CastR();
-
-                    CheckE(true);
+                //    CheckE(true);
                 }
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
                 FarmQ();
                 FarmW();
-
-                CheckE(true);
+              //  CheckE(true);
+            }
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
+            {
+              //  CheckE(true);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
             {
-                CheckE(false);
+             //   CheckE(false);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear))
             {
                 JungleClear();
-
-
-                CheckE(true);
+             //   CheckE(true);
             }
             Auto();
+            UseIgnite();
+            AutoPot();
+            CastRKs();
         }
 
-      private static void Auto()
+        private static void UseIgnite()
+        {
+            var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+
+            if (target == null || !target.IsValidTarget()) return;
+
+            Orbwalker.ForcedTarget = target;
+
+            var useIgnite = _comboMenu["useIgnite"].Cast<CheckBox>().CurrentValue;
+
+            if (useIgnite && target != null)
+            {
+                if (_Player.GetSummonerSpellDamage(target, DamageLibrary.SummonerSpells.Ignite) > target.Health)
+                    _Player.Spellbook.CastSpell(Ignite, target);
+
+            }
+        }
+        private static
+            void AutoPot()
+        {
+            if (_autoPotHealMenu["potion"].Cast<CheckBox>().CurrentValue && !Player.Instance.IsInShopRange() &&
+                Player.Instance.HealthPercent <= _autoPotHealMenu["potionminHP"].Cast<Slider>().CurrentValue &&
+                !(Player.Instance.HasBuff("RegenerationPotion") || Player.Instance.HasBuff("ItemCrystalFlaskJungle") ||
+                  Player.Instance.HasBuff("ItemMiniRegenPotion") || Player.Instance.HasBuff("ItemCrystalFlask") ||
+                  Player.Instance.HasBuff("ItemDarkCrystalFlask")))
+            {
+                if (Item.HasItem(HealthPotion.Id) && Item.CanUseItem(HealthPotion.Id))
+                {
+                    HealthPotion.Cast();
+                    return;
+                }
+                if (Item.HasItem(TotalBiscuit.Id) && Item.CanUseItem(TotalBiscuit.Id))
+                {
+                    TotalBiscuit.Cast();
+                    return;
+                }
+                if (Item.HasItem(RefillablePotion.Id) && Item.CanUseItem(RefillablePotion.Id))
+                {
+                    RefillablePotion.Cast();
+                    return;
+                }
+                if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
+                {
+                    CorruptingPotion.Cast();
+                    return;
+                }
+            }
+            if (Player.Instance.ManaPercent <= _autoPotHealMenu["potionMinMP"].Cast<Slider>().CurrentValue &&
+                !(Player.Instance.HasBuff("RegenerationPotion") || Player.Instance.HasBuff("ItemMiniRegenPotion") ||
+                  Player.Instance.HasBuff("ItemCrystalFlask") || Player.Instance.HasBuff("ItemDarkCrystalFlask")))
+            {
+                if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
+                {
+                    CorruptingPotion.Cast();
+                }
+            }
+        }
+
+        private static
+            void Auto()
         {
             var QonCc = _miscMenu["CCQ"].Cast<CheckBox>().CurrentValue;
             var WonCc = _miscMenu["CCW"].Cast<CheckBox>().CurrentValue;
@@ -225,11 +301,8 @@ namespace ChogathTheTroll
                 }
             }
         }
-
-
-
-
-        private static
+        
+     /*   private static
             void CheckE(bool shouldBeOn)
         {
             if (shouldBeOn)
@@ -247,11 +320,13 @@ namespace ChogathTheTroll
                 }
             }
         }
-
+        */
 
         private static void FarmQ()
         {
-            if (Q.IsReady())
+            var useQfarm = _jungleLaneMenu["UseQFarm"].Cast<CheckBox>().CurrentValue;
+
+            if (Q.IsReady() && useQfarm)
             {
                 foreach (
                     var enemyMinion in
@@ -271,7 +346,9 @@ namespace ChogathTheTroll
 
         private static void FarmW()
         {
-            if (W.IsReady())
+            var useWfarm = _jungleLaneMenu["UseWFarm"].Cast<CheckBox>().CurrentValue;
+
+            if (W.IsReady() && useWfarm)
             {
                 foreach (
                     var enemyMinion in
@@ -299,31 +376,28 @@ namespace ChogathTheTroll
 
             var useQ = _comboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
 
-
             {
                 if (Q.IsReady() && useQ)
                 {
-                    var predQ = Q.GetPrediction(target);
-                    if (predQ.HitChance >= HitChance.Immobile)
+                    var Predq = Q.GetPrediction(target).CastPosition.Extend(target.ServerPosition, Single.MaxValue);
                     {
-                        Q.Cast(predQ.CastPosition);
-                    }
-                    else if (predQ.HitChance >= HitChance.High)
-                    {
-                        Q.Cast(predQ.CastPosition);
+                        Q.Cast(Predq.To3D());
                     }
                 }
             }
         }
 
-        
         private static
-            void CastW()
+                void CastW()
         {
             var targetW = TargetSelector.GetTarget(W.Range, DamageType.Physical);
-            if (targetW == null) return;
+
+            if (targetW == null || !targetW.IsValidTarget()) return;
+
+            Orbwalker.ForcedTarget = targetW;
+            var useWCombo = _comboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
             {
-                if (W.IsReady())
+                if (W.IsReady() && useWCombo)
                 {
                     W.Cast(targetW);
                 }
@@ -336,9 +410,32 @@ namespace ChogathTheTroll
             void CastR()
         {
             var targetR = TargetSelector.GetTarget(R.Range, DamageType.Physical);
-            if (targetR == null) return;
+
+            if (targetR == null || !targetR.IsValidTarget()) return;
+
+           Orbwalker.ForcedTarget = targetR;
+
+            var useRCombo = _comboMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
             {
-                if (R.IsReady())
+                if (R.IsReady() && useRCombo)
+                {
+                    if (_Player.GetSpellDamage(targetR, SpellSlot.R, 0) > targetR.Health)
+                    {
+                        R.Cast(targetR);
+                    }
+                }
+            }
+        }
+
+
+        private static
+           void CastRKs()
+        {
+            var targetR = TargetSelector.GetTarget(R.Range, DamageType.Physical);
+            if (targetR == null) return;
+            var useRCombo = _miscMenu["useRks"].Cast<CheckBox>().CurrentValue;
+            {
+                if (R.IsReady() && useRCombo)
                 {
                     if (_Player.GetSpellDamage(targetR, SpellSlot.R, 0) > targetR.Health)
                     {
@@ -348,7 +445,6 @@ namespace ChogathTheTroll
             }
 
         }
-
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (_target != null && _target.IsValid)
