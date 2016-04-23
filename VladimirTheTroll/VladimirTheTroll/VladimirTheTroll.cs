@@ -92,6 +92,7 @@ namespace VladimirTheTroll
 
             _jungleLaneMenu = _menu.AddSubMenu("Farm Settings", "FarmSettings");
             _jungleLaneMenu.AddGroupLabel("Lane Clear Settings");
+            _jungleLaneMenu.Add("qFarmAlways", new CheckBox("Cast Q always"));
             _jungleLaneMenu.Add("qFarm", new CheckBox("Cast Q LastHit[ForAllMode]"));
             _jungleLaneMenu.Add("FarmE", new CheckBox("Use E"));
             _jungleLaneMenu.Add("FarmEmana", new Slider("Cast E if >= minions hit", 4, 1, 15));
@@ -155,6 +156,7 @@ namespace VladimirTheTroll
                 {
                     FarmQ();
                     FarmE();
+                    FarmQAlways();
                 }
                 if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
                 {
@@ -465,7 +467,21 @@ namespace VladimirTheTroll
                 }
             }
         }
+        private static void FarmQAlways()
+        {
+            var qFarmAlways = _jungleLaneMenu["qFarmAlways"].Cast<CheckBox>().CurrentValue;
+            var qminion =
+                EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, _Player.Position, Q.Range)
+                    .FirstOrDefault(
+                        m =>
+                            m.Distance(_Player) <= Q.Range &&
+                            m.IsValidTarget());
 
+            if (Q.IsReady() && qFarmAlways && qminion != null && !Orbwalker.IsAutoAttacking)
+            {
+                Q.Cast(qminion);
+            }
+        }
         private static void Drawing_OnDraw(EventArgs args)
         {
             var x = _Player.HPBarPosition.X;
