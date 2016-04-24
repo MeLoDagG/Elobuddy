@@ -1,37 +1,28 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
-using SharpDX;
-using Color = System.Drawing.Color;
 
 namespace ChogathTheTroll
 {
     internal class Program
     {
-        public static AIHeroClient _Player
-        {
-            get { return ObjectManager.Player; }
-        }
-
-
         public static Spell.Skillshot Q;
         public static Spell.Active E;
         public static Spell.Skillshot W;
         public static Spell.Targeted R;
-        public static SpellSlot Ignite { get; private set; }
         private static Item HealthPotion;
         private static Item CorruptingPotion;
         private static Item RefillablePotion;
         private static Item TotalBiscuit;
         private static Item HuntersPotion;
 
-      
+
         private static Menu _menu,
             _comboMenu,
             _jungleLaneMenu,
@@ -41,6 +32,13 @@ namespace ChogathTheTroll
             _autoPotHealMenu;
 
         private static AIHeroClient _target;
+
+        public static AIHeroClient _Player
+        {
+            get { return ObjectManager.Player; }
+        }
+
+        public static SpellSlot Ignite { get; private set; }
 
         private static void Main(string[] args)
         {
@@ -91,7 +89,7 @@ namespace ChogathTheTroll
             _autoPotHealMenu.Add("potion", new CheckBox("Use potions"));
             _autoPotHealMenu.Add("potionminHP", new Slider("Minimum Health % to use potion", 40));
             _autoPotHealMenu.Add("potionMinMP", new Slider("Minimum Mana % to use potion", 20));
-           
+
             _miscMenu = _menu.AddSubMenu("Misc Settings", "MiscSettings");
             _miscMenu.AddGroupLabel("Ks settings");
             _miscMenu.Add("useRks", new CheckBox("Use R ks"));
@@ -101,7 +99,7 @@ namespace ChogathTheTroll
             _miscMenu.AddGroupLabel("Auto SKills CC settings");
             _miscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
-           
+
             _skinMenu = _menu.AddSubMenu("Skin Changer", "SkinChanger");
             _skinMenu.Add("checkSkin", new CheckBox("Use Skin Changer"));
             _skinMenu.Add("skin.Id", new Slider("Skin", 1, 0, 7));
@@ -113,7 +111,6 @@ namespace ChogathTheTroll
             _drawMenu.Add("drawR", new CheckBox("Draw R Range"));
 
 
-            
             Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnTick += Game_OnTick;
@@ -159,27 +156,27 @@ namespace ChogathTheTroll
                     CastQ();
                     CastW();
                     CastR();
-                //    CheckE(true);
+                    //    CheckE(true);
                 }
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
                 FarmQ();
                 FarmW();
-              //  CheckE(true);
+                //  CheckE(true);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
-              //  CheckE(true);
+                //  CheckE(true);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
             {
-             //   CheckE(false);
+                //   CheckE(false);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear))
             {
                 JungleClear();
-             //   CheckE(true);
+                //   CheckE(true);
             }
             Auto();
             UseIgnite();
@@ -201,9 +198,9 @@ namespace ChogathTheTroll
             {
                 if (_Player.GetSummonerSpellDamage(target, DamageLibrary.SummonerSpells.Ignite) > target.Health)
                     _Player.Spellbook.CastSpell(Ignite, target);
-
             }
         }
+
         private static
             void AutoPot()
         {
@@ -301,8 +298,8 @@ namespace ChogathTheTroll
                 }
             }
         }
-        
-     /*   private static
+
+        /*   private static
             void CheckE(bool shouldBeOn)
         {
             if (shouldBeOn)
@@ -379,7 +376,7 @@ namespace ChogathTheTroll
             {
                 if (Q.IsReady() && useQ)
                 {
-                    var Predq = Q.GetPrediction(target).CastPosition.Extend(target.ServerPosition, Single.MaxValue);
+                    var Predq = Q.GetPrediction(target).CastPosition.Extend(target.ServerPosition, float.MaxValue);
                     {
                         Q.Cast(Predq.To3D());
                     }
@@ -388,7 +385,7 @@ namespace ChogathTheTroll
         }
 
         private static
-                void CastW()
+            void CastW()
         {
             var targetW = TargetSelector.GetTarget(W.Range, DamageType.Physical);
 
@@ -405,7 +402,6 @@ namespace ChogathTheTroll
         }
 
 
-
         private static
             void CastR()
         {
@@ -413,7 +409,7 @@ namespace ChogathTheTroll
 
             if (targetR == null || !targetR.IsValidTarget()) return;
 
-           Orbwalker.ForcedTarget = targetR;
+            Orbwalker.ForcedTarget = targetR;
 
             var useRCombo = _comboMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
             {
@@ -429,7 +425,7 @@ namespace ChogathTheTroll
 
 
         private static
-           void CastRKs()
+            void CastRKs()
         {
             var targetR = TargetSelector.GetTarget(R.Range, DamageType.Physical);
             if (targetR == null) return;
@@ -443,13 +439,12 @@ namespace ChogathTheTroll
                     }
                 }
             }
-
         }
+
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (_target != null && _target.IsValid)
             {
-
             }
 
             if (Q.IsReady() && _drawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
@@ -503,4 +498,3 @@ namespace ChogathTheTroll
         }
     }
 }
-  
