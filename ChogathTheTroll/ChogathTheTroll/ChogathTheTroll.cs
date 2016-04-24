@@ -156,27 +156,27 @@ namespace ChogathTheTroll
                     CastQ();
                     CastW();
                     CastR();
-                    //    CheckE(true);
+                    CheckE(true);
                 }
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
                 FarmQ();
                 FarmW();
-                //  CheckE(true);
+                CheckE(true);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
-                //  CheckE(true);
+                CheckE(true);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
             {
-                //   CheckE(false);
+                CheckE(false);
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear))
             {
                 JungleClear();
-                //   CheckE(true);
+                CheckE(true);
             }
             Auto();
             UseIgnite();
@@ -299,7 +299,7 @@ namespace ChogathTheTroll
             }
         }
 
-        /*   private static
+           private static
             void CheckE(bool shouldBeOn)
         {
             if (shouldBeOn)
@@ -317,8 +317,7 @@ namespace ChogathTheTroll
                 }
             }
         }
-        */
-
+        
         private static void FarmQ()
         {
             var useQfarm = _jungleLaneMenu["UseQFarm"].Cast<CheckBox>().CurrentValue;
