@@ -470,21 +470,26 @@ namespace VarusTheTroll
         }
 
         private static void Combo()
+
         {
-            var useWcombofocus = MiscMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue;
-            var FocusWtarget = EntityManager.Heroes.Enemies.FirstOrDefault(h => h.ServerPosition.Distance(_Player.ServerPosition) < 600 && h.GetBuffCount("varuswdebuff") == 2);
-            if (useWcombofocus && FocusWtarget.IsValidTarget())
-            {
-                Orbwalker.ForcedTarget = FocusWtarget;
-                Chat.Print("<font color=\"#ffffff\" > Focus W </font>");
-            }
+            var wTarget =
+                   EntityManager.Heroes.Enemies.Find(
+                       x => x.HasBuff("varuswdebuff") && x.IsValidTarget(_Player.CastRange));
             var target = TargetSelector.GetTarget(_q.MaximumRange, DamageType.Physical);
+
+
             if (target == null || !target.IsValidTarget())
             {
                 return;
             }
-          
-        
+            if (wTarget != null && ComboMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue)
+
+            {
+                Orbwalker.ForcedTarget = wTarget;
+                Chat.Print("<font color=\"#ffffff\" > Focus W </font>");
+            }
+
+
             var stackCount = ComboMenu["StackCount"].Cast<Slider>().CurrentValue;
             var comboQ = ComboMenu["useQcombo"].Cast<CheckBox>().CurrentValue;
             var comboQalways = ComboMenu["useQComboAlways"].Cast<CheckBox>().CurrentValue;
