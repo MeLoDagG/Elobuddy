@@ -56,8 +56,8 @@ namespace ezEvade
             if (spell.spellType == SpellType.Arc)
             {
                 var spellRange = spell.startPos.Distance(spell.endPos);
-                var arcRadius = spell.info.radius * (1 + spellRange/100) + extraRadius;
-                                
+                var arcRadius = spell.info.radius * (1 + spellRange / 100) + extraRadius;
+
                 return arcRadius;
             }
 
@@ -148,7 +148,7 @@ namespace ezEvade
             if (spell.info.collisionObjects.Contains(CollisionObjectType.EnemyChampions))
             {
                 foreach (var hero in EntityManager.Heroes.Allies
-                    .Where(h => !h.IsMe && h.IsValidTarget(distanceToHero)))
+                    .Where(h => !h.IsMe && h.IsValidTarget(distanceToHero, false, spellPos.To3D())))
                 {
                     collisionCandidates.Add(hero);
                 }
@@ -157,7 +157,7 @@ namespace ezEvade
             if (spell.info.collisionObjects.Contains(CollisionObjectType.EnemyMinions))
             {
                 foreach (var minion in ObjectManager.Get<Obj_AI_Minion>()
-                    .Where(h => h.Team == Evade.myHero.Team && h.IsValidTarget()))
+                    .Where(h => h.Team == Evade.myHero.Team && h.IsValidTarget(distanceToHero, false, spellPos.To3D())))
                 {
                     if (minion.CharData.BaseSkinName.ToLower() == "teemomushroom"
                         || minion.CharData.BaseSkinName.ToLower() == "shacobox")
@@ -252,18 +252,35 @@ namespace ezEvade
         {
             spell.currentSpellPosition = spell.GetCurrentSpellPosition();
             spell.currentNegativePosition = spell.GetCurrentSpellPosition(true, 0);
-
             spell.dangerlevel = spell.GetSpellDangerLevel();
-            //spell.radius = spell.GetSpellRadius();
+
+            if (spell.info.name == "TaricE")
+            {
+                var taric = EntityManager.Heroes.Enemies.FirstOrDefault(x => x.ChampionName == "Taric");
+                if (taric != null)
+                {
+                    spell.currentSpellPosition = taric.ServerPosition.To2D();
+                    spell.endPos = taric.ServerPosition.To2D() + spell.direction * spell.info.range;
+                }
+            }
+
+            if (spell.info.name == "TaricE2")
+            {
+                var partner = EntityManager.Heroes.Enemies.FirstOrDefault(x => x.HasBuff("taricwleashactive") && x.ChampionName != "Taric");
+                if (partner != null)
+                {
+                    spell.currentSpellPosition = partner.ServerPosition.To2D();
+                    spell.endPos = partner.ServerPosition.To2D() + spell.direction * spell.info.range;
+                }
+            }
         }
 
-        public static Vector2 GetCurrentSpellPosition(this Spell spell, bool allowNegative = false, float delay = 0, 
+        public static Vector2 GetCurrentSpellPosition(this Spell spell, bool allowNegative = false, float delay = 0,
             float extraDistance = 0)
         {
             Vector2 spellPos = spell.startPos;
 
-            if (spell.spellType == SpellType.Line
-                || spell.spellType == SpellType.Arc)
+            if (spell.spellType == SpellType.Line || spell.spellType == SpellType.Arc)
             {
                 float spellTime = EvadeUtils.TickCount - spell.startTime - spell.info.spellDelay;
 

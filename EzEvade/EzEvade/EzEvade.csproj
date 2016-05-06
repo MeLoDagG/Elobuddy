@@ -90,6 +90,7 @@
     <Compile Include="SpecialSpells\Orianna.cs" />
     <Compile Include="SpecialSpells\Sion.cs" />
     <Compile Include="SpecialSpells\Syndra.cs" />
+    <Compile Include="SpecialSpells\Taric.cs" />
     <Compile Include="SpecialSpells\Viktor.cs" />
     <Compile Include="SpecialSpells\Xerath.cs" />
     <Compile Include="SpecialSpells\Yasuo.cs" />
