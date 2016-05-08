@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
@@ -20,13 +22,15 @@ namespace Veigar_The_Troll
         public static Item TotalBiscuit;
         public static Item HuntersPotion;
         public static Item ZhonyaHourglass;
+
         private static Menu _menu,
             _comboMenu,
             _jungleLaneMenu,
             _miscMenu,
             _drawMenu,
             _skinMenu,
-            _autoPotHealMenu;
+            _autoPotHealMenu,
+            _autostuckEnemy;
         
         private static AIHeroClient _target;
 
@@ -61,8 +65,20 @@ namespace Veigar_The_Troll
             _comboMenu.Add("useQCombo", new CheckBox("Use Q", true));
             _comboMenu.Add("useWCombo", new CheckBox("Use W", true));
             _comboMenu.Add("useECombo", new CheckBox("Use E", true));
-            _comboMenu.Add("useRCombo", new CheckBox("Auto R Ks", true));
+            _comboMenu.AddLabel("E logic With Slider Hitchange");
+            _comboMenu.Add("useECombopred", new CheckBox("Use E [% hitchange Slider]", false));
+            _comboMenu.Add("predE", new Slider("Use E Pred %"));
+            _comboMenu.AddLabel("R Logics");
+            _comboMenu.Add("useRburst", new CheckBox("Use R Burst", true));
+            _comboMenu.Add("useRCombo", new CheckBox("Use R Ks[Old]", true));
+            _comboMenu.Add("useRCombobeta", new CheckBox("USe R New Formula [Beta]", false));
+            _comboMenu.AddLabel("Ignite Settings");
             _comboMenu.Add("UseIgnite", new CheckBox("Use Ignite If Combo Killable", true));
+
+            _autostuckEnemy = _menu.AddSubMenu("Auto Stuck Enemy", "AutoStuckEnemy");
+            _autostuckEnemy.Add("UseQstuck", new CheckBox("Use Q Stuck [Enemy]", false));
+            _autostuckEnemy.Add("UseWstuck", new CheckBox("Use W Stuck [Enemy]", false));
+            _autostuckEnemy.Add("StuckEnemyMana", new Slider("Use Q W Mana", 70, 0, 100));
 
             _jungleLaneMenu = _menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             _jungleLaneMenu.AddLabel("Lane Clear");
@@ -86,6 +102,11 @@ namespace Veigar_The_Troll
             _miscMenu.AddLabel("Auto Zhonyas Hourglass");
             _miscMenu.Add("Zhonyas", new CheckBox("Use Zhonyas Hourglass"));
             _miscMenu.Add("ZhonyasHp", new Slider("Use Zhonyas Hourglass If Your HP%", 20, 0, 100));
+            _miscMenu.AddLabel("Interrupter settings");
+            _miscMenu.Add("interuptE", new CheckBox("Auto E for Interrupter"));
+            _miscMenu.AddLabel("Gapcloser");
+            _miscMenu.Add("gapcloser", new CheckBox("Auto E for Gapcloser"));
+
 
             _autoPotHealMenu = _menu.AddSubMenu("Potion", "Potion");
             _autoPotHealMenu.AddGroupLabel("Auto pot usage");
@@ -112,13 +133,42 @@ namespace Veigar_The_Troll
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
-         
+            Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
+            Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
+
             Chat.Print(
                 "<font color=\"#6909aa\" >MeLoDag Presents </font><font color=\"#fffffff\" >Veigar </font><font color=\"#6909aa\" >Kappa Kippo</font>");
         }
 
+        public static
+           void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
+        {
+            if (_miscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
+                e.End.Distance(_Player) <= 750)
+            {
+                SpellManager.E.Cast(e.End);
+            }
+        }
+        private static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs e)
+        {
+            var useE = _miscMenu["interuptE"].Cast<CheckBox>().CurrentValue;
+         
 
-        private static void Game_OnTick(EventArgs args)
+            {
+                if (useE)
+                {
+                    if (sender.IsEnemy && SpellManager.E.IsReady() && sender.Distance(_Player) <= SpellManager.E.Range)
+                    {
+                        SpellManager.E.Cast(sender);
+                        Chat.Print("<font color=\"#fffffff\" > Use E Interrupt</font>");
+                    }
+                }
+            }
+        }
+
+        private static
+                void Game_OnTick(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
             {
@@ -126,6 +176,8 @@ namespace Veigar_The_Troll
                 {
                     Combo();
                     castR();
+                    useEpercent();
+                    useRburst();
                 }
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
@@ -151,9 +203,71 @@ namespace Veigar_The_Troll
             castR();
             qFarmAuto();
             AutoHourglass();
+            AutoStuckEnemy();
         }
+
+        private static void useRburst()
+        {
+            var useRburst = _comboMenu["useRburst"].Cast<CheckBox>().CurrentValue;
+            var target = TargetSelector.GetTarget(SpellManager.R.Range, DamageType.Magical);
+            if (target == null || !target.IsValidTarget()) return;
+
+            Orbwalker.ForcedTarget = target;
+            {
+                if (SpellManager.R.IsReady() && useRburst)
+                {
+                    SpellManager.R.Cast(target);
+                }
+            }
+        }
+
         private static
-           void AutoHourglass()
+                void AutoStuckEnemy()
+        {
+
+            var useQstuck = _autostuckEnemy["UseQstuck"].Cast<CheckBox>().CurrentValue;
+            var useWstuck = _autostuckEnemy["UseWstuck"].Cast<CheckBox>().CurrentValue;
+            var StuckEnemyMana = _autostuckEnemy["StuckEnemyMana"].Cast<Slider>().CurrentValue;
+
+            {
+
+                var targetq = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
+                if (targetq != null)
+                {
+                    if (SpellManager.Q.IsReady() && useQstuck && _Player.ManaPercent >= StuckEnemyMana)
+                    {
+                        var predQ = SpellManager.Q.GetPrediction(targetq);
+                        if (predQ.HitChance >= HitChance.High)
+                        {
+                            SpellManager.Q.Cast(predQ.CastPosition);
+                        }
+                        else if (predQ.HitChance >= HitChance.Immobile)
+                        {
+                            SpellManager.Q.Cast(predQ.CastPosition);
+                        }
+                    }
+                }
+                       var targetw = TargetSelector.GetTarget(SpellManager.W.Range, DamageType.Magical);
+                       if (targetw != null)
+                        {
+                            if (SpellManager.W.IsReady() && useWstuck && _Player.ManaPercent >= StuckEnemyMana)
+                            {
+                                var predW = SpellManager.W.GetPrediction(targetw);
+                                if (predW.HitChance >= HitChance.High)
+                                {
+                                    SpellManager.W.Cast(predW.CastPosition);
+                                }
+                                else if (predW.HitChance >= HitChance.Immobile)
+                                {
+                                    SpellManager.W.Cast(predW.CastPosition);
+                                }
+                            }
+                        }
+                    }
+                }
+            
+        private static
+               void AutoHourglass()
         {
             var Zhonyas = _miscMenu["Zhonyas"].Cast<CheckBox>().CurrentValue;
             var ZhonyasHp = _miscMenu["ZhonyasHp"].Cast<Slider>().CurrentValue;
@@ -214,6 +328,7 @@ namespace Veigar_The_Troll
         private static void castR()
         {
             var useR = _comboMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
+            var useRCombobeta = _comboMenu["useRCombobeta"].Cast<CheckBox>().CurrentValue;
             var target = TargetSelector.GetTarget(SpellManager.R.Range, DamageType.Magical);
             if (target == null || !target.IsValidTarget()) return;
 
@@ -221,16 +336,26 @@ namespace Veigar_The_Troll
             {
                 if (SpellManager.R.IsReady() && useR)
                 {
-                    if (Rdamage(target) >= target.Health)
+                    if (Rdamageold(target) >= target.Health)
                     {
                         SpellManager.R.Cast(target);
                         Chat.Print("<font color=\"#fffffff\" > Use Ulty Free Kill</font>");
+                    }
+                    if (SpellManager.R.IsReady() && useRCombobeta)
+                    {
+                        if (Rdamage(target) >= target.Health)
+                        {
+                            SpellManager.R.Cast(target);
+                            Chat.Print("<font color=\"#fffffff\" > Use new Ulty formula Free Kill</font>");
+                        }
                     }
                 }
             }
         }
 
-        private static void Killsteal()
+
+        private static
+                void Killsteal()
         {
             var ksQ = _miscMenu["ksQ"].Cast<CheckBox>().CurrentValue;
             var ksIgnite = _miscMenu["ksIgnite"].Cast<CheckBox>().CurrentValue;
@@ -258,6 +383,23 @@ namespace Veigar_The_Troll
              }
         }
 
+        private static void useEpercent()
+        {
+
+            var useECombopred = _comboMenu["useECombopred"].Cast<CheckBox>().CurrentValue;
+            var predE = _comboMenu["predE"].Cast<Slider>().CurrentValue;
+            var eTarget = TargetSelector.GetTarget(SpellManager.E.Range, DamageType.Magical);
+            if (eTarget != null)
+
+                if (SpellManager.E.IsReady() && useECombopred && eTarget.Distance(_Player) <= 750)
+                {
+                    var prede = SpellManager.E.GetPrediction(eTarget);
+                    if (prede.HitChancePercent >= predE)
+                    {
+                        SpellManager.E.Cast(prede.CastPosition);
+                    }
+                }
+        }
 
         private static
             void Combo()
@@ -267,65 +409,52 @@ namespace Veigar_The_Troll
             var useE = _comboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
             var useW = _comboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
             var useIgnite = _comboMenu["UseIgnite"].Cast<CheckBox>().CurrentValue;
-            var eTarget = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(SpellManager.E.Range, DamageType.Magical);
             if (eTarget != null)
             {
+
+                if (SpellManager.E.IsReady() && useE && eTarget.Distance(_Player) <= 750)
                 {
-                    if (useE && SpellManager.E.IsReady())
+                    var ePosition = eTarget.ServerPosition.Extend(_Player.Position, 350);
+                    SpellManager.E.Cast(ePosition.To3D());
+                }
+            }
+                var targetq = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
+                if (targetq != null)
                     {
-                     //   var predE = SpellManager.Q.GetPrediction(eTarget);
-                    //    if (predE.HitChance >= HitChance.High)
-                   //     {
-                   //         SpellManager.E.Cast(eTarget);
-                   //     }
-                        var predE = SpellManager.E.GetPrediction(eTarget).CastPosition.Extend(eTarget.ServerPosition, float.MaxValue);
+                        if (SpellManager.Q.IsReady() && useQ)
                         {
-                            SpellManager.E.Cast(predE.To3D());
-                        }
-                        /*  if (E.IsReady() && useE)
-                  {
-                      var predE = E.GetPrediction(target).CastPosition.Extend(target.ServerPosition, 360);
-                      {
-                          E.Cast(predE.To3D());
-                      }
-                  }*/
-                        var targetq = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
-                        if (targetq != null)
-                        {
-                            if (SpellManager.Q.IsReady() && useQ)
+                            var predQ = SpellManager.Q.GetPrediction(targetq);
+                            if (predQ.HitChance >= HitChance.High)
                             {
-                                var predQ = SpellManager.Q.GetPrediction(targetq);
-                                if (predQ.HitChance >= HitChance.High)
+                                SpellManager.Q.Cast(predQ.CastPosition);
+                            }
+                            else if (predQ.HitChance >= HitChance.Immobile)
+                            {
+                                SpellManager.Q.Cast(predQ.CastPosition);
+                            }
+                            var targetw = TargetSelector.GetTarget(SpellManager.W.Range, DamageType.Magical);
+                            if (targetw != null)
+                            {
+                                if (SpellManager.W.IsReady() && useW)
                                 {
-                                    SpellManager.Q.Cast(predQ.CastPosition);
-                                }
-                                else if (predQ.HitChance >= HitChance.Immobile)
-                                {
-                                    SpellManager.Q.Cast(predQ.CastPosition);
-                                }
-                                var targetw = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
-                                if (targetw != null)
-                                {
-                                    if (SpellManager.W.IsReady() && useW)
+                                    var predW = SpellManager.W.GetPrediction(targetw);
+                                    if (predW.HitChance >= HitChance.High)
                                     {
-                                        var predW = SpellManager.W.GetPrediction(targetw);
-                                        if (predW.HitChance >= HitChance.High)
+                                        SpellManager.W.Cast(predW.CastPosition);
+                                    }
+                                    else if (predW.HitChance >= HitChance.Immobile)
+                                    {
+                                        SpellManager.W.Cast(predW.CastPosition);
+                                    }
+                                    var target = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
+                                    if (target != null)
+                                    {
+                                        if (useIgnite && targetq != null)
                                         {
-                                            SpellManager.W.Cast(predW.CastPosition);
-                                        }
-                                        else if (predW.HitChance >= HitChance.Immobile)
-                                        {
-                                            SpellManager.W.Cast(predW.CastPosition);
-                                        }
-                                        var target = TargetSelector.GetTarget(SpellManager.Q.Range, DamageType.Magical);
-                                        if (targetw != null)
-                                        {
-                                            if (useIgnite && targetq != null)
-                                            {
-                                                if (_Player.Distance(target) <= 600 &&
-                                                    Qdamage(target) >= target.Health)
-                                                    _Player.Spellbook.CastSpell(SpellManager.Ignite, target);
-                                            }
+                                            if (_Player.Distance(target) <= 600 &&
+                                                Qdamage(target) >= target.Health)
+                                                _Player.Spellbook.CastSpell(SpellManager.Ignite, target);
                                         }
                                     }
                                 }
@@ -333,9 +462,7 @@ namespace Veigar_The_Troll
                         }
                     }
                 }
-            }
-        }
-
+        
         public static
             float ComboDamage(Obj_AI_Base hero)
         {
@@ -351,7 +478,7 @@ namespace Veigar_The_Troll
             }
             if (SpellManager.R.IsReady())
             {
-                result += Rdamage(hero);
+                result += Rdamageold(hero);
             }
 
             return (float) result;
@@ -369,14 +496,23 @@ namespace Veigar_The_Troll
                 (float) (new[] {0, 100, 150, 200, 250, 300}[SpellManager.W.Level] + 0.99f*_Player.FlatMagicDamageMod));
         }
 
-        public static float Rdamage(Obj_AI_Base target)
+          public static float Rdamageold(Obj_AI_Base target)
+          {
+              return _Player.CalculateDamageOnUnit(target, DamageType.Magical, (float)
+                  (new[] {0, 250, 375, 500}[SpellManager.R.Level] +
+                   0.99*target.FlatMagicDamageMod +
+                   1.0*_Player.FlatMagicDamageMod));
+
+          } 
+        public static double Rdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Magical, (float)
-                (new[] {0, 250, 375, 500}[SpellManager.R.Level] +
-                 0.99*target.FlatMagicDamageMod +
-                 1.0*_Player.FlatMagicDamageMod));
+                (new[] {0, 175, 250, 325}[SpellManager.R.Level] + (new[] {0, 350, 500, 650}[SpellManager.R.Level] +
+                                                                   0.88*target.FlatMagicDamageMod +
+                                                                   1.5f*target.HealthPercent)));
 
-        }
+        } 
+      
 
         private static void Auto()
         {
