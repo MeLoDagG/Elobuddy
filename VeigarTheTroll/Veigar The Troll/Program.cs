@@ -98,7 +98,7 @@ namespace Veigar_The_Troll
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
             _miscMenu.AddGroupLabel("Ks settings");
             _miscMenu.Add("ksQ", new CheckBox("Killsteal Q"));
-            _miscMenu.Add("ksIgnite", new CheckBox("Killsteal Ignite"));
+           // _miscMenu.Add("ksIgnite", new CheckBox("Killsteal Ignite"));
             _miscMenu.AddLabel("Auto Zhonyas Hourglass");
             _miscMenu.Add("Zhonyas", new CheckBox("Use Zhonyas Hourglass"));
             _miscMenu.Add("ZhonyasHp", new Slider("Use Zhonyas Hourglass If Your HP%", 20, 0, 100));
@@ -374,12 +374,12 @@ namespace Veigar_The_Troll
                     SpellManager.Q.Cast(enemy);
                     Chat.Print("<font color=\"#fffffff\" > Use Q Free Kill</font>");
                 }
-                if (ksIgnite && _Player.Distance(enemy) <= 600 &&
+             /*   if (ksIgnite && _Player.Distance(enemy) <= 600 &&
                     _Player.GetSummonerSpellDamage(enemy, DamageLibrary.SummonerSpells.Ignite) >= enemy.Health)
                 {
                     _Player.Spellbook.CastSpell(SpellManager.Ignite, enemy);
                     Chat.Print("<font color=\"#fffffff\" > Use Ignite Killsteal</font>");
-                }
+                } */
              }
         }
 
