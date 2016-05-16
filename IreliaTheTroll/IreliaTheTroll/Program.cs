@@ -30,9 +30,9 @@ namespace IreliaTheTroll
             JungleLaneMenu,
             MiscMenu,
             DrawMenu,
-            PrediMenu,
+          //  PrediMenu,
             ItemMenu,
-            SkinMenu,
+         //   SkinMenu,
             AutoPotHealMenu;
 
         public static AIHeroClient _Player
@@ -164,7 +164,7 @@ namespace IreliaTheTroll
             ItemMenu.Add("useBotrkMyHP", new Slider("My Health < ", 60, 1, 100));
             ItemMenu.Add("useBotrkEnemyHP", new Slider("Enemy Health < ", 60, 1, 100));
             ItemMenu.Add("useYoumu", new CheckBox("Use Youmu"));
-            ItemMenu.AddSeparator();
+         /*   ItemMenu.AddSeparator();
             ItemMenu.Add("useQSS", new CheckBox("Use QSS"));
             ItemMenu.Add("Qssmode", new ComboBox(" ", 0, "Auto", "Combo"));
             ItemMenu.Add("Stun", new CheckBox("Stun", true));
@@ -183,7 +183,7 @@ namespace IreliaTheTroll
             ItemMenu.Add("MordUlt", new CheckBox("Mordekaiser R", true));
             ItemMenu.Add("PoppyUlt", new CheckBox("Poppy R", true));
             ItemMenu.Add("QssUltDelay", new Slider("Use QSS Delay(ms) for Ult", 250, 0, 1000));
-
+            */
             AutoPotHealMenu = Menu.AddSubMenu("Potion", "Potion");
             AutoPotHealMenu.AddGroupLabel("Auto pot usage");
             AutoPotHealMenu.Add("potion", new CheckBox("Use potions"));
@@ -204,12 +204,11 @@ namespace IreliaTheTroll
 
 
             Bootstrap.Init(null);
-
             Game.OnUpdate += OnGameUpdate;
             // Game.OnTick += OnTick;
             Orbwalker.OnPreAttack += OnPreAttack;
             Drawing.OnDraw += OnDraw;
-            Obj_AI_Base.OnBuffGain += OnBuffGain;
+         //   Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += OnGapcloser;
             Interrupter.OnInterruptableSpell += OnInterruptableSpell;
         }
@@ -368,7 +367,7 @@ namespace IreliaTheTroll
             }
         }
 
-        private static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
+     /*  private static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
         {
             if (!sender.IsMe) return;
 
