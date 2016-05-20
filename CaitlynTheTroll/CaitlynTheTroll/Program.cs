@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Linq;
 using CaitlynTheTroll.Utility;
 using EloBuddy;
@@ -8,14 +9,13 @@ using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
 using Activator = CaitlynTheTroll.Utility.Activator;
-using Color = System.Drawing.Color;
 
 namespace CaitlynTheTroll
 {
     public static class Program
     {
-        public static string Version = "Version 1 18/5/2016";
-       public static AIHeroClient Target = null;
+        public static string Version = "Version 1.2 20/5/2016";
+        public static AIHeroClient Target = null;
         public static int QOff = 0, WOff = 0, EOff = 0, ROff = 0;
         public static Spell.Skillshot Q;
         public static Spell.Skillshot W;
@@ -37,7 +37,8 @@ namespace CaitlynTheTroll
         private static void OnLoadingComplete(EventArgs args)
         {
             if (Player.ChampionName != "Caitlyn") return;
-            Chat.Print("<font color=\"#6909aa\" >MeLoDag Presents </font><font color=\"#fffffff\" >Caitlyn </font><font color=\"#6909aa\" >Kappa Kippo</font>");
+            Chat.Print(
+                "<font color=\"#6909aa\" >MeLoDag Presents </font><font color=\"#fffffff\" >Caitlyn </font><font color=\"#6909aa\" >Kappa Kippo</font>");
             CaitlynTheTrollMeNu.LoadMenu();
             Game.OnTick += GameOnTick;
             Activator.LoadSpells();
@@ -48,6 +49,9 @@ namespace CaitlynTheTroll
             Q = new Spell.Skillshot(SpellSlot.Q, 1240, SkillShotType.Linear, 250, 2000, 60);
             W = new Spell.Skillshot(SpellSlot.W, 820, SkillShotType.Circular, 500, int.MaxValue, 80);
             E = new Spell.Skillshot(SpellSlot.E, 800, SkillShotType.Linear, 250, 1600, 80);
+            {
+                E.AllowedCollisionCount = 0;
+            }
             R = new Spell.Targeted(SpellSlot.R, 2000);
 
             #endregion
@@ -120,15 +124,17 @@ namespace CaitlynTheTroll
             }
             W.Cast(e.Sender.ServerPosition);
         }
-        public static void Interupt(Obj_AI_Base sender, Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
+
+        public static void Interupt(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
         {
             if (!sender.IsEnemy) return;
 
-            if (interruptableSpellEventArgs.DangerLevel >= DangerLevel.High && !CaitlynTheTrollMeNu.InterupteW() && W.IsReady())
+            if (interruptableSpellEventArgs.DangerLevel >= DangerLevel.High && !CaitlynTheTrollMeNu.InterupteW() &&
+                W.IsReady())
             {
                 W.Cast(sender.Position);
             }
-
         }
 
         private static void Barrier()
@@ -166,10 +172,32 @@ namespace CaitlynTheTroll
             KillSteal();
             AutoCc();
             AutoPotions();
+            UseEq();
         }
 
+        private static void UseEq()
+        {
+            var target = TargetSelector.GetTarget(E.Range, DamageType.Physical);
+            if (target != null &&
+                (CaitlynTheTrollMeNu.ComboEq() && E.IsReady() && Q.IsReady() &&
+                 target.IsValid &&
+                 !Player.HasBuff("CaitlynE")))
+            {
+                var predEq = E.GetPrediction(target);
+                if (predEq.HitChance >= HitChance.Medium)
+                {
+                    E.Cast(predEq.CastPosition);
+                }
+                var predQ = Q.GetPrediction(target);
+                if (predQ.HitChance >= HitChance.Medium)
+                {
+                    Q.Cast(predQ.CastPosition);
+                }
+            }
+        }
 
-        private static void AutoPotions()
+        private static
+            void AutoPotions()
         {
             if (CaitlynTheTrollMeNu.SpellsPotionsCheck() && !Player.IsInShopRange() &&
                 Player.HealthPercent <= CaitlynTheTrollMeNu.SpellsPotionsHp() &&
@@ -265,7 +293,7 @@ namespace CaitlynTheTroll
                 Activator.Mercurial.Cast();
             }
         }
-        
+
         private static void KillSteal()
         {
             var enemies = EntityManager.Heroes.Enemies.OrderByDescending
@@ -288,7 +316,7 @@ namespace CaitlynTheTroll
                     Player.GetSpellDamage(target, SpellSlot.Q))
 
                 {
-                    Q.Cast(target);
+                    Q.Cast(target.Position);
                 }
             }
         }
@@ -416,26 +444,39 @@ namespace CaitlynTheTroll
             }
             if (CaitlynTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
             {
-                W.Cast(target);
-            }
-            if (Q.IsReady() && target.IsValidTarget(Q.Range))
-                foreach (var eenemies in enemies)
+                var predW = W.GetPrediction(target);
+                if (predW.HitChance >= HitChance.Medium)
                 {
-                    var useQ = CaitlynTheTrollMeNu.ComboMenu["combo.q"
-                                                             + eenemies.ChampionName].Cast<CheckBox>().CurrentValue;
-                    if (useQ)
+                    W.Cast(predW.CastPosition);
+                }
+                else if (predW.HitChance >= HitChance.Immobile)
+                {
+                    W.Cast(predW.CastPosition);
+                }
+                if (Q.IsReady() && target.IsValidTarget(Q.Range))
+                    foreach (var eenemies in enemies)
                     {
-                        var predQ = Q.GetPrediction(target);
-                        if (predQ.HitChance >= HitChance.High)
+                        var useQ = CaitlynTheTrollMeNu.ComboMenu["combo.q"
+                                                                 + eenemies.ChampionName].Cast<CheckBox>().CurrentValue;
+                        if (useQ)
                         {
-                            Q.Cast(predQ.CastPosition);
+                            var predQ = Q.GetPrediction(target);
+                            if (predQ.HitChance >= HitChance.High)
+                            {
+                                Q.Cast(predQ.CastPosition);
+                            }
+                            else if (predQ.HitChance >= HitChance.Immobile)
+                            {
+                                Q.Cast(predQ.CastPosition);
+                            }
                         }
-
                         if (E.IsReady() && target.IsValidTarget(E.Range) && CaitlynTheTrollMeNu.ComboE())
                         {
                             E.Cast(target);
                         }
-                        if (R.IsReady() && CaitlynTheTrollMeNu.ComboR() && Player.CountEnemiesInRange(R.Range) >= CaitlynTheTrollMeNu.ComboREnemies() && SpellDamage.GetTotalDamage(target) >= target.Health)
+                        if (R.IsReady() && CaitlynTheTrollMeNu.ComboR() &&
+                            Player.CountEnemiesInRange(R.Range) >= CaitlynTheTrollMeNu.ComboREnemies() &&
+                            SpellDamage.GetTotalDamage(target) >= target.Health)
                         {
                             R.Cast(target);
                         }
@@ -462,7 +503,7 @@ namespace CaitlynTheTroll
                             Activator.Botrk.Cast(target);
                         }
                     }
-                }
+            }
         }
     }
 }

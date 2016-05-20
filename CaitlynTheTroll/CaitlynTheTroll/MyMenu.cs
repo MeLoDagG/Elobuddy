@@ -23,9 +23,8 @@ namespace CaitlynTheTroll
 
         private static void MyCaitlynTheTrollPage()
         {
-            _myMenu = MainMenu.AddMenu("CaitlynTheTroll", "main");
-            _myMenu.AddGroupLabel("About this script:");
-            _myMenu.AddLabel(" CaitlynTheTroll " + Program.Version);
+            _myMenu = MainMenu.AddMenu("Caitlyn The Troll", "main");
+            _myMenu.AddLabel(" Caitlyn The Troll " + Program.Version);
             _myMenu.AddLabel(" Made by MeLoDag");
         }
 
@@ -60,10 +59,12 @@ namespace CaitlynTheTroll
                 new CheckBox("Use E"));
             ComboMenu.Add("combo.w",
                 new CheckBox("Use W"));
-            ComboMenu.Add("combo.R",
+          ComboMenu.Add("combo.R",
                 new CheckBox("Use R"));
             ComboMenu.AddSeparator();
             ComboMenu.AddGroupLabel("Combo preferences:");
+           ComboMenu.Add("comboEQbind",
+                new KeyBind("Use E + Q Spells", false, KeyBind.BindTypes.HoldActive, 'Z'));
             ComboMenu.Add("combo.CC",
                 new CheckBox("Use E CC"));
             ComboMenu.Add("combo.CCQ",
@@ -228,18 +229,19 @@ namespace CaitlynTheTroll
         {
             return ComboMenu["combo.W"].Cast<CheckBox>().CurrentValue;
         }
-
         public static float ComboREnemies()
         {
             return ComboMenu["combo.REnemies"].Cast<Slider>().CurrentValue;
         }
-
         public static bool ComboR()
         {
             return ComboMenu["combo.R"].Cast<CheckBox>().CurrentValue;
         }
-
-        public static bool LaneQ()
+        public static bool ComboEq()
+        {
+            return ComboMenu["comboEQbind"].Cast<KeyBind>().CurrentValue;
+        }
+       public static bool LaneQ()
         {
             return FarmMeNu["lane.Q"].Cast<CheckBox>().CurrentValue;
         }
