@@ -45,7 +45,10 @@ namespace GravesTheTroll
                 new CheckBox("Draw E"));
             DrawMeNu.Add("draw.R",
                 new CheckBox("Draw R"));
-          }
+            DrawMeNu.AddLabel("Damage indicators");
+            DrawMeNu.Add("healthbar", new CheckBox("Healthbar overlay"));
+            DrawMeNu.Add("percent", new CheckBox("Damage percent info"));
+        }
 
         private static void ComboMenuPage()
         {
@@ -86,7 +89,7 @@ namespace GravesTheTroll
             FarmMeNu.AddGroupLabel("Lane clear settings:");
             FarmMeNu.Add("Lane.Q",
                 new CheckBox("Use Q"));
-            FarmMeNu.Add("LaneQcount", new Slider("Use Q if Hit minions", 3, 0, 5));
+            FarmMeNu.Add("LaneQcount", new Slider("Use Q if Hit minions", 3, 0, 15));
             FarmMeNu.Add("LaneMana",
                 new Slider("Min. Mana for Laneclear Spells %", 60));
             FarmMeNu.AddSeparator();

@@ -82,6 +82,9 @@ namespace GravesTheTroll
                 {
                     new Circle {Color = Color.Red, Radius = R.Range, BorderWidth = 2f}.Draw(Player.Position);
                 }
+                DamageIndicator.HealthbarEnabled =
+                    GravesTheTrollMeNu.DrawMeNu["healthbar"].Cast<CheckBox>().CurrentValue;
+                DamageIndicator.PercentEnabled = GravesTheTrollMeNu.DrawMeNu["percent"].Cast<CheckBox>().CurrentValue;
             }
         }
 
@@ -107,20 +110,20 @@ namespace GravesTheTroll
 
         private static void AntiGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
-            if (!e.Sender.IsValidTarget() || !GravesTheTrollMeNu.GapcloserE() || e.Sender.Type != Player.Type ||
-                !e.Sender.IsEnemy || e.Sender.IsAlly)
+            if (GravesTheTrollMeNu.GapcloserW() && sender.IsEnemy &&
+                e.End.Distance(Player) < 200)
             {
-                return;
+                W.Cast(e.End);
+                Chat.Print("<font color=\"#ffffff\" > USe W Gapclose </font>");
             }
 
-            E.Cast(e.Sender.ServerPosition);
 
-            if (!e.Sender.IsValidTarget() || !GravesTheTrollMeNu.GapcloserW() || e.Sender.Type != Player.Type ||
-                !e.Sender.IsEnemy || e.Sender.IsAlly)
+            if (GravesTheTrollMeNu.GapcloserE() && sender.IsEnemy &&
+                e.End.Distance(Player) < 200)
             {
-                return;
+                E.Cast(e.End);
+                Chat.Print("<font color=\"#ffffff\" > USe E Gapclose </font>");
             }
-            W.Cast(e.Sender.ServerPosition);
         }
 
         private static void Barrier()
@@ -357,21 +360,24 @@ namespace GravesTheTroll
 
         private static void OnLaneClear()
         {
-            foreach (var enemyMinion in
-                ObjectManager.Get<Obj_AI_Minion>()
-                    .Where(x => x.IsEnemy && x.Distance(Player) <= Q.Range))
+            if (Q.IsReady() && GravesTheTrollMeNu.LaneQ() && Player.Mana > GravesTheTrollMeNu.LaneMana())
             {
-                var enemyMinionsInRange =
-                    ObjectManager.Get<Obj_AI_Minion>()
-                        .Where(x => x.IsEnemy && x.Distance(enemyMinion) <= 185)
-                        .Count();
-                if (enemyMinionsInRange >= GravesTheTrollMeNu.LaneQcount() && GravesTheTrollMeNu.LaneQ() &&
-                    Player.ManaPercent > GravesTheTrollMeNu.LaneMana())
+                foreach (
+                    var enemyMinion in
+                        ObjectManager.Get<Obj_AI_Minion>().Where(x => x.IsEnemy && x.Distance(Player) <= Q.Range))
                 {
-                    Q.Cast(enemyMinion);
+                    var enemyMinionsInRange =
+                        ObjectManager.Get<Obj_AI_Minion>()
+                            .Where(x => x.IsEnemy && x.Distance(enemyMinion) <= 600)
+                            .Count();
+                    if (enemyMinionsInRange > GravesTheTrollMeNu.LaneQcount())
+                    {
+                        Q.Cast(enemyMinion.Position);
+                    }
                 }
             }
         }
+
 
         private static
             void OnJungle()
@@ -416,6 +422,14 @@ namespace GravesTheTroll
                         {
                             Q.Cast(predQharass.CastPosition);
                         }
+                        else if (predQharass.HitChance >= HitChance.Medium)
+                        {
+                            Q.Cast(predQharass.CastPosition);
+                        }
+                        else if (predQharass.HitChance >= HitChance.Immobile)
+                        {
+                            Q.Cast(predQharass.CastPosition);
+                        }
                     }
                 }
         }
@@ -447,47 +461,41 @@ namespace GravesTheTroll
                         {
                             Q.Cast(predQ.CastPosition);
                         }
-                        if (GravesTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) &&
-                            !target.IsInvulnerable)
+                    }
+                    if (GravesTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range))
+                    {
+                        var predW = W.GetPrediction(target);
+                        if (predW.HitChance >= HitChance.Medium)
                         {
-                            var predW = W.GetPrediction(target);
-                            if (predW.HitChance >= HitChance.Medium)
-                            {
-                                W.Cast(predW.CastPosition);
-                            }
-                            else if (predW.HitChance >= HitChance.Immobile)
-                            {
-                                W.Cast(predW.CastPosition);
-                            }
-
-                            if (R.IsReady() && GravesTheTrollMeNu.ComboR() &&
-                                Player.CountEnemiesInRange(R.Range) >= GravesTheTrollMeNu.ComboREnemies())
-                            {
-                                R.Cast(target);
-                            }
-                            if ((ObjectManager.Player.CountEnemiesInRange(ObjectManager.Player.AttackRange) >=
-                                 GravesTheTrollMeNu.YoumusEnemies() ||
-                                 Player.HealthPercent >= GravesTheTrollMeNu.ItemsYoumuShp()) &&
-                                Activator.Youmus.IsReady() && GravesTheTrollMeNu.Youmus() && Activator.Youmus.IsOwned())
-                            {
-                                Activator.Youmus.Cast();
-                                return;
-                            }
-                            if (Player.HealthPercent <= GravesTheTrollMeNu.BilgewaterHp() &&
-                                GravesTheTrollMeNu.Bilgewater() &&
-                                Activator.Bilgewater.IsReady() && Activator.Bilgewater.IsOwned())
-                            {
-                                Activator.Bilgewater.Cast(target);
-                                return;
-                            }
-
-                            if (Player.HealthPercent <= GravesTheTrollMeNu.BotrkHp() && GravesTheTrollMeNu.Botrk() &&
-                                Activator.Botrk.IsReady() &&
-                                Activator.Botrk.IsOwned())
-                            {
-                                Activator.Botrk.Cast(target);
-                            }
+                            W.Cast(predW.CastPosition);
                         }
+                    }
+                    if (R.IsReady() && GravesTheTrollMeNu.ComboR() &&
+                        Player.CountEnemiesInRange(R.Range) >= GravesTheTrollMeNu.ComboREnemies())
+                    {
+                        R.Cast(target);
+                    }
+                    if ((ObjectManager.Player.CountEnemiesInRange(ObjectManager.Player.AttackRange) >=
+                         GravesTheTrollMeNu.YoumusEnemies() ||
+                         Player.HealthPercent >= GravesTheTrollMeNu.ItemsYoumuShp()) &&
+                        Activator.Youmus.IsReady() && GravesTheTrollMeNu.Youmus() && Activator.Youmus.IsOwned())
+                    {
+                        Activator.Youmus.Cast();
+                        return;
+                    }
+                    if (Player.HealthPercent <= GravesTheTrollMeNu.BilgewaterHp() &&
+                        GravesTheTrollMeNu.Bilgewater() &&
+                        Activator.Bilgewater.IsReady() && Activator.Bilgewater.IsOwned())
+                    {
+                        Activator.Bilgewater.Cast(target);
+                        return;
+                    }
+
+                    if (Player.HealthPercent <= GravesTheTrollMeNu.BotrkHp() && GravesTheTrollMeNu.Botrk() &&
+                        Activator.Botrk.IsReady() &&
+                        Activator.Botrk.IsOwned())
+                    {
+                        Activator.Botrk.Cast(target);
                     }
                 }
         }
