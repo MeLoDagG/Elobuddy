@@ -51,6 +51,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DamageIndicator.cs" />
     <Compile Include="VarusTheTroll.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
