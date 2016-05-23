@@ -114,7 +114,7 @@ namespace GravesTheTroll
                 e.End.Distance(Player) < 200)
             {
                 W.Cast(e.End);
-                Chat.Print("<font color=\"#ffffff\" > USe W Gapclose </font>");
+              
             }
 
 
@@ -122,7 +122,7 @@ namespace GravesTheTroll
                 e.End.Distance(Player) < 200)
             {
                 E.Cast(e.End);
-                Chat.Print("<font color=\"#ffffff\" > USe E Gapclose </font>");
+               
             }
         }
 
@@ -305,7 +305,7 @@ namespace GravesTheTroll
                 }
 
                 if (GravesTheTrollMeNu.KillstealQ() && Q.IsReady() &&
-                    target.Health < SpellDamage.RDamage(target))
+                    target.Health + target.AttackShield < SpellDamage.RDamage(target))
                 {
                     Q.Cast(target.Position);
                 }
