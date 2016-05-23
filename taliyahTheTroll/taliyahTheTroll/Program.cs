@@ -128,7 +128,6 @@ namespace taliyahTheTroll
                 W.IsReady())
             {
                 W.Cast(sender.Position);
-                W.Cast(Player.ServerPosition);
             }
         }
 
@@ -377,7 +376,7 @@ namespace taliyahTheTroll
                     E.Cast(predE.CastPosition);
                 }
             }
-            if (TalliyahTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && E.IsOnCooldown && !target.IsInvulnerable)
+            if (TalliyahTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
                 {
                    var pred = W.GetPrediction(target);
                    if (pred.HitChance >= HitChance.Medium)
