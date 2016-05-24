@@ -360,8 +360,7 @@ namespace taliyahTheTroll
                 if (pred.HitChance >= HitChance.High)
                 {
                     W.Cast(pred.CastPosition);
-                 //   W.Cast(ObjectManager.Player.Position + (Vector3.Down - pred.CastPosition).Normalized()*W.Range);
-                   W.Cast(Player.Position.Normalized());
+                    W.Cast(Player.Position.Normalized());
                 }
             }
             if (E.IsReady() && target.IsValidTarget(600) && TalliyahTheTrollMeNu.ComboE())
