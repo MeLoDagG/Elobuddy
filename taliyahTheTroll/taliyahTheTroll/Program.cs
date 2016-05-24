@@ -24,6 +24,7 @@ namespace taliyahTheTroll
         public static Spell.Skillshot R;
         public static bool Out = false;
         public static int CurrentSkin;
+
      
 
         public static readonly AIHeroClient Player = ObjectManager.Player;
@@ -51,7 +52,7 @@ namespace taliyahTheTroll
             {
                 Q.AllowedCollisionCount = 0;
             }
-            W = new Spell.Skillshot(SpellSlot.W, 800, SkillShotType.Circular, 250, int.MaxValue, 200);
+            W = new Spell.Skillshot(SpellSlot.W, 800, SkillShotType.Circular, 250, int.MaxValue, 180);
             E = new Spell.Skillshot(SpellSlot.E, 700, SkillShotType.Cone);
             R = new Spell.Skillshot(SpellSlot.R, 3000, SkillShotType.Linear);
 
@@ -168,7 +169,7 @@ namespace taliyahTheTroll
                 OnJungle();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
-                KillSteal();
+            KillSteal();
             AutoCc();
             AutoPotions();
             AutoHourglass();
@@ -248,7 +249,8 @@ namespace taliyahTheTroll
                 }
 
                 if (TalliyahTheTrollMeNu.KillstealQ() && Q.IsReady() &&
-                    target.Health  < SpellDamage.GetRealDamage(SpellSlot.Q, target))
+                    target.Health <= 20 &&
+                    target.Distance(Player) <= Q.Range)
                 {
                     Q.Cast(target.Position);
                     Chat.Print("Use Q ks");
@@ -260,7 +262,7 @@ namespace taliyahTheTroll
         private static
             void AutoCc()
         {
-            if (!TalliyahTheTrollMeNu.ComboMenu["combo.CC"].Cast<CheckBox>().CurrentValue)
+            if (!TalliyahTheTrollMeNu.ComboMenu["combo.CCQ"].Cast<CheckBox>().CurrentValue)
             {
                 return;
             }
@@ -269,27 +271,11 @@ namespace taliyahTheTroll
                     x =>
                         x.HasBuffOfType(BuffType.Charm) || x.HasBuffOfType(BuffType.Knockup) ||
                         x.HasBuffOfType(BuffType.Stun) || x.HasBuffOfType(BuffType.Suppression) ||
+                        x.HasBuffOfType(BuffType.Slow) ||
                         x.HasBuffOfType(BuffType.Snare));
             if (autoTarget != null)
             {
-                E.Cast(autoTarget.ServerPosition);
-            }
-            if (!TalliyahTheTrollMeNu.ComboMenu["combo.CCQ"].Cast<CheckBox>().CurrentValue)
-            {
-                return;
-            }
-            if (autoTarget != null)
-            {
-                E.Cast(autoTarget.ServerPosition);
-                W.Cast(Player.ServerPosition);
-            }
-            if (!TalliyahTheTrollMeNu.ComboMenu["combo.CCW"].Cast<CheckBox>().CurrentValue)
-            {
-                return;
-            }
-            if (autoTarget != null)
-            {
-                W.Cast(autoTarget.ServerPosition);
+                Q.Cast(autoTarget.ServerPosition);
             }
         }
 
@@ -361,31 +347,32 @@ namespace taliyahTheTroll
         private static
             void OnCombo()
         {
-           var enemies = EntityManager.Heroes.Enemies.OrderByDescending
+            var enemies = EntityManager.Heroes.Enemies.OrderByDescending
                 (a => a.HealthPercent).Where(a => !a.IsMe && a.IsValidTarget() && a.Distance(Player) <= Q.Range);
             var target = TargetSelector.GetTarget(1400, DamageType.Physical);
             if (!target.IsValidTarget(Q.Range) || target == null)
             {
                 return;
             }
-            if (E.IsReady() && target.IsValidTarget(E.Range) && TalliyahTheTrollMeNu.ComboE())
+            if (TalliyahTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
+            {
+                var pred = W.GetPrediction(target);
+                if (pred.HitChance >= HitChance.High)
+                {
+                    W.Cast(pred.CastPosition);
+                 //   W.Cast(ObjectManager.Player.Position + (Vector3.Down - pred.CastPosition).Normalized()*W.Range);
+                   W.Cast(Player.Position.Normalized());
+                }
+            }
+            if (E.IsReady() && target.IsValidTarget(600) && TalliyahTheTrollMeNu.ComboE())
             {
                 var predE = E.GetPrediction(target);
-                if (predE.HitChance >= HitChance.Medium)
+                if (predE.HitChance >= HitChance.High)
                 {
                     E.Cast(predE.CastPosition);
                 }
             }
-            if (TalliyahTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
-                {
-                   var pred = W.GetPrediction(target);
-                   if (pred.HitChance >= HitChance.Medium)
-                   {
-                   W.Cast(pred.CastPosition);
-                   W.Cast(Player.ServerPosition);
-                  }
-             }
-            if (TalliyahTheTrollMeNu.UseQonly5() && Q.IsReady() && !Player.HasBuff("Taliyah_Base_Q_aoe_bright.troy") &&
+          if (TalliyahTheTrollMeNu.UseQonly5() && Q.IsReady() && !Player.HasBuff("Taliyah_Base_Q_aoe_bright.troy") &&
                 target.IsValidTarget(Q.Range) &&
                 !target.IsInvulnerable)
                 {

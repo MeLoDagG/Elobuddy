@@ -29,7 +29,7 @@ namespace taliyahTheTroll.Utility
             }
 
             // R
-          
+
 
             return damage;
         }
@@ -56,23 +56,23 @@ namespace taliyahTheTroll.Utility
             switch (slot)
             {
                 case SpellSlot.Q:
-                   
-                    damage = new float[] { 60, 80, 100, 120, 140 }[spellLevel] + 0.4f * Program.Player.TotalMagicalDamage;
+
+                    damage = new float[] {60, 80, 100, 120, 140}[spellLevel] + 0.4f*Program.Player.TotalMagicalDamage;
                     break;
 
                 case SpellSlot.W:
-                     
-                    damage = new float[] { 60, 80, 100, 120, 140 }[spellLevel] + 0.4f * Program.Player.TotalMagicalDamage;
+
+                    damage = new float[] {60, 80, 100, 120, 140}[spellLevel] + 0.4f*Program.Player.TotalMagicalDamage;
                     break;
 
                 case SpellSlot.E:
-                    
-                    damage = new float[] { 80, 105, 130, 155, 180 }[spellLevel] + 0.4f * Program.Player.TotalMagicalDamage;
+
+                    damage = new float[] {80, 105, 130, 155, 180}[spellLevel] + 0.4f*Program.Player.TotalMagicalDamage;
                     break;
 
                 case SpellSlot.R:
-                   
-                    damage = new float[] { 0, 0, 0 }[spellLevel] + 0.0f* Program.Player.TotalMagicalDamage;
+
+                    damage = new float[] {0, 0, 0}[spellLevel] + 0.0f*Program.Player.TotalMagicalDamage;
                     break;
             }
 
@@ -82,6 +82,15 @@ namespace taliyahTheTroll.Utility
             }
 
             return Program.Player.CalculateDamageOnUnit(target, damageType, damage) - 10;
+        }
+
+        public static float Qdamage(Obj_AI_Base target)
+        {
+            return
+                (float)
+                    ObjectManager.Player.CalculateDamageOnUnit(target, DamageType.Magical,
+                        new int[] {60, 80, 100, 120, 140}[Program.Q.Level] +
+                        ObjectManager.Player.TotalMagicalDamage*0.4f);
         }
     }
 }

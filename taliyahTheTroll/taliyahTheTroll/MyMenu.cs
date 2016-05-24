@@ -66,13 +66,9 @@ namespace taliyahTheTroll
             ComboMenu.AddSeparator();
             ComboMenu.AddGroupLabel("Combo preferences:");
             ComboMenu.Add("use.onlyq5", new CheckBox("Use Q Only If 5X Q",false));
-            ComboMenu.Add("combo.CC",
-                new CheckBox("Use E CC"));
             ComboMenu.Add("combo.CCQ",
                 new CheckBox("Use Q CC"));
-            ComboMenu.Add("combo.CCW",
-               new CheckBox("Use W CC"));
-        }
+          }
 
 
         private static void FarmMeNuPage()
