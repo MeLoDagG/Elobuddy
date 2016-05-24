@@ -415,7 +415,7 @@ namespace CaitlynTheTroll
                 return;
             }
 
-            if (Q.IsReady() && target.IsValidTarget(Q.Range))
+            if (Q.IsReady() && target.IsValidTarget(850))
                 foreach (var eenemies in enemies)
                 {
                     var useQ = CaitlynTheTrollMeNu.HarassMeNu["harass.Q"
@@ -454,7 +454,7 @@ namespace CaitlynTheTroll
                     W.Cast(predW.CastPosition);
                 }
             }
-            if (Q.IsReady() && target.IsValidTarget(Q.Range))
+            if (Q.IsReady() && target.IsValidTarget(850))
                 foreach (var eenemies in enemies)
                 {
                     var useQ = CaitlynTheTrollMeNu.ComboMenu["combo.q"
@@ -466,17 +466,17 @@ namespace CaitlynTheTroll
                         {
                             Q.Cast(predQ.CastPosition);
                         }
-                        else if (predQ.HitChance >= HitChance.Immobile)
-                        {
-                            Q.Cast(predQ.CastPosition);
-                        }
                     }
                 }
-            if (E.IsReady() && target.IsValidTarget(E.Range) && CaitlynTheTrollMeNu.ComboE())
-                        {
-                            E.Cast(target);
-                        }
-                        if (R.IsReady() && CaitlynTheTrollMeNu.ComboR() &&
+            if (E.IsReady() && target.IsValidTarget(700) && CaitlynTheTrollMeNu.ComboE())
+            {
+                var predE = Q.GetPrediction(target);
+                if (predE.HitChance >= HitChance.Medium)
+                {
+                    E.Cast(predE.CastPosition);
+                }
+            }
+            if (R.IsReady() && CaitlynTheTrollMeNu.ComboR() &&
                             Player.CountEnemiesInRange(R.Range) >= CaitlynTheTrollMeNu.ComboREnemies() &&
                             SpellDamage.GetTotalDamage(target) >= target.Health)
                         {
