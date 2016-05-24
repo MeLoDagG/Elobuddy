@@ -453,24 +453,26 @@ namespace CaitlynTheTroll
                 {
                     W.Cast(predW.CastPosition);
                 }
-                if (Q.IsReady() && target.IsValidTarget(Q.Range))
-                    foreach (var eenemies in enemies)
+            }
+            if (Q.IsReady() && target.IsValidTarget(Q.Range))
+                foreach (var eenemies in enemies)
+                {
+                    var useQ = CaitlynTheTrollMeNu.ComboMenu["combo.q"
+                                                             + eenemies.ChampionName].Cast<CheckBox>().CurrentValue;
+                    if (useQ)
                     {
-                        var useQ = CaitlynTheTrollMeNu.ComboMenu["combo.q"
-                                                                 + eenemies.ChampionName].Cast<CheckBox>().CurrentValue;
-                        if (useQ)
+                        var predQ = Q.GetPrediction(target);
+                        if (predQ.HitChance >= HitChance.High)
                         {
-                            var predQ = Q.GetPrediction(target);
-                            if (predQ.HitChance >= HitChance.High)
-                            {
-                                Q.Cast(predQ.CastPosition);
-                            }
-                            else if (predQ.HitChance >= HitChance.Immobile)
-                            {
-                                Q.Cast(predQ.CastPosition);
-                            }
+                            Q.Cast(predQ.CastPosition);
                         }
-                        if (E.IsReady() && target.IsValidTarget(E.Range) && CaitlynTheTrollMeNu.ComboE())
+                        else if (predQ.HitChance >= HitChance.Immobile)
+                        {
+                            Q.Cast(predQ.CastPosition);
+                        }
+                    }
+                }
+            if (E.IsReady() && target.IsValidTarget(E.Range) && CaitlynTheTrollMeNu.ComboE())
                         {
                             E.Cast(target);
                         }
@@ -505,5 +507,3 @@ namespace CaitlynTheTroll
                     }
             }
         }
-    }
-}
