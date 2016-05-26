@@ -139,6 +139,7 @@ namespace Lucian_The_Troll
             MiscMenu.Add("gapcloser", new CheckBox("Auto W for Gapcloser"));
             MiscMenu.AddGroupLabel("Ks Settings");
             MiscMenu.Add("UseQks", new CheckBox("Use Q ks"));
+            MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
             MiscMenu.Add("UseRks", new CheckBox("Use R ks"));
             MiscMenu.Add("UseRksRange", new Slider("Use Ulty Max Range[KS]", 1000, 500, 2000));
 
@@ -445,6 +446,7 @@ namespace Lucian_The_Troll
         {
             var distance = MiscMenu["UseRksRange"].Cast<Slider>().CurrentValue;
             var useQks = MiscMenu["UseQks"].Cast<CheckBox>().CurrentValue;
+            var useWks = MiscMenu["UseWks"].Cast<CheckBox>().CurrentValue;
             var useRks = MiscMenu["UseRks"].Cast<CheckBox>().CurrentValue;
             foreach (
                 var enemy in
@@ -455,6 +457,11 @@ namespace Lucian_The_Troll
                     Qdamage(enemy) >= enemy.Health && enemy.Distance(_Player) <= _q.Range)
                 {
                     _q.Cast(enemy);
+                }
+                if (useWks && _w.IsReady() &&
+                    Wdamage(enemy) >= enemy.Health && enemy.Distance(_Player) <= _w.Range)
+                {
+                    _w.Cast(enemy);
                 }
                 if (useRks && _r.IsReady() && RDamage(enemy) >= enemy.Health &&
                     enemy.Distance(_Player) <= distance)
@@ -712,7 +719,13 @@ namespace Lucian_The_Troll
                      (new[] {0, 0.6, 0.75, 0.9, 1.05, 1.2}[_q.Level]*_Player.FlatPhysicalDamageMod
                          )));
         }
-        
+        private static float Wdamage(Obj_AI_Base target)
+        {
+            return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
+             (float)(new[] { 0, 60, 100, 140, 180, 220 }[_w.Level] + 0.9f * _Player.FlatMagicDamageMod
+                 ));
+        }
+
         private static float RDamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
