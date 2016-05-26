@@ -14,7 +14,6 @@ namespace Lucian_The_Troll
 {
     internal class LucianTHeTroll
     {
-      
         private static Spell.Targeted _q;
         private static Spell.Skillshot _q1;
         private static Spell.Skillshot _w;
@@ -31,7 +30,6 @@ namespace Lucian_The_Troll
         private static readonly Item Youmuu = new Item(ItemId.Youmuus_Ghostblade);
         private static readonly Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
         private static readonly Item Cutlass = new Item(ItemId.Bilgewater_Cutlass);
-        private static Item Tear = new Item(ItemId.Tear_of_the_Goddess);
         private static readonly Item Qss = new Item(ItemId.Quicksilver_Sash);
         private static readonly Item Simitar = new Item(ItemId.Mercurial_Scimitar);
         private static bool Lightslinger;
@@ -102,9 +100,14 @@ namespace Lucian_The_Troll
             ComboMenu.Add("useQExtendCombo", new CheckBox("Use Q Extend"));
             ComboMenu.AddLabel("W Settings");
             ComboMenu.Add("useWCombo", new CheckBox("Use W"));
-            ComboMenu.AddLabel("E Logic");
+            ComboMenu.Add("useWrange", new Slider("Min Range Use W", 550, 0, 1000));
+            ComboMenu.AddLabel("E Settings");
+            ComboMenu.Add("useEcombo", new CheckBox("Use E"));
             ComboMenu.Add("ELogic", new ComboBox(" ", 0, "Side", "Cursor"));
             ComboMenu.AddLabel("R Settings");
+            ComboMenu.Add("UseRcomboHp", new CheckBox("Use R"));
+            ComboMenu.Add("Hp", new Slider("Use R Enemy Health %", 45, 0, 100));
+            ComboMenu.Add("combo.REnemies",new Slider("Min Enemyes for R", 1, 1, 5));
             // ComboMenu.Add("Humanizer", new Slider("Humanizer Ms", 5, 1, 5000));
             ComboMenu.Add("ForceR",
                 new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
@@ -132,6 +135,8 @@ namespace Lucian_The_Troll
             JungleLaneMenu.Add("useWMana", new Slider("Min. Mana for Jungleclear Spells %", 70, 0, 100));
 
             FleeMenu = Menu.AddSubMenu("Flee Settings", "FleeSettings");
+            FleeMenu.AddGroupLabel("Flee Settings");
+            FleeMenu.Add("FleeE", new CheckBox("Use E"));
             FleeMenu.Add("FleeW", new CheckBox("Use W"));
 
             MiscMenu = Menu.AddSubMenu("Misc Settings", "MiscSettings");
@@ -141,7 +146,7 @@ namespace Lucian_The_Troll
             MiscMenu.Add("UseQks", new CheckBox("Use Q ks"));
             MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
             MiscMenu.Add("UseRks", new CheckBox("Use R ks"));
-            MiscMenu.Add("UseRksRange", new Slider("Use Ulty Max Range[KS]", 1000, 500, 2000));
+            MiscMenu.Add("UseRksRange", new Slider("Use Ulty Max Range[KS]", 1000, 500, 1400));
 
             AutoPotHealMenu = Menu.AddSubMenu("Potion & HeaL", "Potion & HeaL");
             AutoPotHealMenu.AddGroupLabel("Auto pot usage");
@@ -183,10 +188,11 @@ namespace Lucian_The_Troll
 
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
             DrawMenu.Add("drawQ", new CheckBox("Draw Q Range"));
+            DrawMenu.Add("drawQ.1", new CheckBox("Draw Q Extend Range"));
             DrawMenu.Add("drawW", new CheckBox("Draw W Range"));
             DrawMenu.Add("drawE", new CheckBox("Draw E Range"));
             DrawMenu.Add("drawR", new CheckBox("Draw R Range"));
-          
+
             DrawMenu.AddLabel("Damage indicators");
             DrawMenu.Add("healthbar", new CheckBox("Healthbar overlay"));
             DrawMenu.Add("percent", new CheckBox("Damage percent info"));
@@ -201,24 +207,27 @@ namespace Lucian_The_Troll
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-           
-                    if (DrawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
-                    {
-                        new Circle { Color = Color.Aqua, Radius = _q.Range, BorderWidth = 2f }.Draw(_Player.Position);
-                    }
-                    if (DrawMenu["drawW"].Cast<CheckBox>().CurrentValue)
-                    {
-                        new Circle { Color = Color.Aqua, Radius = _w.Range, BorderWidth = 2f }.Draw(_Player.Position);
-                    }
-                    if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
-                    {
-                        new Circle { Color = Color.Aqua, Radius = _e.Range, BorderWidth = 2f }.Draw(_Player.Position);
-                    }
-                    if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
-                    {
-                        new Circle { Color = Color.Aqua, Radius = _r.Range, BorderWidth = 2f }.Draw(_Player.Position);
-                    }
-                
+            if (DrawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
+            {
+                new Circle {Color = Color.Aqua, Radius = _q.Range, BorderWidth = 2f}.Draw(_Player.Position);
+            }
+            if (DrawMenu["drawQ.1"].Cast<CheckBox>().CurrentValue)
+            {
+                new Circle {Color = Color.Aqua, Radius = _q1.Range, BorderWidth = 2f}.Draw(_Player.Position);
+            }
+            if (DrawMenu["drawW"].Cast<CheckBox>().CurrentValue)
+            {
+                new Circle {Color = Color.Aqua, Radius = _w.Range, BorderWidth = 2f}.Draw(_Player.Position);
+            }
+            if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
+            {
+                new Circle {Color = Color.Aqua, Radius = _e.Range, BorderWidth = 2f}.Draw(_Player.Position);
+            }
+            if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
+            {
+                new Circle {Color = Color.Aqua, Radius = _r.Range, BorderWidth = 2f}.Draw(_Player.Position);
+            }
+
             DamageIndicator.HealthbarEnabled = DrawMenu["healthbar"].Cast<CheckBox>().CurrentValue;
             DamageIndicator.PercentEnabled = DrawMenu["percent"].Cast<CheckBox>().CurrentValue;
         }
@@ -428,17 +437,22 @@ namespace Lucian_The_Troll
                 UseRTarget();
                 AutoPot();
             }
-         }
+        }
 
 
         private static void Flee()
         {
             var targetW = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
             var fleeW = FleeMenu["FleeW"].Cast<CheckBox>().CurrentValue;
+            var fleeE = FleeMenu["FleeE"].Cast<CheckBox>().CurrentValue;
 
             if (fleeW && _w.IsReady() && targetW.IsValidTarget(_w.Range))
             {
                 _w.Cast(targetW);
+            }
+            if (fleeE && _e.IsReady())
+            {
+                _e.Cast(Game.CursorPos);
             }
         }
 
@@ -550,7 +564,7 @@ namespace Lucian_The_Troll
         {
             var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
             var qharass = HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue;
-            var Qextend = HarassMenu["useQextendHarass"].Cast<CheckBox>().CurrentValue;
+            var qextend = HarassMenu["useQextendHarass"].Cast<CheckBox>().CurrentValue;
             var wharass = HarassMenu["useWHarass"].Cast<CheckBox>().CurrentValue;
             var target = TargetSelector.GetTarget(_q.Range, DamageType.Physical);
             if (!target.IsValidTarget())
@@ -562,7 +576,7 @@ namespace Lucian_The_Troll
             {
                 _q.Cast(target);
             }
-            if (_q.IsReady() && target.IsValidTarget(_q1.Range) && Qextend && _Player.ManaPercent >= wmana)
+            if (_q.IsReady() && target.IsValidTarget(_q1.Range) && qextend && _Player.ManaPercent >= wmana)
             {
                 CastExtendedQ();
             }
@@ -638,12 +652,16 @@ namespace Lucian_The_Troll
         private static void Combo()
         {
             Lightslinger = false;
-            var useE = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
-         
-            var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
-            var useQExtendCombo = ComboMenu["useQExtendCombo"].Cast<CheckBox>().CurrentValue;
-            //  var humanizer = ComboMenu["Humanizer"].Cast<Slider>().CurrentValue;
             var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
+            var useQExtendCombo = ComboMenu["useQExtendCombo"].Cast<CheckBox>().CurrentValue;
+            var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
+            var useWrange = ComboMenu["useWrange"].Cast<Slider>().CurrentValue;
+            var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
+            var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
+            var userhp = ComboMenu["UseRcomboHp"].Cast<CheckBox>().CurrentValue;
+            var enemyhp = ComboMenu["hp"].Cast<Slider>().CurrentValue;
+            var useRminPl = ComboMenu["combo.REnemies"].Cast<Slider>().CurrentValue;
+            //  var humanizer = ComboMenu["Humanizer"].Cast<Slider>().CurrentValue;
             var target = TargetSelector.GetTarget(1400, DamageType.Physical);
             if (!target.IsValidTarget(_q.Range) || target == null)
             {
@@ -658,27 +676,31 @@ namespace Lucian_The_Troll
             {
                 CastExtendedQ();
             }
-            if (useW && _w.IsReady() && target.IsValidTarget(_w.Range) && !target.IsInvulnerable && !Lightslinger)
+            if (useW && _w.IsReady() && target.Distance(_Player) <= useWrange && !target.IsInvulnerable && !Lightslinger)
             {
                 var predW = _w.GetPrediction(target);
                 if (predW.HitChance >= HitChance.Medium)
                 {
                     _w.Cast(predW.CastPosition);
                 }
-                else if (predW.HitChance >= HitChance.Immobile)
-                {
-                    _w.Cast(predW.CastPosition);
-                }
             }
-          if (useE == 0 && _e.IsReady() && target.IsValidTarget(_e.Range) && !target.IsInvulnerable && !Lightslinger)
+            if (logice == 0 && usee && _e.IsReady() && target.IsValidTarget(800) && !target.IsInvulnerable &&
+                !Lightslinger)
             {
                 _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
-             //   Orbwalker.ResetAutoAttack();
+                //   Orbwalker.ResetAutoAttack();
             }
-            if (useE == 1 && _e.IsReady() && target.IsValidTarget(_e.Range) && !target.IsInvulnerable && !Lightslinger)
+            if (logice == 1 && usee && _e.IsReady() && target.IsValidTarget(800) && !target.IsInvulnerable &&
+                !Lightslinger)
             {
                 _e.Cast(Game.CursorPos);
-             //   Orbwalker.ResetAutoAttack();
+
+                //   Orbwalker.ResetAutoAttack();
+            }
+            if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) >= useRminPl && _r.IsReady() && target.IsValidTarget(_r.Range) &&
+                !target.IsInvulnerable)
+            {
+                _r.Cast(target.Position);
             }
         }
 
@@ -719,11 +741,11 @@ namespace Lucian_The_Troll
                      (new[] {0, 0.6, 0.75, 0.9, 1.05, 1.2}[_q.Level]*_Player.FlatPhysicalDamageMod
                          )));
         }
+
         private static float Wdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
-             (float)(new[] { 0, 60, 100, 140, 180, 220 }[_w.Level] + 0.9f * _Player.FlatMagicDamageMod
-                 ));
+                new[] {0, 60, 100, 140, 180, 220}[_w.Level] + 0.9f*_Player.FlatMagicDamageMod);
         }
 
         private static float RDamage(Obj_AI_Base target)
