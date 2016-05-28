@@ -26,8 +26,7 @@ namespace GravesTheTroll
         public static int CurrentSkin;
 
         public static readonly AIHeroClient Player = ObjectManager.Player;
-
-
+       
         internal static void Main(string[] args)
         {
             Loading.OnLoadingComplete += OnLoadingComplete;
@@ -275,14 +274,14 @@ namespace GravesTheTroll
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && E.IsReady() && target.IsValid &&
                 GravesTheTrollMeNu.ComboMenu["useEcombo"].Cast<ComboBox>().CurrentValue == 1)
             {
-                E.Cast(Game.CursorPos);
+                EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
                 Orbwalker.ResetAutoAttack();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && E.IsReady() && target.IsValid &&
                 GravesTheTrollMeNu.ComboMenu["useEcombo"].Cast<ComboBox>().CurrentValue == 2)
                 if (Player.Position.Extend(Game.CursorPos, 700).CountEnemiesInRange(700) <= 1)
                 {
-                    E.Cast(Game.CursorPos);
+                    EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
                     Orbwalker.ResetAutoAttack();
                 }
         }
