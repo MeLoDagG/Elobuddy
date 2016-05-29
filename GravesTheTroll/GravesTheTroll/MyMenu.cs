@@ -98,6 +98,8 @@ namespace GravesTheTroll
                 new CheckBox("Use Q"));
             FarmMeNu.Add("jungle.W",
                 new CheckBox("Use W"));
+            FarmMeNu.Add("jungle.E",
+             new CheckBox("Use E"));
             FarmMeNu.Add("JunglMana",
               new Slider("Min. Mana for JungleClear Spells %", 45));
         }
@@ -273,6 +275,10 @@ namespace GravesTheTroll
             return FarmMeNu["jungle.W"].Cast<CheckBox>().CurrentValue;
         }
 
+        public static bool JungleE()
+        {
+            return FarmMeNu["jungle.E"].Cast<CheckBox>().CurrentValue;
+        }
         public static float JunglMana()
         {
             return FarmMeNu["JunglMana"].Cast<Slider>().CurrentValue;

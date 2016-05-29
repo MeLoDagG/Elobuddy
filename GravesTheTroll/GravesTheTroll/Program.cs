@@ -82,7 +82,7 @@ namespace GravesTheTroll
                     new Circle {Color = Color.Red, Radius = R.Range, BorderWidth = 2f}.Draw(Player.Position);
                 }
                 DamageIndicator.HealthbarEnabled =
-                    GravesTheTrollMeNu.DrawMeNu["healthbar"].Cast<CheckBox>().CurrentValue;
+                GravesTheTrollMeNu.DrawMeNu["healthbar"].Cast<CheckBox>().CurrentValue;
                 DamageIndicator.PercentEnabled = GravesTheTrollMeNu.DrawMeNu["percent"].Cast<CheckBox>().CurrentValue;
             }
         }
@@ -284,6 +284,11 @@ namespace GravesTheTroll
                     EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
                     Orbwalker.ResetAutoAttack();
                 }
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear) && E.IsReady() && target.IsValid && GravesTheTrollMeNu.JungleE())
+            {
+                EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
+                Orbwalker.ResetAutoAttack();
+            }
         }
 
         private static void KillSteal()
