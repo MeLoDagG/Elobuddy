@@ -2,6 +2,7 @@
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Constants;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
@@ -14,27 +15,31 @@ namespace Lucian_The_Troll
 {
     internal class LucianTHeTroll
     {
-        private static Spell.Targeted _q;
-        private static Spell.Skillshot _q1;
-        private static Spell.Skillshot _w;
-        private static Spell.Skillshot _e;
-        private static Spell.Skillshot _r;
-        private static Spell.Active Heal;
+        public static Spell.Targeted _q;
+        public static Spell.Skillshot _q1;
+        public static Spell.Skillshot _w;
+        public static Spell.Skillshot _e;
+        public static Spell.Skillshot _r;
+        public static Spell.Active Heal;
+
+        public static bool HasPassive()
+        {
+            return ObjectManager.Player.HasBuff("LucianPassiveBuff");
+        }
+
+        public static Item HealthPotion;
+        public static Item CorruptingPotion;
+        public static Item RefillablePotion;
+        public static Item TotalBiscuit;
+        public static Item HuntersPotion;
+        public static readonly Item Youmuu = new Item(ItemId.Youmuus_Ghostblade);
+        public static readonly Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
+        public static readonly Item Cutlass = new Item(ItemId.Bilgewater_Cutlass);
+        public static readonly Item Qss = new Item(ItemId.Quicksilver_Sash);
+        public static readonly Item Simitar = new Item(ItemId.Mercurial_Scimitar);
 
 
-        private static Item HealthPotion;
-        private static Item CorruptingPotion;
-        private static Item RefillablePotion;
-        private static Item TotalBiscuit;
-        private static Item HuntersPotion;
-        private static readonly Item Youmuu = new Item(ItemId.Youmuus_Ghostblade);
-        private static readonly Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
-        private static readonly Item Cutlass = new Item(ItemId.Bilgewater_Cutlass);
-        private static readonly Item Qss = new Item(ItemId.Quicksilver_Sash);
-        private static readonly Item Simitar = new Item(ItemId.Mercurial_Scimitar);
-
-
-        private static Menu Menu,
+        public static Menu Menu,
             ComboMenu,
             HarassMenu,
             JungleLaneMenu,
@@ -46,24 +51,24 @@ namespace Lucian_The_Troll
             FleeMenu,
             Humanizer;
 
-        private static AIHeroClient _Player
+        public static AIHeroClient _Player
         {
             get { return ObjectManager.Player; }
         }
 
 
-        private static float HealthPercent
+        public static float HealthPercent
         {
             get { return _Player.Health/_Player.MaxHealth*100; }
         }
 
-        private static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Loading.OnLoadingComplete += Loading_OnLoadingComplete;
         }
 
 
-        private static void Loading_OnLoadingComplete(EventArgs args)
+        public static void Loading_OnLoadingComplete(EventArgs args)
         {
             if (Player.Instance.Hero != Champion.Lucian)
             {
@@ -88,20 +93,19 @@ namespace Lucian_The_Troll
             RefillablePotion = new Item(2031, 0);
             HuntersPotion = new Item(2032, 0);
 
-            Chat.Print("Lucian The Troll Loaded! Version 1.2", Color.DeepSkyBlue);
+            Chat.Print("Lucian The Troll Loaded! Version 1.3", Color.DeepSkyBlue);
             Chat.Print("Have Fun And Dont Feed Kappa!", Color.DeepSkyBlue);
 
             Menu = MainMenu.AddMenu("Lucian The Troll", "LucianTheTroll");
-            Menu.AddGroupLabel("Lucian The Troll Version 1.2");
-            Menu.AddLabel("Last Update 28/5/2016");
+            Menu.AddGroupLabel("Lucian The Troll Version 1.3");
+            Menu.AddLabel("Last Update 29/5/2016");
             Menu.AddLabel("Made By MeLoDaG");
 
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.AddGroupLabel("Combo Settings");
-            ComboMenu.AddLabel("Q Settings");
-            ComboMenu.Add("useQCombo", new CheckBox("Use Q"));
-            ComboMenu.AddLabel("W Settings");
-            ComboMenu.Add("useWCombo", new CheckBox("Use W"));
+            ComboMenu.AddLabel("Combo Logic");
+            ComboMenu.Add("ComboLogic", new ComboBox(" ", 0, "AArange", "Normal"));
+            ComboMenu.AddLabel("W Settings For Normal Logic");
             ComboMenu.Add("useWrange", new Slider("Min Range Use W", 550, 0, 1000));
             ComboMenu.AddLabel("E Settings");
             ComboMenu.Add("useEcombo", new CheckBox("Use E"));
@@ -121,12 +125,12 @@ namespace Lucian_The_Troll
 
             HarassMenu = Menu.AddSubMenu("Harass Settings", "Harass");
             HarassMenu.AddGroupLabel("Harass Settings");
-            HarassMenu.Add("useQHarass", new CheckBox("Use Q normal - Exted"));
+            HarassMenu.Add("useQHarass", new CheckBox("Use Q normal - Exted - Test"));
             HarassMenu.Add("useWHarass", new CheckBox("Use W"));
             HarassMenu.Add("useWHarassMana", new Slider("Min. Mana for Harass %", 70, 0, 100));
             HarassMenu.AddLabel("AutoHarass");
             HarassMenu.Add("autoQHarass", new CheckBox("Auto Q Exted  Harass", false));
-            HarassMenu.Add("autoWHarassMana", new Slider("Min. Mana for Auto Harass%", 70, 0, 100));
+            HarassMenu.Add("autoQHarassMana", new Slider("Min. Mana for Auto Harass%", 70, 0, 100));
 
             JungleLaneMenu = Menu.AddSubMenu("Lane Jungle Clear Settings", "FarmSettings");
             JungleLaneMenu.AddGroupLabel("Lane Clear");
@@ -192,7 +196,7 @@ namespace Lucian_The_Troll
             FleeMenu.AddGroupLabel("Flee Settings");
             FleeMenu.Add("FleeE", new CheckBox("Use E"));
             FleeMenu.Add("FleeW", new CheckBox("Use W"));
-            
+
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
             DrawMenu.AddGroupLabel("Draw Settings");
             DrawMenu.Add("drawQ", new CheckBox("Draw Q Range"));
@@ -207,12 +211,15 @@ namespace Lucian_The_Troll
             DamageIndicator.Initialize(ComboDamage);
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
+            Orbwalker.OnPostAttack += OnAfterAttack;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
             Drawing.OnDraw += Drawing_OnDraw;
-        }
 
-        private static void Drawing_OnDraw(EventArgs args)
+
+        }
+       public static
+                void Drawing_OnDraw(EventArgs args)
         {
             if (DrawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
             {
@@ -239,7 +246,7 @@ namespace Lucian_The_Troll
             DamageIndicator.PercentEnabled = DrawMenu["percent"].Cast<CheckBox>().CurrentValue;
         }
 
-        private static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
+        public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
             if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
                 e.End.Distance(_Player) < 250)
@@ -248,7 +255,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static void AUtoheal()
+        public static void AUtoheal()
         {
             if (Heal != null && AutoPotHealMenu["UseHeal"].Cast<CheckBox>().CurrentValue && Heal.IsReady() &&
                 HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
@@ -259,7 +266,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static
+        public static
             void AutoPot()
         {
             if (AutoPotHealMenu["potion"].Cast<CheckBox>().CurrentValue && !Player.Instance.IsInShopRange() &&
@@ -305,7 +312,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static
+        public static
             void ItemUsage()
         {
             var target = TargetSelector.GetTarget(550, DamageType.Physical);
@@ -337,7 +344,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
+        public static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
         {
             if (!sender.IsMe) return;
 
@@ -379,7 +386,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static void DoQss()
+        public static void DoQss()
         {
             if (Qss.IsOwned() && Qss.IsReady())
             {
@@ -392,7 +399,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static void Game_OnTick(EventArgs args)
+        public static void Game_OnTick(EventArgs args)
         {
             if (CheckSkin())
             {
@@ -400,17 +407,17 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static int SkinId()
+        public static int SkinId()
         {
             return SkinMenu["skin.Id"].Cast<Slider>().CurrentValue;
         }
 
-        private static bool CheckSkin()
+        public static bool CheckSkin()
         {
             return SkinMenu["checkSkin"].Cast<CheckBox>().CurrentValue;
         }
 
-        private static
+        public static
             void OnGameUpdate(EventArgs args)
         {
             Orbwalker.ForcedTarget = null;
@@ -418,7 +425,6 @@ namespace Lucian_The_Troll
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
                 Combo();
-                CastExtendedQ();
                 ItemUsage();
                 AUtoheal();
             }
@@ -448,7 +454,7 @@ namespace Lucian_The_Troll
         }
 
 
-        private static void Flee()
+        public static void Flee()
         {
             var targetW = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
             var fleeW = FleeMenu["FleeW"].Cast<CheckBox>().CurrentValue;
@@ -464,7 +470,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static void Ks()
+        public static void Ks()
         {
             var distance = MiscMenu["UseRksRange"].Cast<Slider>().CurrentValue;
             var useQks = MiscMenu["UseQks"].Cast<CheckBox>().CurrentValue;
@@ -493,7 +499,7 @@ namespace Lucian_The_Troll
             }
         }
 
-        private static void JungleClear()
+        public static void JungleClear()
         {
             var useQ = JungleLaneMenu["useQJungle"].Cast<CheckBox>().CurrentValue;
             var useW = JungleLaneMenu["useWJungle"].Cast<CheckBox>().CurrentValue;
@@ -506,25 +512,22 @@ namespace Lucian_The_Troll
                         .OrderByDescending(a => a.MaxHealth)
                         .FirstOrDefault(a => a.IsValidTarget(900));
 
-                if (useQ && _Player.ManaPercent > junglemana && _q.IsReady() && junleminions.IsValidTarget(_q.Range) &&
-                    !_Player.HasBuff("LucianPassiveBuff"))
-                {
-                    _q.Cast(junleminions);
+                if (useQ && _Player.ManaPercent > junglemana && _q.IsReady() && junleminions.IsValidTarget(_q.Range) && !_Player.IsDashing() && !HasPassive())
+                { 
+                    Core.DelayAction(() => _q.Cast(junleminions), 300);
                 }
-                if (useW && _Player.ManaPercent > junglemana && _w.IsReady() && junleminions.IsValidTarget(_w.Range) &&
-                    !_Player.HasBuff("LucianPassiveBuff"))
+                if (useW && _Player.ManaPercent > junglemana && _w.IsReady() && junleminions.IsValidTarget(_w.Range) && !_Player.IsDashing() && !HasPassive())
                 {
-                    _w.Cast(junleminions);
+                    Core.DelayAction(() => _w.Cast(junleminions), 300);
                 }
-                if (useE && _Player.ManaPercent > junglemana && _e.IsReady() && junleminions.IsValidTarget(_e.Range) &&
-                    !_Player.HasBuff("LucianPassiveBuff"))
+                if (useE && _Player.ManaPercent > junglemana && _e.IsReady() && junleminions.IsValidTarget(_e.Range) && !_Player.IsDashing() && !HasPassive())
                 {
-                    _e.Cast(Game.CursorPos);
+                    Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
                 }
             }
         }
 
-        private static void WaveClear()
+        public static void WaveClear()
         {
             var useQ = JungleLaneMenu["useQFarm"].Cast<CheckBox>().CurrentValue;
             var useW = JungleLaneMenu["useWFarm"].Cast<CheckBox>().CurrentValue;
@@ -540,32 +543,37 @@ namespace Lucian_The_Troll
                     .OrderBy(a => a.MaxHealth)
                     .FirstOrDefault(a => a.IsValidTarget(_q.Range));
             if (count == 0) return;
-            if (useQ && _Player.ManaPercent > lanemana && _q.IsReady() && !_Player.HasBuff("Lightslinger"))
+            if (useQ && _Player.ManaPercent > lanemana && _q.IsReady() && !_Player.IsDashing() && !HasPassive())
             {
-                _q.Cast(source);
+                Core.DelayAction(() => _q.Cast(source), 300);
             }
-            if (useW && _Player.ManaPercent > lanemana && _w.IsReady() && !_Player.HasBuff("Lightslinger"))
+            if (useW && _Player.ManaPercent > lanemana && _w.IsReady() && !_Player.IsDashing() && !HasPassive())
             {
-                _w.Cast(source);
+                Core.DelayAction(() => _w.Cast(source), 300);
             }
-            if (useE && _Player.ManaPercent > lanemana && _e.IsReady() && !_Player.HasBuff("LucianPassiveBuff"))
+            if (useE && _Player.ManaPercent > lanemana && _e.IsReady() && !_Player.IsDashing() && !HasPassive())
             {
-                _e.Cast(Game.CursorPos);
+               Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
             }
         }
 
-        private static void AutoHarass()
+        public static void AutoHarass()
         {
-            var target = TargetSelector.GetTarget(_q.Range, DamageType.Physical);
-            if (HarassMenu["autoQHarass"].Cast<CheckBox>().CurrentValue &&
-                _q.IsReady() && target.IsValidTarget(_q.Range) &&
-                Player.Instance.ManaPercent > HarassMenu["autoWHarassMana"].Cast<Slider>().CurrentValue)
+            var autoQmana = HarassMenu["autoQHarassMana"].Cast<Slider>().CurrentValue;
+            var autoQharass = HarassMenu["autoQHarass"].Cast<CheckBox>().CurrentValue;
+            var target = TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
+            if (!target.IsValidTarget())
+            {
+                return;
+            }
+
+            if (_q.IsReady() && autoQharass && target.IsValidTarget(_q1.Range) && _Player.ManaPercent >= autoQmana)
             {
                 CastExtendedQ();
             }
         }
-
-        private static
+    
+    public static
             void Harass()
         {
             var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
@@ -577,9 +585,10 @@ namespace Lucian_The_Troll
                 return;
             }
 
-            if (_q.IsReady() && target.IsValidTarget(_q1.Range) && qharass && _Player.ManaPercent >= wmana)
+            if (_q.IsReady() && qharass && target.IsValidTarget(_q1.Range) && _Player.ManaPercent >= wmana)
             {
                 CastExtendedQ();
+                _q.Cast(target);
             }
             if (_w.IsReady() && target.IsValidTarget(_w.Range) && wharass && _Player.ManaPercent >= wmana)
             {
@@ -589,59 +598,58 @@ namespace Lucian_The_Troll
                     _w.Cast(predW.CastPosition);
                 }
             }
-        }
+        } 
 
         //Gredit D4mnedN00B
         public static void CastExtendedQ()
         {
-            var target = TargetSelector.SelectedTarget != null &&
-                         TargetSelector.SelectedTarget.Distance(Player.Instance) < 2000
-                ? TargetSelector.SelectedTarget
-                : TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
+             var target = TargetSelector.SelectedTarget != null &&
+                             TargetSelector.SelectedTarget.Distance(Player.Instance) < 2000
+                    ? TargetSelector.SelectedTarget
+                    : TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
 
-            if (!target.IsValidTarget(_q1.Range))
-                return;
-
-            var predPos = _q1.GetPrediction(target);
-            var minions =
-                EntityManager.MinionsAndMonsters.EnemyMinions.Where(m => m.Distance(Player.Instance) <= _q1.Range);
-            var champs = EntityManager.Heroes.Enemies.Where(m => m.Distance(Player.Instance) <= _q1.Range);
-            var monsters =
-                EntityManager.MinionsAndMonsters.Monsters.Where(m => m.Distance(Player.Instance) <= _q1.Range);
-            {
-                foreach (var minion in from minion in minions
-                    let polygon = new Geometry.Polygon.Rectangle(
-                        (Vector2) Player.Instance.ServerPosition,
-                        Player.Instance.ServerPosition.Extend(minion.ServerPosition, _q1.Range), 65f)
-                    where polygon.IsInside(predPos.CastPosition)
-                    select minion)
+                if (!target.IsValidTarget(_q1.Range))
+                    return;
+                var predPos = _q1.GetPrediction(target);
+                var minions =
+                    EntityManager.MinionsAndMonsters.EnemyMinions.Where(m => m.Distance(Player.Instance) <= _q1.Range);
+                var champs = EntityManager.Heroes.Enemies.Where(m => m.Distance(Player.Instance) <= _q1.Range);
+                var monsters =
+                    EntityManager.MinionsAndMonsters.Monsters.Where(m => m.Distance(Player.Instance) <= _q1.Range);
                 {
-                    _q.Cast(minion);
-                }
+                    foreach (var minion in from minion in minions
+                        let polygon = new Geometry.Polygon.Rectangle(
+                            (Vector2) Player.Instance.ServerPosition,
+                            Player.Instance.ServerPosition.Extend(minion.ServerPosition, _q1.Range), 65f)
+                        where polygon.IsInside(predPos.CastPosition)
+                        select minion)
+                    {
+                        _q.Cast(minion);
+                    }
 
-                foreach (var champ in from champ in champs
-                    let polygon = new Geometry.Polygon.Rectangle(
-                        (Vector2) Player.Instance.ServerPosition,
-                        Player.Instance.ServerPosition.Extend(champ.ServerPosition, _q1.Range), 65f)
-                    where polygon.IsInside(predPos.CastPosition)
-                    select champ)
-                {
-                    _q.Cast(champ);
-                }
+                    foreach (var champ in from champ in champs
+                        let polygon = new Geometry.Polygon.Rectangle(
+                            (Vector2) Player.Instance.ServerPosition,
+                            Player.Instance.ServerPosition.Extend(champ.ServerPosition, _q1.Range), 65f)
+                        where polygon.IsInside(predPos.CastPosition)
+                        select champ)
+                    {
+                        _q.Cast(champ);
+                    }
 
-                foreach (var monster in from monster in monsters
-                    let polygon = new Geometry.Polygon.Rectangle(
-                        (Vector2) Player.Instance.ServerPosition,
-                        Player.Instance.ServerPosition.Extend(monster.ServerPosition, _q1.Range), 65f)
-                    where polygon.IsInside(predPos.CastPosition)
-                    select monster)
-                {
-                    _q.Cast(monster);
+                    foreach (var monster in from monster in monsters
+                        let polygon = new Geometry.Polygon.Rectangle(
+                            (Vector2) Player.Instance.ServerPosition,
+                            Player.Instance.ServerPosition.Extend(monster.ServerPosition, _q1.Range), 65f)
+                        where polygon.IsInside(predPos.CastPosition)
+                        select monster)
+                    {
+                        _q.Cast(monster);
+                    }
                 }
             }
-        }
-
-        private static
+        
+        public static
             void UseRTarget()
         {
             var target = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
@@ -649,11 +657,9 @@ namespace Lucian_The_Troll
                 (ComboMenu["ForceR"].Cast<KeyBind>().CurrentValue && _r.IsReady() && target.IsValid &&
                  !Player.HasBuff("lucianr"))) _r.Cast(target.Position);
         }
-
-        private static void Combo()
+        public static void Combo()
         {
-            var useQ = ComboMenu["useQCombo"].Cast<CheckBox>().CurrentValue;
-            var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
+            var comboLogic = ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue;
             var useWrange = ComboMenu["useWrange"].Cast<Slider>().CurrentValue;
             var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
             var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
@@ -666,34 +672,73 @@ namespace Lucian_The_Troll
             {
                 return;
             }
-            if (useQ && _q.IsReady() && target.IsValidTarget(_q.Range) && !_Player.HasBuff("LucianPassiveBuff"))
+            if (comboLogic == 1)
             {
-                Core.DelayAction(() => _q.Cast(target), humanizer);
-            }
-            if (useW && _w.IsReady() &&
-                target.Distance(_Player) <= useWrange && !_Player.HasBuff("LucianPassiveBuff"))
-            {
-                var predW = _w.GetPrediction(target);
-                if (predW.HitChance >= HitChance.High)
+                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !_Player.IsDashing() && !HasPassive())
                 {
-                    Core.DelayAction(() => _w.Cast(predW.CastPosition), humanizer);
+                    Core.DelayAction(() => _q.Cast(target), humanizer);
+                }
+                if (logice == 0 && usee && _e.IsReady() &&
+                    target.IsValidTarget(450) && !HasPassive())
+                {
+                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),
+                        humanizer);
+                }
+                if (logice == 1 && usee && _e.IsReady() && !HasPassive())
+                {
+                    Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), humanizer);
+                }
+                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
+                    _r.IsReady() && target.IsValidTarget(_r.Range))
+                {
+                    _r.Cast(target.Position);
+                }
+                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !_Player.IsDashing() && !HasPassive())
+                {
+                    var predW = _w.GetPrediction(target);
+                    if (predW.HitChance <= HitChance.High)
+                    {
+                        Core.DelayAction(() => _w.Cast(predW.CastPosition), humanizer);
+                    }
                 }
             }
-            if (logice == 0 && usee && _e.IsReady() &&
-                target.IsValidTarget(800) && !_Player.HasBuff("LucianPassiveBuff"))
+        }
+        public static void OnAfterAttack(AttackableUnit target, EventArgs args)
+        {
+            if (ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 0 && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
-                Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),
-                    humanizer);
-            }
-            if (logice == 1 && usee && _e.IsReady() &&
-                target.IsValidTarget(800) && !_Player.HasBuff("LucianPassiveBuff"))
-            {
-                Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), humanizer);
-            }
-            if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
-                _r.IsReady() && target.IsValidTarget(_r.Range))
-            {
-                _r.Cast(target.Position);
+                if (target == null || !(target is AIHeroClient) || target.IsDead || target.IsInvulnerable || !target.IsEnemy || target.IsPhysicalImmune || target.IsZombie)
+                    return;
+
+                var enemy = target as AIHeroClient;
+                if (enemy == null)
+                    return;
+
+                var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
+                var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
+                var humanizer = Humanizer["Humanizer"].Cast<Slider>().CurrentValue;
+
+                if (_q.IsReady() && !_Player.IsDashing())
+                {
+                    Core.DelayAction(() => _q.Cast(enemy), 0);
+                }
+                if (logice == 0 && usee && _e.IsReady())
+                {
+                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),
+                        0);
+                }
+                if (logice == 1 && usee && _e.IsReady())
+                {
+                    Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), 0);
+                }
+                if (_w.IsReady())
+                {
+                    var predW = _w.GetPrediction(enemy);
+                    if (predW.HitChance <= HitChance.High)
+                    {
+                        Core.DelayAction(() => _w.Cast(predW.CastPosition), 300);
+                    }
+                }
             }
         }
 
@@ -711,7 +756,7 @@ namespace Lucian_The_Troll
 
         #region dmg
 
-        private static float ComboDamage(Obj_AI_Base hero)
+        public static float ComboDamage(Obj_AI_Base hero)
         {
             var damage = _Player.GetAutoAttackDamage(hero);
             if (_r.IsReady())
@@ -726,7 +771,7 @@ namespace Lucian_The_Troll
             return damage;
         }
 
-        private static float Qdamage(Obj_AI_Base target)
+        public static float Qdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
                 (float)
@@ -735,13 +780,13 @@ namespace Lucian_The_Troll
                          )));
         }
 
-        private static float Wdamage(Obj_AI_Base target)
+        public static float Wdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
                 new[] {0, 60, 100, 140, 180, 220}[_w.Level] + 0.9f*_Player.FlatMagicDamageMod);
         }
 
-        private static float RDamage(Obj_AI_Base target)
+        public static float RDamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
                 new[] {0, 20, 35, 50}[_r.Level] + 0.2f*_Player.FlatPhysicalDamageMod +
