@@ -249,7 +249,7 @@ namespace Lucian_The_Troll
         public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
             if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.End.Distance(_Player) < 250)
+                e.End.Distance(_Player) <= 850)
             {
                 _w.Cast(e.End);
             }
