@@ -2,7 +2,6 @@
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
-using EloBuddy.SDK.Constants;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
@@ -93,20 +92,21 @@ namespace Lucian_The_Troll
             RefillablePotion = new Item(2031, 0);
             HuntersPotion = new Item(2032, 0);
 
-            Chat.Print("Lucian The Troll Loaded! Version 1.3", Color.DeepSkyBlue);
+            Chat.Print("Lucian The Troll Loaded! Version 1.4", Color.DeepSkyBlue);
             Chat.Print("Have Fun And Dont Feed Kappa!", Color.DeepSkyBlue);
 
             Menu = MainMenu.AddMenu("Lucian The Troll", "LucianTheTroll");
-            Menu.AddGroupLabel("Lucian The Troll Version 1.3");
-            Menu.AddLabel("Last Update 29/5/2016");
+            Menu.AddGroupLabel("Lucian The Troll Version 1.4");
+            Menu.AddLabel("Last Update 1/6/2016");
             Menu.AddLabel("Made By MeLoDaG");
 
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.AddGroupLabel("Combo Settings");
             ComboMenu.AddLabel("Combo Logic");
-            ComboMenu.Add("ComboLogic", new ComboBox(" ", 0, "AArange", "Normal"));
+            ComboMenu.Add("ComboLogic",
+                new ComboBox(" ", 0, "AA > Q > AA > E > AA > W", "Q > AA > W > AA > E", "E > AA > Q > AA > W"));
             ComboMenu.AddLabel("W Settings For Normal Logic");
-            ComboMenu.Add("useWrange", new Slider("Min Range Use W", 550, 0, 1000));
+            ComboMenu.Add("useWrange", new Slider("Min Range Use W", 500, 0, 1000));
             ComboMenu.AddLabel("E Settings");
             ComboMenu.Add("useEcombo", new CheckBox("Use E"));
             ComboMenu.Add("ELogic", new ComboBox(" ", 0, "Side", "Cursor"));
@@ -117,11 +117,11 @@ namespace Lucian_The_Troll
             ComboMenu.Add("ForceR",
                 new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
 
-            Humanizer = Menu.AddSubMenu("Humanizer Settings", "Humanizer");
+         /*   Humanizer = Menu.AddSubMenu("Humanizer Settings", "Humanizer");
             Humanizer.AddGroupLabel("Humanizer Settings");
             Humanizer.AddLabel("For Better And smoothest 250");
             Humanizer.AddLabel("For Faster 0");
-            Humanizer.Add("Humanizer", new Slider("Humanizer", 250, 0, 1000));
+            Humanizer.Add("Humanizer", new Slider("Humanizer", 0, 0, 1000)); */
 
             HarassMenu = Menu.AddSubMenu("Harass Settings", "Harass");
             HarassMenu.AddGroupLabel("Harass Settings");
@@ -218,8 +218,9 @@ namespace Lucian_The_Troll
 
 
         }
-       public static
-                void Drawing_OnDraw(EventArgs args)
+
+        public static
+            void Drawing_OnDraw(EventArgs args)
         {
             if (DrawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
             {
@@ -249,7 +250,7 @@ namespace Lucian_The_Troll
         public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
             if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.End.Distance(_Player) <= 850)
+                e.End.Distance(_Player) >= 900)
             {
                 _w.Cast(e.End);
             }
@@ -262,7 +263,7 @@ namespace Lucian_The_Troll
                 && _Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
             {
                 Heal.Cast();
-                Chat.Print("<font color=\"#fffffff\" > Use HeaL Kappa kippo</font>");
+                Chat.Print("Use Heal Noob!", Color.DeepSkyBlue);
             }
         }
 
@@ -278,25 +279,25 @@ namespace Lucian_The_Troll
                 if (Item.HasItem(HealthPotion.Id) && Item.CanUseItem(HealthPotion.Id))
                 {
                     HealthPotion.Cast();
-                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
+                    Chat.Print("Use Pot NooB!", Color.DeepSkyBlue);
                     return;
                 }
                 if (Item.HasItem(TotalBiscuit.Id) && Item.CanUseItem(TotalBiscuit.Id))
                 {
                     TotalBiscuit.Cast();
-                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
+                    Chat.Print("Use Pot NooB!", Color.DeepSkyBlue);
                     return;
                 }
                 if (Item.HasItem(RefillablePotion.Id) && Item.CanUseItem(RefillablePotion.Id))
                 {
                     RefillablePotion.Cast();
-                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
+                    Chat.Print("Use Pot NooB!", Color.DeepSkyBlue);
                     return;
                 }
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
                     CorruptingPotion.Cast();
-                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
+                    Chat.Print("Use Pot NooB!", Color.DeepSkyBlue);
                     return;
                 }
             }
@@ -307,7 +308,7 @@ namespace Lucian_The_Troll
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
                     CorruptingPotion.Cast();
-                    Chat.Print("<font color=\"#fffffff\" > Use Pot Kappa kippo</font>");
+                    Chat.Print("Use Pot NooB!", Color.DeepSkyBlue);
                 }
             }
         }
@@ -431,6 +432,7 @@ namespace Lucian_The_Troll
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
                 Harass();
+                HarassW();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
@@ -512,15 +514,18 @@ namespace Lucian_The_Troll
                         .OrderByDescending(a => a.MaxHealth)
                         .FirstOrDefault(a => a.IsValidTarget(900));
 
-                if (useQ && _Player.ManaPercent > junglemana && _q.IsReady() && junleminions.IsValidTarget(_q.Range) && !_Player.IsDashing() && !HasPassive())
-                { 
+                if (useQ && _Player.ManaPercent > junglemana && _q.IsReady() && junleminions.IsValidTarget(_q.Range) &&
+                    !_Player.IsDashing() && !HasPassive())
+                {
                     Core.DelayAction(() => _q.Cast(junleminions), 300);
                 }
-                if (useW && _Player.ManaPercent > junglemana && _w.IsReady() && junleminions.IsValidTarget(_w.Range) && !_Player.IsDashing() && !HasPassive())
+                if (useW && _Player.ManaPercent > junglemana && _w.IsReady() && junleminions.IsValidTarget(_w.Range) &&
+                    !_Player.IsDashing() && !HasPassive())
                 {
                     Core.DelayAction(() => _w.Cast(junleminions), 300);
                 }
-                if (useE && _Player.ManaPercent > junglemana && _e.IsReady() && junleminions.IsValidTarget(_e.Range) && !_Player.IsDashing() && !HasPassive())
+                if (useE && _Player.ManaPercent > junglemana && _e.IsReady() && junleminions.IsValidTarget(_e.Range) &&
+                    !_Player.IsDashing() && !HasPassive())
                 {
                     Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
                 }
@@ -553,7 +558,7 @@ namespace Lucian_The_Troll
             }
             if (useE && _Player.ManaPercent > lanemana && _e.IsReady() && !_Player.IsDashing() && !HasPassive())
             {
-               Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
+                Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
             }
         }
 
@@ -572,23 +577,33 @@ namespace Lucian_The_Troll
                 CastExtendedQ();
             }
         }
-    
-    public static
+
+        public static
             void Harass()
         {
-            var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
             var qharass = HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue;
-            var wharass = HarassMenu["useWHarass"].Cast<CheckBox>().CurrentValue;
-            var target = TargetSelector.GetTarget(_q.Range, DamageType.Physical);
+            var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
+            var target = TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
             if (!target.IsValidTarget())
             {
                 return;
             }
-
             if (_q.IsReady() && qharass && target.IsValidTarget(_q1.Range) && _Player.ManaPercent >= wmana)
             {
                 CastExtendedQ();
                 _q.Cast(target);
+            }
+        }
+
+        public static
+            void HarassW()
+        {
+            var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
+            var wharass = HarassMenu["useWHarass"].Cast<CheckBox>().CurrentValue;
+            var target = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
+            if (!target.IsValidTarget())
+            {
+                return;
             }
             if (_w.IsReady() && target.IsValidTarget(_w.Range) && wharass && _Player.ManaPercent >= wmana)
             {
@@ -598,12 +613,11 @@ namespace Lucian_The_Troll
                     _w.Cast(predW.CastPosition);
                 }
             }
-        } 
-
+        }
         //Gredit D4mnedN00B
         public static void CastExtendedQ()
         {
-             var target = TargetSelector.SelectedTarget != null &&
+          var target = TargetSelector.SelectedTarget != null &&
                              TargetSelector.SelectedTarget.Distance(Player.Instance) < 2000
                     ? TargetSelector.SelectedTarget
                     : TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
@@ -648,7 +662,7 @@ namespace Lucian_The_Troll
                     }
                 }
             }
-        
+         
         public static
             void UseRTarget()
         {
@@ -657,6 +671,7 @@ namespace Lucian_The_Troll
                 (ComboMenu["ForceR"].Cast<KeyBind>().CurrentValue && _r.IsReady() && target.IsValid &&
                  !Player.HasBuff("lucianr"))) _r.Cast(target.Position);
         }
+
         public static void Combo()
         {
             var comboLogic = ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue;
@@ -666,7 +681,7 @@ namespace Lucian_The_Troll
             var userhp = ComboMenu["UseRcomboHp"].Cast<CheckBox>().CurrentValue;
             var enemyhp = ComboMenu["hp"].Cast<Slider>().CurrentValue;
             var useRminPl = ComboMenu["combo.REnemies"].Cast<Slider>().CurrentValue;
-            var humanizer = Humanizer["Humanizer"].Cast<Slider>().CurrentValue;
+        //    var humanizer = Humanizer["Humanizer"].Cast<Slider>().CurrentValue;
             var target = TargetSelector.GetTarget(1400, DamageType.Physical);
             if (!target.IsValidTarget(_q.Range) || target == null)
             {
@@ -674,36 +689,78 @@ namespace Lucian_The_Troll
             }
             if (comboLogic == 1)
             {
-                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !_Player.IsDashing() && !HasPassive())
+                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !HasPassive())
                 {
-                    Core.DelayAction(() => _q.Cast(target), humanizer);
+                     _q.Cast(target);
+                    Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 0 && usee && _e.IsReady() &&
                     target.IsValidTarget(450) && !HasPassive())
                 {
-                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),
-                        humanizer);
+                    _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                    Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 1 && usee && _e.IsReady() && !HasPassive())
                 {
-                    Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), humanizer);
+                    Player.CastSpell(SpellSlot.E, Game.CursorPos);
+                    Orbwalker.ResetAutoAttack();
                 }
-                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
-                    _r.IsReady() && target.IsValidTarget(_r.Range))
-                {
-                    _r.Cast(target.Position);
-                }
-                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !_Player.IsDashing() && !HasPassive())
+                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive())
                 {
                     var predW = _w.GetPrediction(target);
                     if (predW.HitChance <= HitChance.High)
                     {
-                        Core.DelayAction(() => _w.Cast(predW.CastPosition), humanizer);
+                       _w.Cast(predW.CastPosition);
+                       Orbwalker.ResetAutoAttack();
+                    }
+                }
+                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
+                   _r.IsReady() && target.IsValidTarget(_r.Range))
+                {
+                    _r.Cast(target.Position);
+                }
+            }
+            if (comboLogic == 2)
+            {
+                if (logice == 0 && usee && _e.IsReady() && target.IsValidTarget(_q1.Range) && !HasPassive())
+                {
+                    _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                   // Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()), humanizer);
+                    Orbwalker.ResetAutoAttack();
+                }
+                if (logice == 1 && usee && _e.IsReady() && target.IsValidTarget(_q1.Range) && !HasPassive())
+                {
+                    Player.CastSpell(SpellSlot.E, Game.CursorPos);
+                  //  Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), humanizer);
+                    Orbwalker.ResetAutoAttack();
+                }
+                if (_q.IsReady() && target.IsValidTarget(550) && !HasPassive())
+                {
+                    _q.Cast(target);
+                    Orbwalker.ResetAutoAttack();
+                    //   Core.DelayAction(() => _q.Cast(target), humanizer);
+                }
+                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive())
+                {
+                    var predW = _w.GetPrediction(target);
+                    if (predW.HitChance <= HitChance.High)
+                    {
+                        _w.Cast(predW.CastPosition);
+                        Orbwalker.ResetAutoAttack();
+                        //  Core.DelayAction(() => _w.Cast(predW.CastPosition), humanizer);
+                    }
+                }
+                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
+                        _r.IsReady() && target.IsValidTarget(_r.Range))
+                    {
+                        _r.Cast(target.Position);
                     }
                 }
             }
-        }
-        public static void OnAfterAttack(AttackableUnit target, EventArgs args)
+        
+
+        public static
+            void OnAfterAttack(AttackableUnit target, EventArgs args)
         {
             if (ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 0 && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
@@ -716,20 +773,21 @@ namespace Lucian_The_Troll
 
                 var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
                 var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
-                var humanizer = Humanizer["Humanizer"].Cast<Slider>().CurrentValue;
-
-                if (_q.IsReady() && !_Player.IsDashing())
+         
+                if (_q.IsReady())
                 {
                     Core.DelayAction(() => _q.Cast(enemy), 0);
+                    Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 0 && usee && _e.IsReady())
                 {
-                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),
-                        0);
+                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),0);
+                    Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 1 && usee && _e.IsReady())
                 {
                     Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), 0);
+                    Orbwalker.ResetAutoAttack();
                 }
                 if (_w.IsReady())
                 {
@@ -737,6 +795,7 @@ namespace Lucian_The_Troll
                     if (predW.HitChance <= HitChance.High)
                     {
                         Core.DelayAction(() => _w.Cast(predW.CastPosition), 300);
+                        Orbwalker.ResetAutoAttack();
                     }
                 }
             }
