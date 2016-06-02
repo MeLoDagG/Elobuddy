@@ -484,12 +484,12 @@ namespace Lucian_The_Troll
                         e => e.Distance(_Player) <= _q.Range && e.IsValidTarget() && !e.IsInvulnerable))
             {
                 if (useQks && _q.IsReady() &&
-                    Qdamage(enemy) >= enemy.Health && enemy.Distance(_Player) <= _q.Range)
+                    Qdamage(enemy) >= enemy.Health)
                 {
                     _q.Cast(enemy);
                 }
                 if (useWks && _w.IsReady() &&
-                    Wdamage(enemy) >= enemy.Health && enemy.Distance(_Player) <= _w.Range)
+                    Wdamage(enemy) >= enemy.Health)
                 {
                     _w.Cast(enemy);
                 }
@@ -692,18 +692,18 @@ namespace Lucian_The_Troll
                 if (_q.IsReady() && target.IsValidTarget(_q.Range) && !HasPassive())
                 {
                     _q.Cast(target);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 0 && usee && _e.IsReady() &&
                     target.IsValidTarget(450) && !HasPassive())
                 {
                     _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 1 && usee && _e.IsReady() && !HasPassive())
                 {
                     Player.CastSpell(SpellSlot.E, Game.CursorPos);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (_w.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive())
                 {
@@ -711,7 +711,7 @@ namespace Lucian_The_Troll
                     if (predW.HitChance <= HitChance.High)
                     {
                         _w.Cast(predW.UnitPosition);
-                        Orbwalker.ResetAutoAttack();
+                       // Orbwalker.ResetAutoAttack();
                     }
                 }
                 if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
@@ -726,18 +726,18 @@ namespace Lucian_The_Troll
                 {
                     _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
                     // Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()), humanizer);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 1 && usee && _e.IsReady() && target.IsValidTarget(_q1.Range) && !HasPassive())
                 {
                     Player.CastSpell(SpellSlot.E, Game.CursorPos);
                     //  Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), humanizer);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (_q.IsReady() && target.IsValidTarget(_q.Range) && !HasPassive())
                 {
                     _q.Cast(target);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                     //   Core.DelayAction(() => _q.Cast(target), humanizer);
                 }
                 if (_w.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive())
@@ -746,7 +746,7 @@ namespace Lucian_The_Troll
                     if (predW.HitChance <= HitChance.High)
                     {
                         _w.Cast(predW.UnitPosition);
-                        Orbwalker.ResetAutoAttack();
+                       // Orbwalker.ResetAutoAttack();
                         //  Core.DelayAction(() => _w.Cast(predW.CastPosition), humanizer);
                     }
                 }
@@ -806,17 +806,17 @@ namespace Lucian_The_Troll
                 if (_q.IsReady())
                 {
                     Core.DelayAction(() => _q.Cast(enemy), 0);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 0 && usee && _e.IsReady())
                 {
                     Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),0);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (logice == 1 && usee && _e.IsReady())
                 {
                     Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), 0);
-                    Orbwalker.ResetAutoAttack();
+                   // Orbwalker.ResetAutoAttack();
                 }
                 if (_w.IsReady())
                 {
@@ -824,7 +824,7 @@ namespace Lucian_The_Troll
                     if (predW.HitChance <= HitChance.High)
                     {
                         Core.DelayAction(() => _w.Cast(predW.UnitPosition), 300);
-                        Orbwalker.ResetAutoAttack();
+                       // Orbwalker.ResetAutoAttack();
                     }
                 }
             }
