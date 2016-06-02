@@ -38,16 +38,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EloBuddy">
-      <HintPath>..\..\..\..\..\Desktop\EloBuddyconsole\EloBuddy\System\EloBuddy.dll</HintPath>
+      <HintPath>..\..\..\EloBuddyconsole\EloBuddy\System\EloBuddy.dll</HintPath>
     </Reference>
     <Reference Include="EloBuddy.SDK">
-      <HintPath>..\..\..\..\..\Desktop\EloBuddyconsole\EloBuddy\System\EloBuddy.SDK.dll</HintPath>
+      <HintPath>..\..\..\EloBuddyconsole\EloBuddy\System\EloBuddy.SDK.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\..\Desktop\EloBuddyconsole\EloBuddy\System\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\EloBuddyconsole\EloBuddy\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>..\..\..\..\..\Desktop\EloBuddyconsole\EloBuddy\System\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>..\..\..\EloBuddyconsole\EloBuddy\System\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
