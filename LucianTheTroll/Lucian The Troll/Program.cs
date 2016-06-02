@@ -76,8 +76,8 @@ namespace Lucian_The_Troll
 
 
             _q = new Spell.Targeted(SpellSlot.Q, 675);
-            _q1 = new Spell.Skillshot(SpellSlot.Q, 1140, SkillShotType.Linear, 350, int.MaxValue, 75);
-            _w = new Spell.Skillshot(SpellSlot.W, 1000, SkillShotType.Linear, 250, 1600, 100);
+            _q1 = new Spell.Skillshot(SpellSlot.Q, 900, SkillShotType.Linear, 350, int.MaxValue, 75);
+            _w = new Spell.Skillshot(SpellSlot.W, 900, SkillShotType.Linear, 250, 1600, 100);
             _e = new Spell.Skillshot(SpellSlot.E, 475, SkillShotType.Linear);
             _r = new Spell.Skillshot(SpellSlot.R, 1400, SkillShotType.Linear, 500, 2800, 110);
 
@@ -92,12 +92,12 @@ namespace Lucian_The_Troll
             RefillablePotion = new Item(2031, 0);
             HuntersPotion = new Item(2032, 0);
 
-            Chat.Print("Lucian The Troll Loaded! Version 1.4", Color.DeepSkyBlue);
+            Chat.Print("Lucian The Troll Loaded! Version 1.5", Color.DeepSkyBlue);
             Chat.Print("Have Fun And Dont Feed Kappa!", Color.DeepSkyBlue);
 
             Menu = MainMenu.AddMenu("Lucian The Troll", "LucianTheTroll");
-            Menu.AddGroupLabel("Lucian The Troll Version 1.4");
-            Menu.AddLabel("Last Update 1/6/2016");
+            Menu.AddGroupLabel("Lucian The Troll Version 1.5");
+            Menu.AddLabel("Last Update 2/6/2016");
             Menu.AddLabel("Made By MeLoDaG");
 
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
@@ -710,7 +710,7 @@ namespace Lucian_The_Troll
                     var predW = _w.GetPrediction(target);
                     if (predW.HitChance <= HitChance.High)
                     {
-                       _w.Cast(predW.CastPosition);
+                       _w.Cast(predW.UnitPosition);
                        Orbwalker.ResetAutoAttack();
                     }
                 }
@@ -734,7 +734,7 @@ namespace Lucian_The_Troll
                   //  Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), humanizer);
                     Orbwalker.ResetAutoAttack();
                 }
-                if (_q.IsReady() && target.IsValidTarget(550) && !HasPassive())
+                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !HasPassive())
                 {
                     _q.Cast(target);
                     Orbwalker.ResetAutoAttack();
@@ -745,7 +745,7 @@ namespace Lucian_The_Troll
                     var predW = _w.GetPrediction(target);
                     if (predW.HitChance <= HitChance.High)
                     {
-                        _w.Cast(predW.CastPosition);
+                        _w.Cast(predW.UnitPosition);
                         Orbwalker.ResetAutoAttack();
                         //  Core.DelayAction(() => _w.Cast(predW.CastPosition), humanizer);
                     }
@@ -794,7 +794,7 @@ namespace Lucian_The_Troll
                     var predW = _w.GetPrediction(enemy);
                     if (predW.HitChance <= HitChance.High)
                     {
-                        Core.DelayAction(() => _w.Cast(predW.CastPosition), 300);
+                        Core.DelayAction(() => _w.Cast(predW.UnitPosition), 300);
                         Orbwalker.ResetAutoAttack();
                     }
                 }
@@ -835,7 +835,7 @@ namespace Lucian_The_Troll
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
                 (float)
                     (new[] {0, 80, 110, 140, 170, 200}[_q.Level] +
-                     (new[] {0, 0.6, 0.75, 0.9, 1.05, 1.2}[_q.Level]*_Player.FlatPhysicalDamageMod
+                     (new[] {0, 0.6, 0.7, 0.8, 0.9, 1.0}[_q.Level]*_Player.FlatPhysicalDamageMod
                          )));
         }
 
