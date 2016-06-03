@@ -624,7 +624,7 @@ namespace Varus_The_Troll
             if (targetQ != null)
             {
                 if (HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue && Q.IsReady() &&
-                    targetQ.Distance(Player) > Player.AttackRange && targetE.IsValidTarget(Q.Range)
+                    targetQ.Distance(Player) > Player.AttackRange && targetQ.IsValidTarget(800)
                     && EloBuddy.Player.Instance.ManaPercent > qmana)
                 {
                     if (Q.IsCharging)
@@ -676,7 +676,7 @@ namespace Varus_The_Troll
             if (useEalways && E.IsReady())
             {
                 E.Cast(target);
-                Orbwalker.ResetAutoAttack();
+             //   Orbwalker.ResetAutoAttack();
             }
             if (comboQalways && Q.IsReady() && target != null)
             {
