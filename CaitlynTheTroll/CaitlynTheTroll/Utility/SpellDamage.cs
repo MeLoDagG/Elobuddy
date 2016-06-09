@@ -20,6 +20,6 @@ namespace CaitlynTheTroll.Utility
 
             return damage;
         }
-    }
+     }
 }
        

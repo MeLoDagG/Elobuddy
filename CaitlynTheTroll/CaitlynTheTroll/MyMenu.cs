@@ -60,7 +60,7 @@ namespace CaitlynTheTroll
             ComboMenu.Add("combo.w",
                 new CheckBox("Use W"));
           ComboMenu.Add("combo.R",
-                new CheckBox("Use R"));
+                new CheckBox("Use Smart R"));
             ComboMenu.AddSeparator();
             ComboMenu.AddGroupLabel("Combo preferences:");
            ComboMenu.Add("comboEQbind",
@@ -71,9 +71,7 @@ namespace CaitlynTheTroll
                 new CheckBox("Use Q CC"));
             ComboMenu.Add("combo.CCW",
                new CheckBox("Use W CC"));
-            ComboMenu.Add("combo.REnemies",
-                new Slider("Min Enemyes for R", 1, 0, 5));
-        }
+           }
 
 
         private static void FarmMeNuPage()
@@ -100,6 +98,8 @@ namespace CaitlynTheTroll
             {
                 HarassMeNu.Add("Harass.Q" + enemies.ChampionName, new CheckBox("" + enemies.ChampionName));
             }
+            HarassMeNu.AddSeparator();
+            HarassMeNu.Add("UseWharass", new CheckBox("Use W"));
             HarassMeNu.Add("harass.QE",
                 new Slider("Min. Mana for Harass Spells %", 55));
             HarassMeNu.AddSeparator();
@@ -260,7 +260,10 @@ namespace CaitlynTheTroll
         {
             return HarassMeNu["harass.Q"].Cast<CheckBox>().CurrentValue;
         }
-
+        public static bool HarassW()
+        {
+            return HarassMeNu["UseWharass"].Cast<CheckBox>().CurrentValue;
+        }
         public static float HarassQe()
         {
             return HarassMeNu["harass.QE"].Cast<Slider>().CurrentValue;
