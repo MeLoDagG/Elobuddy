@@ -14,17 +14,12 @@ namespace Lucian_The_Troll
 {
     internal class LucianTHeTroll
     {
-        public static Spell.Targeted _q;
-        public static Spell.Skillshot _q1;
-        public static Spell.Skillshot _w;
-        public static Spell.Skillshot _e;
-        public static Spell.Skillshot _r;
+        public static Spell.Targeted Q;
+        public static Spell.Skillshot Q1;
+        public static Spell.Skillshot W;
+        public static Spell.Skillshot E;
+        public static Spell.Skillshot R;
         public static Spell.Active Heal;
-
-        public static bool HasPassive()
-        {
-            return ObjectManager.Player.HasBuff("LucianPassiveBuff");
-        }
 
         public static Item HealthPotion;
         public static Item CorruptingPotion;
@@ -47,8 +42,9 @@ namespace Lucian_The_Troll
             ItemMenu,
             SkinMenu,
             AutoPotHealMenu,
-            FleeMenu,
-            Humanizer;
+            FleeMenu;
+
+        //  Humanizer;
 
         public static AIHeroClient _Player
         {
@@ -59,6 +55,11 @@ namespace Lucian_The_Troll
         public static float HealthPercent
         {
             get { return _Player.Health/_Player.MaxHealth*100; }
+        }
+
+        public static bool HasPassive()
+        {
+            return ObjectManager.Player.HasBuff("LucianPassiveBuff");
         }
 
         public static void Main(string[] args)
@@ -75,11 +76,11 @@ namespace Lucian_The_Troll
             }
 
 
-            _q = new Spell.Targeted(SpellSlot.Q, 675);
-            _q1 = new Spell.Skillshot(SpellSlot.Q, 900, SkillShotType.Linear, 350, int.MaxValue, 75);
-            _w = new Spell.Skillshot(SpellSlot.W, 900, SkillShotType.Linear, 250, 1600, 100);
-            _e = new Spell.Skillshot(SpellSlot.E, 475, SkillShotType.Linear);
-            _r = new Spell.Skillshot(SpellSlot.R, 1400, SkillShotType.Linear, 500, 2800, 110);
+            Q = new Spell.Targeted(SpellSlot.Q, 675);
+            Q1 = new Spell.Skillshot(SpellSlot.Q, 900, SkillShotType.Linear, 350, int.MaxValue, 75);
+            W = new Spell.Skillshot(SpellSlot.W, 900, SkillShotType.Linear, 250, 1600, 100);
+            E = new Spell.Skillshot(SpellSlot.E, 475, SkillShotType.Linear);
+            R = new Spell.Skillshot(SpellSlot.R, 1400, SkillShotType.Linear, 500, 2800, 110);
 
             var slot = _Player.GetSpellSlotFromName("summonerheal");
             if (slot != SpellSlot.Unknown)
@@ -92,22 +93,22 @@ namespace Lucian_The_Troll
             RefillablePotion = new Item(2031, 0);
             HuntersPotion = new Item(2032, 0);
 
-            Chat.Print("Lucian The Troll Loaded! Version 1.6", Color.DeepSkyBlue);
+            Chat.Print("Lucian The Troll Loaded! Version 1.7 (15/6/2016)", Color.DeepSkyBlue);
             Chat.Print("Have Fun And Dont Feed Kappa!", Color.DeepSkyBlue);
 
             Menu = MainMenu.AddMenu("Lucian The Troll", "LucianTheTroll");
-            Menu.AddGroupLabel("Lucian The Troll Version 1.6");
-            Menu.AddLabel("Last Update 3/6/2016");
+            Menu.AddGroupLabel("Lucian The Troll Version 1.7");
+            Menu.AddLabel("Last Update 15/6/2016");
             Menu.AddLabel("Made By MeLoDaG");
-
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.AddGroupLabel("Combo Settings");
             ComboMenu.AddLabel("Combo Logic");
             ComboMenu.Add("ComboLogic",
-                new ComboBox(" ", 0, "AA > Q > AA > E > AA > W", "Q > AA > W > AA > E", "E > AA > Q > AA > W", "OldFastCombo"));
+                new ComboBox(" ", 0, "AARange", "Normal"));
             ComboMenu.AddLabel("W Settings For Normal Logic");
             ComboMenu.Add("useWrange", new Slider("Min Range Use W", 500, 0, 1000));
             ComboMenu.AddLabel("E Settings");
+            ComboMenu.Add("useEstartcombo", new CheckBox("Use E Start Combo", false));
             ComboMenu.Add("useEcombo", new CheckBox("Use E"));
             ComboMenu.Add("ELogic", new ComboBox(" ", 0, "Side", "Cursor"));
             ComboMenu.AddLabel("R Settings");
@@ -117,7 +118,7 @@ namespace Lucian_The_Troll
             ComboMenu.Add("ForceR",
                 new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
 
-         /*   Humanizer = Menu.AddSubMenu("Humanizer Settings", "Humanizer");
+            /*   Humanizer = Menu.AddSubMenu("Humanizer Settings", "Humanizer");
             Humanizer.AddGroupLabel("Humanizer Settings");
             Humanizer.AddLabel("For Better And smoothest 250");
             Humanizer.AddLabel("For Faster 0");
@@ -181,7 +182,7 @@ namespace Lucian_The_Troll
 
             MiscMenu = Menu.AddSubMenu("Misc Settings", "MiscSettings");
             MiscMenu.AddGroupLabel("Gapcloser  settings");
-            MiscMenu.Add("gapcloser", new CheckBox("Auto W for Gapcloser"));
+            MiscMenu.Add("gapcloser", new CheckBox("Auto E for Gapcloser"));
             MiscMenu.AddGroupLabel("Ks Settings");
             MiscMenu.Add("UseQks", new CheckBox("Use Q ks"));
             MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
@@ -208,15 +209,13 @@ namespace Lucian_The_Troll
             DrawMenu.Add("healthbar", new CheckBox("Healthbar overlay"));
             DrawMenu.Add("percent", new CheckBox("Damage percent info"));
 
-            DamageIndicator.Initialize(ComboDamage);
+            DamageIndicator.Initialize(GetRawDamage);
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
             Orbwalker.OnPostAttack += OnAfterAttack;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
             Drawing.OnDraw += Drawing_OnDraw;
-
-
         }
 
         public static
@@ -224,23 +223,23 @@ namespace Lucian_The_Troll
         {
             if (DrawMenu["drawQ"].Cast<CheckBox>().CurrentValue)
             {
-                new Circle {Color = Color.DeepSkyBlue, Radius = _q.Range, BorderWidth = 2f}.Draw(_Player.Position);
+                new Circle {Color = Color.DeepSkyBlue, Radius = Q.Range, BorderWidth = 2f}.Draw(_Player.Position);
             }
             if (DrawMenu["drawQ.1"].Cast<CheckBox>().CurrentValue)
             {
-                new Circle {Color = Color.DeepSkyBlue, Radius = _q1.Range, BorderWidth = 2f}.Draw(_Player.Position);
+                new Circle {Color = Color.DeepSkyBlue, Radius = Q1.Range, BorderWidth = 2f}.Draw(_Player.Position);
             }
             if (DrawMenu["drawW"].Cast<CheckBox>().CurrentValue)
             {
-                new Circle {Color = Color.DeepSkyBlue, Radius = _w.Range, BorderWidth = 2f}.Draw(_Player.Position);
+                new Circle {Color = Color.DeepSkyBlue, Radius = W.Range, BorderWidth = 2f}.Draw(_Player.Position);
             }
             if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
             {
-                new Circle {Color = Color.DeepSkyBlue, Radius = _e.Range, BorderWidth = 2f}.Draw(_Player.Position);
+                new Circle {Color = Color.DeepSkyBlue, Radius = E.Range, BorderWidth = 2f}.Draw(_Player.Position);
             }
             if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
             {
-                new Circle {Color = Color.DeepSkyBlue, Radius = _r.Range, BorderWidth = 2f}.Draw(_Player.Position);
+                new Circle {Color = Color.DeepSkyBlue, Radius = R.Range, BorderWidth = 2f}.Draw(_Player.Position);
             }
 
             DamageIndicator.HealthbarEnabled = DrawMenu["healthbar"].Cast<CheckBox>().CurrentValue;
@@ -250,11 +249,11 @@ namespace Lucian_The_Troll
         public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
         {
             if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.End.Distance(_Player) <= 220)
+                e.End.Distance(_Player) <= 170)
             {
-                _w.Cast(e.End);
+                E.Cast(e.End);
             }
-        } 
+        }
 
         public static void AUtoheal()
         {
@@ -426,6 +425,7 @@ namespace Lucian_The_Troll
                 Combo();
                 ItemUsage();
                 AUtoheal();
+                CastR();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
@@ -456,19 +456,20 @@ namespace Lucian_The_Troll
 
         public static void Flee()
         {
-            var targetW = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
+            var targetW = TargetSelector.GetTarget(W.Range, DamageType.Physical);
             var fleeW = FleeMenu["FleeW"].Cast<CheckBox>().CurrentValue;
             var fleeE = FleeMenu["FleeE"].Cast<CheckBox>().CurrentValue;
 
-            if (fleeW && _w.IsReady() && targetW.IsValidTarget(_w.Range))
+            if (fleeW && W.IsReady() && targetW.IsValidTarget(W.Range))
             {
-                _w.Cast(targetW);
+                W.Cast(targetW);
             }
-            if (fleeE && _e.IsReady())
+            if (fleeE && E.IsReady())
             {
                 Player.CastSpell(SpellSlot.E, Game.CursorPos);
             }
         }
+
         public static void Ks()
         {
             var distance = MiscMenu["UseRksRange"].Cast<Slider>().CurrentValue;
@@ -477,25 +478,30 @@ namespace Lucian_The_Troll
             var useRks = MiscMenu["UseRks"].Cast<CheckBox>().CurrentValue;
             foreach (
                 var enemy in
-                    EntityManager.Heroes.Enemies.Where(e => e.Distance(_Player) <= _q.Range && e.IsValidTarget(1000) && !e.IsInvulnerable))
+                    EntityManager.Heroes.Enemies.Where(
+                        e => e.Distance(_Player) <= Q.Range && e.IsValidTarget(1000) && !e.IsInvulnerable))
             {
-                if (useQks && _q.IsReady() &&
-                    Qdamage(enemy) >= enemy.Health)
+                if (useQks && Q.IsReady() &&
+                    Qdamage(enemy) >= enemy.Health && enemy.Distance(_Player) >= 550)
                 {
-                    _q.Cast(enemy);
+                    Q.Cast(enemy);
                 }
-                if (useWks && _w.IsReady() &&
-                    Wdamage(enemy) >= enemy.Health)
+                if (useWks && W.IsReady() &&
+                    Wdamage(enemy) >= enemy.Health && enemy.Distance(_Player) >= 550)
                 {
-                    _w.Cast(enemy.Position);
-                }
-                if (useRks && _r.IsReady() && RDamage(enemy) >= enemy.Health &&
-                    enemy.Distance(_Player) <= distance)
-                {
-                    _r.Cast(enemy.Position);
+                    var predW = W.GetPrediction(enemy);
+                    if (predW.HitChance == HitChance.High)
+                    {
+                        W.Cast(enemy.Position);
+                    }
+                    if (useRks && R.IsReady() && RDamage(enemy) >= enemy.Health &&
+                        enemy.Distance(_Player) <= distance)
+                    {
+                        R.Cast(enemy.Position);
+                    }
                 }
             }
-        } 
+        }
 
         public static void JungleClear()
         {
@@ -510,20 +516,20 @@ namespace Lucian_The_Troll
                         .OrderByDescending(a => a.MaxHealth)
                         .FirstOrDefault(a => a.IsValidTarget(900));
 
-                if (useQ && _Player.ManaPercent > junglemana && _q.IsReady() && junleminions.IsValidTarget(_q.Range) &&
+                if (useQ && _Player.ManaPercent > junglemana && Q.IsReady() && junleminions.IsValidTarget(Q.Range) &&
                     !_Player.IsDashing() && !HasPassive())
                 {
-                    Core.DelayAction(() => _q.Cast(junleminions), 300);
+                    Core.DelayAction(() => Q.Cast(junleminions), 300);
                 }
-                if (useW && _Player.ManaPercent > junglemana && _w.IsReady() && junleminions.IsValidTarget(_w.Range) &&
+                if (useW && _Player.ManaPercent > junglemana && W.IsReady() && junleminions.IsValidTarget(W.Range) &&
                     !_Player.IsDashing() && !HasPassive())
                 {
-                    Core.DelayAction(() => _w.Cast(junleminions), 300);
+                    Core.DelayAction(() => W.Cast(junleminions), 300);
                 }
-                if (useE && _Player.ManaPercent > junglemana && _e.IsReady() && junleminions.IsValidTarget(_e.Range) &&
+                if (useE && _Player.ManaPercent > junglemana && E.IsReady() && junleminions.IsValidTarget(E.Range) &&
                     !_Player.IsDashing() && !HasPassive())
                 {
-                    Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
+                    Core.DelayAction(() => E.Cast(Game.CursorPos), 300);
                 }
             }
         }
@@ -542,19 +548,19 @@ namespace Lucian_The_Troll
             var source =
                 EntityManager.MinionsAndMonsters.GetLaneMinions()
                     .OrderBy(a => a.MaxHealth)
-                    .FirstOrDefault(a => a.IsValidTarget(_q.Range));
+                    .FirstOrDefault(a => a.IsValidTarget(Q.Range));
             if (count == 0) return;
-            if (useQ && _Player.ManaPercent > lanemana && _q.IsReady() && !HasPassive())
+            if (useQ && _Player.ManaPercent > lanemana && Q.IsReady() && !HasPassive())
             {
-                Core.DelayAction(() => _q.Cast(source), 300);
+                Core.DelayAction(() => Q.Cast(source), 300);
             }
-            if (useW && _Player.ManaPercent > lanemana && _w.IsReady() && !HasPassive())
+            if (useW && _Player.ManaPercent > lanemana && W.IsReady() && !HasPassive())
             {
-                Core.DelayAction(() => _w.Cast(source), 300);
+                Core.DelayAction(() => W.Cast(source), 300);
             }
-            if (useE && _Player.ManaPercent > lanemana && _e.IsReady() && !HasPassive())
+            if (useE && _Player.ManaPercent > lanemana && E.IsReady() && !HasPassive())
             {
-                Core.DelayAction(() => _e.Cast(Game.CursorPos), 300);
+                Core.DelayAction(() => E.Cast(Game.CursorPos), 300);
             }
         }
 
@@ -562,13 +568,13 @@ namespace Lucian_The_Troll
         {
             var autoQmana = HarassMenu["autoQHarassMana"].Cast<Slider>().CurrentValue;
             var autoQharass = HarassMenu["autoQHarass"].Cast<CheckBox>().CurrentValue;
-            var target = TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
+            var target = TargetSelector.GetTarget(Q1.Range, DamageType.Physical);
             if (!target.IsValidTarget())
             {
                 return;
             }
 
-            if (_q.IsReady() && autoQharass && target.IsValidTarget(_q1.Range) && _Player.ManaPercent >= autoQmana)
+            if (Q.IsReady() && autoQharass && target.IsValidTarget(Q1.Range) && _Player.ManaPercent >= autoQmana)
             {
                 CastExtendedQ();
             }
@@ -579,15 +585,15 @@ namespace Lucian_The_Troll
         {
             var qharass = HarassMenu["useQHarass"].Cast<CheckBox>().CurrentValue;
             var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
-            var target = TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
+            var target = TargetSelector.GetTarget(Q1.Range, DamageType.Physical);
             if (!target.IsValidTarget())
             {
                 return;
             }
-            if (_q.IsReady() && qharass && target.IsValidTarget(_q1.Range) && _Player.ManaPercent >= wmana)
+            if (Q.IsReady() && qharass && target.IsValidTarget(Q1.Range) && _Player.ManaPercent >= wmana)
             {
                 CastExtendedQ();
-                _q.Cast(target);
+                Q.Cast(target);
             }
         }
 
@@ -596,181 +602,146 @@ namespace Lucian_The_Troll
         {
             var wmana = HarassMenu["useWHarassMana"].Cast<Slider>().CurrentValue;
             var wharass = HarassMenu["useWHarass"].Cast<CheckBox>().CurrentValue;
-            var target = TargetSelector.GetTarget(_w.Range, DamageType.Physical);
+            var target = TargetSelector.GetTarget(W.Range, DamageType.Physical);
             if (!target.IsValidTarget())
             {
                 return;
             }
-            if (_w.IsReady() && target.IsValidTarget(_w.Range) && wharass && _Player.ManaPercent >= wmana)
+            if (W.IsReady() && target.IsValidTarget(W.Range) && wharass && _Player.ManaPercent >= wmana)
             {
-                var predW = _w.GetPrediction(target);
+                var predW = W.GetPrediction(target);
                 if (predW.HitChance >= HitChance.High)
                 {
-                    _w.Cast(predW.CastPosition);
+                    W.Cast(predW.CastPosition);
                 }
             }
         }
+
         //Gredit D4mnedN00B
         public static void CastExtendedQ()
         {
-          var target = TargetSelector.SelectedTarget != null &&
-                             TargetSelector.SelectedTarget.Distance(Player.Instance) < 2000
-                    ? TargetSelector.SelectedTarget
-                    : TargetSelector.GetTarget(_q1.Range, DamageType.Physical);
+            var target = TargetSelector.SelectedTarget != null &&
+                         TargetSelector.SelectedTarget.Distance(Player.Instance) < 2000
+                ? TargetSelector.SelectedTarget
+                : TargetSelector.GetTarget(Q1.Range, DamageType.Physical);
 
-                if (!target.IsValidTarget(_q1.Range))
-                    return;
-                var predPos = _q1.GetPrediction(target);
-                var minions =
-                    EntityManager.MinionsAndMonsters.EnemyMinions.Where(m => m.Distance(Player.Instance) <= _q1.Range);
-                var champs = EntityManager.Heroes.Enemies.Where(m => m.Distance(Player.Instance) <= _q1.Range);
-                var monsters =
-                    EntityManager.MinionsAndMonsters.Monsters.Where(m => m.Distance(Player.Instance) <= _q1.Range);
+            if (!target.IsValidTarget(Q1.Range))
+                return;
+            var predPos = Q1.GetPrediction(target);
+            var minions =
+                EntityManager.MinionsAndMonsters.EnemyMinions.Where(m => m.Distance(Player.Instance) <= Q1.Range);
+            var champs = EntityManager.Heroes.Enemies.Where(m => m.Distance(Player.Instance) <= Q1.Range);
+            var monsters =
+                EntityManager.MinionsAndMonsters.Monsters.Where(m => m.Distance(Player.Instance) <= Q1.Range);
+            {
+                foreach (var minion in from minion in minions
+                    let polygon = new Geometry.Polygon.Rectangle(
+                        (Vector2) Player.Instance.ServerPosition,
+                        Player.Instance.ServerPosition.Extend(minion.ServerPosition, Q1.Range), 65f)
+                    where polygon.IsInside(predPos.CastPosition)
+                    select minion)
                 {
-                    foreach (var minion in from minion in minions
-                        let polygon = new Geometry.Polygon.Rectangle(
-                            (Vector2) Player.Instance.ServerPosition,
-                            Player.Instance.ServerPosition.Extend(minion.ServerPosition, _q1.Range), 65f)
-                        where polygon.IsInside(predPos.CastPosition)
-                        select minion)
-                    {
-                        _q.Cast(minion);
-                    }
+                    Q.Cast(minion);
+                }
 
-                    foreach (var champ in from champ in champs
-                        let polygon = new Geometry.Polygon.Rectangle(
-                            (Vector2) Player.Instance.ServerPosition,
-                            Player.Instance.ServerPosition.Extend(champ.ServerPosition, _q1.Range), 65f)
-                        where polygon.IsInside(predPos.CastPosition)
-                        select champ)
-                    {
-                        _q.Cast(champ);
-                    }
+                foreach (var champ in from champ in champs
+                    let polygon = new Geometry.Polygon.Rectangle(
+                        (Vector2) Player.Instance.ServerPosition,
+                        Player.Instance.ServerPosition.Extend(champ.ServerPosition, Q1.Range), 65f)
+                    where polygon.IsInside(predPos.CastPosition)
+                    select champ)
+                {
+                    Q.Cast(champ);
+                }
 
-                    foreach (var monster in from monster in monsters
-                        let polygon = new Geometry.Polygon.Rectangle(
-                            (Vector2) Player.Instance.ServerPosition,
-                            Player.Instance.ServerPosition.Extend(monster.ServerPosition, _q1.Range), 65f)
-                        where polygon.IsInside(predPos.CastPosition)
-                        select monster)
-                    {
-                        _q.Cast(monster);
-                    }
+                foreach (var monster in from monster in monsters
+                    let polygon = new Geometry.Polygon.Rectangle(
+                        (Vector2) Player.Instance.ServerPosition,
+                        Player.Instance.ServerPosition.Extend(monster.ServerPosition, Q1.Range), 65f)
+                    where polygon.IsInside(predPos.CastPosition)
+                    select monster)
+                {
+                    Q.Cast(monster);
                 }
             }
-         
+        }
+
         public static
             void UseRTarget()
         {
-            var target = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
+            var target = TargetSelector.GetTarget(R.Range, DamageType.Magical);
             if (target != null &&
-                (ComboMenu["ForceR"].Cast<KeyBind>().CurrentValue && _r.IsReady() && target.IsValid &&
-                 !Player.HasBuff("lucianr"))) _r.Cast(target.Position);
+                (ComboMenu["ForceR"].Cast<KeyBind>().CurrentValue && R.IsReady() && target.IsValid &&
+                 !Player.HasBuff("lucianr"))) R.Cast(target.Position);
+        }
+
+        public static
+            void CastR()
+        {
+            var userhp = ComboMenu["UseRcomboHp"].Cast<CheckBox>().CurrentValue;
+            var enemyhp = ComboMenu["hp"].Cast<Slider>().CurrentValue;
+            var useRminPl = ComboMenu["combo.REnemies"].Cast<Slider>().CurrentValue;
+            var target = TargetSelector.GetTarget(1400, DamageType.Physical);
+            if (!target.IsValidTarget(Q.Range) || target == null)
+            {
+                return;
+            }
+            if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(R.Range) == useRminPl &&
+                R.IsReady() && target.IsValidTarget(R.Range))
+            {
+                R.Cast(target.Position);
+            }
         }
 
         public static void Combo()
         {
-            var comboLogic = ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue;
-            var useWrange = ComboMenu["useWrange"].Cast<Slider>().CurrentValue;
-            var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
-            var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
-            var userhp = ComboMenu["UseRcomboHp"].Cast<CheckBox>().CurrentValue;
-            var enemyhp = ComboMenu["hp"].Cast<Slider>().CurrentValue;
-            var useRminPl = ComboMenu["combo.REnemies"].Cast<Slider>().CurrentValue;
-            //    var humanizer = Humanizer["Humanizer"].Cast<Slider>().CurrentValue;
-            var target = TargetSelector.GetTarget(1400, DamageType.Physical);
-            if (!target.IsValidTarget(_q.Range) || target == null)
+            if (ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 1)
             {
-                return;
-            }
-            if (comboLogic == 1)
-            {
-                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !HasPassive() && !target.IsInvulnerable)
+                var useWrange = ComboMenu["useWrange"].Cast<Slider>().CurrentValue;
+                var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
+                var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
+                var useEstart = ComboMenu["useEstartcombo"].Cast<CheckBox>().CurrentValue;
+                //    var humanizer = Humanizer["Humanizer"].Cast<Slider>().CurrentValue;
+                var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
+                if (!target.IsValidTarget(Q.Range) || target == null)
                 {
-                    _q.Cast(target);
+                    return;
                 }
-                if (logice == 0 && usee && _e.IsReady() && target.IsValidTarget(500) && !HasPassive() && !target.IsInvulnerable)
+                if (logice == 0 && useEstart && E.IsReady() && target.IsValidTarget(700) && !_Player.IsDashing() &&
+                    !HasPassive())
                 {
-                    _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                    E.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
                     Orbwalker.ResetAutoAttack();
                 }
-                if (logice == 1 && usee && _e.IsReady() && target.IsValidTarget(500) && !HasPassive() && !target.IsInvulnerable)
+                if (logice == 1 && useEstart && E.IsReady() && target.IsValidTarget(700) && !_Player.IsDashing() &&
+                    !HasPassive())
                 {
                     Player.CastSpell(SpellSlot.E, Game.CursorPos);
                     Orbwalker.ResetAutoAttack();
                 }
-                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive() && !target.IsInvulnerable)
+                if (Q.IsReady() && target.IsValidTarget(Q.Range) && !HasPassive())
                 {
-                    var predW = _w.GetPrediction(target);
-                    if (predW.HitChance <= HitChance.High)
+                    Q.Cast(target);
+                }
+                if (W.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive())
+                {
+                    var predW = W.GetPrediction(target);
+                    if (predW.HitChance == HitChance.High || predW.HitChance == HitChance.Collision)
                     {
-                        _w.Cast(predW.CastPosition);
+                        W.Cast(predW.CastPosition);
+                        // Core.DelayAction(() => W.Cast(predW.CastPosition), 300);
                     }
                 }
-                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
-                    _r.IsReady() && target.IsValidTarget(_r.Range))
+                if (logice == 0 && usee && E.IsReady() && target.IsValidTarget(E.Range) && !HasPassive())
                 {
-                    _r.Cast(target.Position);
+                    E.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                    Orbwalker.ResetAutoAttack();
                 }
-            }
-            if (comboLogic == 2)
-            {
-                if (logice == 0 && usee && _e.IsReady() && target.IsValidTarget(_q1.Range) && !HasPassive() && !target.IsInvulnerable)
-                {
-                    _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
-                     Orbwalker.ResetAutoAttack();
-                }
-                if (logice == 1 && usee && _e.IsReady() && target.IsValidTarget(_q1.Range) && !HasPassive() && !target.IsInvulnerable)
+                if (logice == 1 && usee && E.IsReady() && target.IsValidTarget(600) && !_Player.IsDashing() &&
+                    !HasPassive())
                 {
                     Player.CastSpell(SpellSlot.E, Game.CursorPos);
                     Orbwalker.ResetAutoAttack();
-                }
-                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !HasPassive() && !target.IsInvulnerable)
-                {
-                    _q.Cast(target);
-                }
-                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !HasPassive() && !target.IsInvulnerable)
-                {
-                    var predW = _w.GetPrediction(target);
-                    if (predW.HitChance <= HitChance.High)
-                    {
-                        _w.Cast(predW.CastPosition);
-                    }
-                }
-                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
-                    _r.IsReady() && target.IsValidTarget(_r.Range))
-                {
-                    _r.Cast(target.Position);
-                }
-            }
-            if (comboLogic == 3)
-            {
-                if (_q.IsReady() && target.IsValidTarget(_q.Range) && !_Player.IsDashing() && !HasPassive() && !target.IsInvulnerable)
-                {
-                    Core.DelayAction(() => _q.Cast(target), 0);
-                }
-                if (_w.IsReady() && target.Distance(_Player) <= useWrange && !_Player.IsDashing() && !HasPassive() && !target.IsInvulnerable)
-                {
-                    var predW = _w.GetPrediction(target);
-                    if (predW.HitChance <= HitChance.High)
-                    {
-                        Core.DelayAction(() => _w.Cast(predW.CastPosition), 0);
-                    }
-                }
-                if (logice == 0 && usee && _e.IsReady() &&target.IsValidTarget(500) && !HasPassive() && !target.IsInvulnerable)
-                {
-                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),0);
-                    Orbwalker.ResetAutoAttack();
-                }
-                if (logice == 1 && usee && _e.IsReady() && !HasPassive() && !target.IsInvulnerable)
-                {
-                    Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), 0);
-                    Orbwalker.ResetAutoAttack();
-                }
-                if (userhp && target.HealthPercent <= enemyhp && _Player.CountEnemiesInRange(_r.Range) == useRminPl &&
-                    _r.IsReady() && target.IsValidTarget(_r.Range))
-                {
-                    _r.Cast(target.Position);
                 }
             }
         }
@@ -778,38 +749,49 @@ namespace Lucian_The_Troll
         public static
             void OnAfterAttack(AttackableUnit target, EventArgs args)
         {
-            if (ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 0 && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+            if (ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 0 &&
+                Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
-                if (target == null || !(target is AIHeroClient) || target.IsDead || target.IsInvulnerable || !target.IsEnemy || target.IsPhysicalImmune || target.IsZombie)
+                if (target == null || !(target is AIHeroClient) || target.IsDead || target.IsInvulnerable ||
+                    !target.IsEnemy || target.IsPhysicalImmune || target.IsZombie)
                     return;
 
                 var enemy = target as AIHeroClient;
                 if (enemy == null)
                     return;
-
+                var useEstart = ComboMenu["useEstartcombo"].Cast<CheckBox>().CurrentValue;
                 var logice = ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue;
                 var usee = ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
-         
-                if (_q.IsReady())
+                if (logice == 0 && useEstart && E.IsReady())
                 {
-                    Core.DelayAction(() => _q.Cast(enemy), 0);
-                }
-                if (logice == 0 && usee && _e.IsReady())
-                {
-                    Core.DelayAction(() => _e.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()),0);
+                    Core.DelayAction(() => E.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()), 0);
                     Orbwalker.ResetAutoAttack();
                 }
-                if (logice == 1 && usee && _e.IsReady())
+                if (logice == 1 && useEstart && E.IsReady())
                 {
                     Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), 0);
                     Orbwalker.ResetAutoAttack();
                 }
-                if (_w.IsReady())
+                if (Q.IsReady())
                 {
-                    var predW = _w.GetPrediction(enemy);
-                    if (predW.HitChance <= HitChance.High)
+                    Core.DelayAction(() => Q.Cast(enemy), 0);
+                }
+                if (logice == 0 && usee && E.IsReady())
+                {
+                    Core.DelayAction(() => E.Cast(Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D()), 0);
+                    Orbwalker.ResetAutoAttack();
+                }
+                if (logice == 1 && usee && E.IsReady())
+                {
+                    Core.DelayAction(() => Player.CastSpell(SpellSlot.E, Game.CursorPos), 0);
+                    Orbwalker.ResetAutoAttack();
+                }
+                if (W.IsReady())
+                {
+                    var predW = W.GetPrediction(enemy);
+                    if (predW.HitChance == HitChance.High || predW.HitChance == HitChance.Collision)
                     {
-                        Core.DelayAction(() => _w.Cast(predW.CastPosition), 300);
+                        Core.DelayAction(() => W.Cast(predW.CastPosition), 300);
                     }
                 }
             }
@@ -829,40 +811,72 @@ namespace Lucian_The_Troll
 
         #region dmg
 
-        public static float ComboDamage(Obj_AI_Base hero)
+        internal static float GetRawDamage(Obj_AI_Base target)
         {
-            var damage = _Player.GetAutoAttackDamage(hero);
-            if (_r.IsReady())
-                damage = RDamage(hero);
-            if (_e.IsReady())
-                damage = _Player.GetSpellDamage(hero, SpellSlot.E);
-            if (_w.IsReady())
-                damage = Wdamage(hero);
-            if (_q.IsReady())
-                damage = Qdamage(hero);
-
+            float damage = 0;
+            if (target != null)
+            {
+                if (Q.IsReady())
+                {
+                    damage += Player.Instance.GetSpellDamage(target, SpellSlot.Q);
+                    damage += Player.Instance.GetAutoAttackDamage(target);
+                    damage += LucianPassive();
+                }
+                if (W.IsReady())
+                {
+                    damage += Player.Instance.GetSpellDamage(target, SpellSlot.W);
+                    damage += Player.Instance.GetAutoAttackDamage(target);
+                    damage += LucianPassive();
+                }
+                if (E.IsReady())
+                {
+                    damage += Player.Instance.GetAutoAttackDamage(target);
+                    damage += LucianPassive();
+                }
+            }
             return damage;
+        }
+
+        public static float LucianPassive()
+        {
+            if (_Player.Level >= 1 && _Player.Level < 6)
+            {
+                return _Player.TotalAttackDamage*0.3f;
+            }
+            if (_Player.Level >= 6 && _Player.Level < 11)
+            {
+                return _Player.TotalAttackDamage*0.4f;
+            }
+            if (_Player.Level >= 11 && _Player.Level < 16)
+            {
+                return _Player.TotalAttackDamage*0.5f;
+            }
+            if (_Player.Level >= 16)
+            {
+                return _Player.TotalAttackDamage*0.6f;
+            }
+            return 0;
         }
 
         public static float Qdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
                 (float)
-                    (new[] {0, 80, 110, 140, 170, 200}[_q.Level] +
-                     (new[] {0, 0.6, 0.7, 0.8, 0.9, 1.0}[_q.Level]*_Player.FlatPhysicalDamageMod
+                    (new[] {0, 80, 110, 140, 170, 200}[Q.Level] +
+                     (new[] {0, 0.6, 0.7, 0.8, 0.9, 1.0}[Q.Level]*_Player.FlatPhysicalDamageMod
                          )));
         }
 
         public static float Wdamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
-                new[] {0, 60, 100, 140, 180, 220}[_w.Level] + 0.9f*_Player.FlatMagicDamageMod);
+                new[] {0, 60, 100, 140, 180, 220}[W.Level] + 0.9f*_Player.FlatMagicDamageMod);
         }
 
         public static float RDamage(Obj_AI_Base target)
         {
             return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
-                new[] {0, 20, 35, 50}[_r.Level] + 0.2f*_Player.FlatPhysicalDamageMod +
+                new[] {0, 20, 35, 50}[R.Level] + 0.2f*_Player.FlatPhysicalDamageMod +
                 0.1f*_Player.FlatMagicDamageMod);
         }
 
