@@ -14,14 +14,12 @@ namespace VladimirTheTroll
 {
     public static class Program
     {
-        public static string Version = "Version 1.2 26/5/2016";
+        public static string Version = "Version 1.3 7/7/2016";
         public static AIHeroClient Target = null;
-        public static int QOff = 0, WOff = 0, EOff = 0, ROff = 0;
         public static Spell.Targeted Q;
         public static Spell.Chargeable E;
         public static Spell.Skillshot W;
         public static Spell.Skillshot R;
-        public static bool Out = false;
         public static int CurrentSkin;
 
         public static readonly AIHeroClient Player = ObjectManager.Player;
@@ -37,8 +35,9 @@ namespace VladimirTheTroll
         private static void OnLoadingComplete(EventArgs args)
         {
             if (Player.ChampionName != "Vladimir") return;
-            Chat.Print(
-                "<font color=\"#d80303\" >MeLoDag Presents </font><font color=\"#ffffff\" > Vladimir </font><font color=\"#d80303\" >Kappa Kippo</font>");
+            Chat.Print("<font color=\"#d80303\" >MeLoDag Presents </font><font color=\"#ffffff\" > Vladimir </font><font color=\"#d80303\" >Kappa Kippo</font>");
+            Chat.Print("Version Loaded 1.3 (7/7/2016)", Color.Red);
+            Chat.Print("HF Gl And Dont Feed Kappa!!!", Color.Red);
             VladimirTheTrollMeNu.LoadMenu();
             Game.OnTick += GameOnTick;
             Activator.LoadSpells();
@@ -97,7 +96,7 @@ namespace VladimirTheTroll
                 }
             }
         }
-        
+
 
         private static void Ignite()
         {
@@ -130,14 +129,20 @@ namespace VladimirTheTroll
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
-                FarmQ();
-                FarmQAlways();
+                Lasthit();
+            }
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
+            {
+                Lasthit();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear))
             {
                 OnJungle();
             }
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.None))
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
+            {
+                
+            }
             KillSteal();
             AutoPotions();
             AutoHarass();
@@ -148,10 +153,10 @@ namespace VladimirTheTroll
         private static
             void AutoHourglass()
         {
-            var Zhonyas = VladimirTheTrollMeNu.Activator["Zhonyas"].Cast<CheckBox>().CurrentValue;
-            var ZhonyasHp = VladimirTheTrollMeNu.Activator["ZhonyasHp"].Cast<Slider>().CurrentValue;
+            var zhonyas = VladimirTheTrollMeNu.Activator["Zhonyas"].Cast<CheckBox>().CurrentValue;
+            var zhonyasHp = VladimirTheTrollMeNu.Activator["ZhonyasHp"].Cast<Slider>().CurrentValue;
 
-            if (Zhonyas && Player.HealthPercent <= ZhonyasHp && Activator.ZhonyaHourglass.IsReady())
+            if (zhonyas && Player.HealthPercent <= zhonyasHp && Activator.ZhonyaHourglass.IsReady())
             {
                 Activator.ZhonyaHourglass.Cast();
                 Chat.Print("<font color=\"#fffffff\" > Use Zhonyas <font>");
@@ -200,7 +205,7 @@ namespace VladimirTheTroll
                 }
             }
         }
-        
+
         private static void KillSteal()
         {
             var ksQ = VladimirTheTrollMeNu.HarassMeNu["ksQ"].Cast<CheckBox>().CurrentValue;
@@ -221,54 +226,44 @@ namespace VladimirTheTroll
             }
         }
 
-      private static
-            void FarmQ()
+        private static void Lasthit()
         {
-            var useQ = VladimirTheTrollMeNu.FarmMeNu["qFarm"].Cast<CheckBox>().CurrentValue;
             var qminion =
                 EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, Player.Position, Q.Range)
                     .FirstOrDefault(
                         m =>
                             m.Distance(Player) <= Q.Range &&
-                            m.Health <= SpellDamage.QDamage(m) - 20 &&
+                            m.Health <= SpellDamage.QDamage(m) &&
                             m.IsValidTarget());
-
-            if (Q.IsReady() && useQ && qminion != null && !Orbwalker.IsAutoAttacking)
+            if (Q.IsReady() && VladimirTheTrollMeNu.LastHitQ() && qminion != null)
             {
                 Q.Cast(qminion);
             }
         }
-
-        private static void FarmQAlways()
-        {
-            var qFarmAlways = VladimirTheTrollMeNu.FarmMeNu["qFarmAlways"].Cast<CheckBox>().CurrentValue;
-            var qminion =
-                EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, Player.Position, Q.Range)
-                    .FirstOrDefault(
-                        m =>
-                            m.Distance(Player) <= Q.Range &&
-                            m.IsValidTarget());
-
-            if (Q.IsReady() && qFarmAlways && qminion != null && !Orbwalker.IsAutoAttacking)
-            {
-                Q.Cast(qminion);
-            }
-        }
-
-
+        
         private static
             void OnJungle()
         {
-            var useQJungle = VladimirTheTrollMeNu.FarmMeNu["useQJungle"].Cast<CheckBox>().CurrentValue;
-
-            if (useQJungle)
+            var useQ = VladimirTheTrollMeNu.FarmMeNu["useQJungle"].Cast<CheckBox>().CurrentValue;
+            var useE = VladimirTheTrollMeNu.FarmMeNu["useEJungle"].Cast<CheckBox>().CurrentValue;
+           
             {
-                var minion =
-                    EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.ServerPosition, 950f, true)
-                        .FirstOrDefault();
-                if (Q.IsReady() && useQJungle && minion != null)
+                var junleminions =
+                    EntityManager.MinionsAndMonsters.GetJungleMonsters()
+                        .OrderByDescending(a => a.MaxHealth)
+                        .FirstOrDefault(a => a.IsValidTarget(900));
+
+                if (useQ  && Q.IsReady() && junleminions.IsValidTarget(Q.Range))
                 {
-                    Q.Cast(minion);
+                    Q.Cast(junleminions);
+                }
+                if (useE  && E.IsReady() && junleminions.IsValidTarget(450))
+                {
+                    if (E.IsCharging)
+                    {
+                        E.Cast(Game.CursorPos);
+                    }
+                    E.StartCharging();
                 }
             }
         }
@@ -277,15 +272,11 @@ namespace VladimirTheTroll
             void AutoHarass()
         {
             var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
-
             if (target == null || !target.IsValidTarget()) return;
-
-            Orbwalker.ForcedTarget = target;
-
-            var AutoQharass = VladimirTheTrollMeNu.HarassMeNu["useQAuto"].Cast<CheckBox>().CurrentValue;
+            var autoQharass = VladimirTheTrollMeNu.HarassMeNu["useQAuto"].Cast<CheckBox>().CurrentValue;
 
             {
-                if (Q.IsReady() && AutoQharass)
+                if (Q.IsReady() && autoQharass)
                 {
                     Q.Cast(target);
                 }
@@ -334,7 +325,7 @@ namespace VladimirTheTroll
         private static
             void OnCombo()
         {
-           var target = TargetSelector.GetTarget(1400, DamageType.Physical);
+            var target = TargetSelector.GetTarget(1400, DamageType.Physical);
             if (!target.IsValidTarget(Q.Range) || target == null)
             {
                 return;
@@ -358,7 +349,6 @@ namespace VladimirTheTroll
                     R.Cast(target);
                 }
             }
-            
         }
     }
 }

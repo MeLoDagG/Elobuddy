@@ -34,7 +34,7 @@ namespace VladimirTheTroll
             DrawMeNu.AddGroupLabel("Draw Settings:");
             DrawMeNu.Add("nodraw",
                 new CheckBox("No Display Drawing", false));
-          DrawMeNu.AddSeparator();
+            DrawMeNu.AddSeparator();
             DrawMeNu.Add("draw.Q",
                 new CheckBox("Draw Q"));
             DrawMeNu.Add("draw.W",
@@ -61,12 +61,14 @@ namespace VladimirTheTroll
         private static void FarmMeNuPage()
         {
             FarmMeNu = _myMenu.AddSubMenu("Farm Settings", "FarmSettings");
-            FarmMeNu.AddGroupLabel("Lane Clear Settings");
-            FarmMeNu.Add("qFarmAlways", new CheckBox("Cast Q always"));
-            FarmMeNu.Add("qFarm", new CheckBox("Cast Q LastHit[ForAllMode]"));
-            FarmMeNu.AddLabel("Jungle Clear Settings");
+            FarmMeNu.AddGroupLabel("Lane Clear Settings:");
+            FarmMeNu.Add("qFarmAlways", new CheckBox("Use Q last Hit"));
+            FarmMeNu.AddLabel("Last Hit Settigs:");
+            FarmMeNu.Add("qFarm", new CheckBox("Use Q LastHit"));
+            FarmMeNu.AddLabel("Jungle Settings:");
             FarmMeNu.Add("useQJungle", new CheckBox("Use Q"));
-        }
+            FarmMeNu.Add("UseEjungle", new CheckBox("Use E"));
+          }
 
         private static void HarassMeNuPage()
         {
@@ -144,8 +146,16 @@ namespace VladimirTheTroll
         {
             return DrawMeNu["draw.T"].Cast<CheckBox>().CurrentValue;
         }
+        public static bool LaneQ()
+        {
+            return FarmMeNu["qFarmAlways"].Cast<CheckBox>().CurrentValue;
+        }
+        public static bool LastHitQ()
+        {
+            return FarmMeNu["qFarm"].Cast<CheckBox>().CurrentValue;
+        }
         
-      public static bool SpellsPotionsCheck()
+        public static bool SpellsPotionsCheck()
         {
             return Activator["spells.Potions.Check"].Cast<CheckBox>().CurrentValue;
         }

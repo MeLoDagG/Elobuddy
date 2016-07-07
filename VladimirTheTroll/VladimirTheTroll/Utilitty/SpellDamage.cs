@@ -25,15 +25,14 @@ namespace VladimirTheTroll.Utility
             float QDamage(Obj_AI_Base target)
         {
             return ObjectManager.Player.CalculateDamageOnUnit(target, DamageType.Magical,
-                (new float[] {0, 90, 125, 160, 195, 230}[Program.Q.Level] +
-                 (0.6f*ObjectManager.Player.FlatMagicDamageMod)));
+                (new float[] {0, 80, 100, 120, 140, 160}[Program.Q.Level] +
+                 (0.45f*ObjectManager.Player.FlatMagicDamageMod)));
         }
-
-
+    
         public static float RDamage(Obj_AI_Base target)
         {
             return ObjectManager.Player.CalculateDamageOnUnit(target, DamageType.Magical,
-                (new float[] {0, 168, 280, 392}[Program.R.Level] + (0.78f*ObjectManager.Player.FlatMagicDamageMod)));
+                (new float[] {0, 150, 250, 350}[Program.R.Level] + (0.7f*ObjectManager.Player.FlatMagicDamageMod)));
         }
     }
 }
