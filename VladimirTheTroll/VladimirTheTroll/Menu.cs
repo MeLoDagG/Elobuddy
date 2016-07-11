@@ -1,4 +1,5 @@
 using System.Linq;
+using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
@@ -8,7 +9,7 @@ namespace VladimirTheTroll
     internal static class VladimirTheTrollMeNu
     {
         private static Menu _myMenu;
-        public static Menu ComboMenu, DrawMeNu, HarassMeNu, Activator, FarmMeNu, MiscMeNu;
+        public static Menu ComboMenu, DrawMeNu, HarassMeNu, Activator, FarmMeNu, MiscMeNu, EvadeMenu;
 
         public static void LoadMenu()
         {
@@ -19,6 +20,7 @@ namespace VladimirTheTroll
             HarassMeNuPage();
             ActivatorPage();
             MiscMeNuPage();
+            EvadeMenuPage();
         }
 
         private static void MyVladimirTheTrollPage()
@@ -43,7 +45,7 @@ namespace VladimirTheTroll
                 new CheckBox("Draw E"));
             DrawMeNu.Add("draw.R",
                 new CheckBox("Draw R"));
-          }
+        }
 
         private static void ComboMenuPage()
         {
@@ -68,7 +70,7 @@ namespace VladimirTheTroll
             FarmMeNu.AddLabel("Jungle Settings:");
             FarmMeNu.Add("useQJungle", new CheckBox("Use Q"));
             FarmMeNu.Add("UseEjungle", new CheckBox("Use E"));
-          }
+        }
 
         private static void HarassMeNuPage()
         {
@@ -78,7 +80,7 @@ namespace VladimirTheTroll
             HarassMeNu.AddLabel("AutoHarass Setttings");
             HarassMeNu.Add("useQAuto", new CheckBox("Use Q"));
             HarassMeNu.AddSeparator();
-            HarassMeNu.AddGroupLabel("KillSteal Settings:");
+            HarassMeNu.AddLabel("KillSteal Settings:");
             HarassMeNu.Add("ksQ",
                 new CheckBox("Use Q", false));
         }
@@ -90,7 +92,7 @@ namespace VladimirTheTroll
             Activator.Add("Zhonyas", new CheckBox("Use Zhonyas Hourglass"));
             Activator.Add("ZhonyasHp", new Slider("Use Zhonyas Hourglass If Your HP%", 20, 0, 100));
             Activator.AddSeparator();
-            Activator.AddGroupLabel("Potion Settings");
+            Activator.AddLabel("Potion Settings");
             Activator.Add("spells.Potions.Check",
                 new CheckBox("Use Potions"));
             Activator.Add("spells.Potions.HP",
@@ -98,11 +100,11 @@ namespace VladimirTheTroll
             Activator.Add("spells.Potions.Mana",
                 new Slider("Use Potions when Mana is lower than {0}(%)", 60, 1));
             Activator.AddSeparator();
-            Activator.AddGroupLabel("Spells settings:");
-            Activator.AddGroupLabel("Heal settings:");
+            Activator.AddLabel("Spells settings:");
+            Activator.AddLabel("Heal settings:");
             Activator.Add("spells.Heal.Hp",
                 new Slider("Use Heal when HP is lower than {0}(%)", 30, 1));
-            Activator.AddGroupLabel("Ignite settings:");
+            Activator.AddLabel("Ignite settings:");
             Activator.Add("spells.Ignite.Focus",
                 new Slider("Use Ignite when target HP is lower than {0}(%)", 10, 1));
         }
@@ -117,11 +119,49 @@ namespace VladimirTheTroll
                 new Slider("Skin Editor", 5, 0, 10));
         }
 
-        public static bool Nodraw()
+        private static void EvadeMenuPage()
+        {
+            EvadeMenu = _myMenu.AddSubMenu("Evade Menu", "EvadeMenu");
+            EvadeMenu.AddGroupLabel("Use Auto W:");
+            foreach (var enemy in EntityManager.Heroes.Enemies.Where(a => a.Team != Player.Instance.Team))
+            {
+                foreach (
+                    var spell in
+                        enemy.Spellbook.Spells.Where(
+                            a =>
+                                a.Slot == SpellSlot.Q || a.Slot == SpellSlot.W || a.Slot == SpellSlot.E ||
+                                a.Slot == SpellSlot.R))
+                {
+                    if (spell.Slot == SpellSlot.Q)
+                    {
+                        EvadeMenu.Add(spell.SData.Name,
+                            new CheckBox(enemy.ChampionName + " - Q - " + spell.Name, false));
+                    }
+                    else if (spell.Slot == SpellSlot.W)
+                    {
+                        EvadeMenu.Add(spell.SData.Name,
+                            new CheckBox(enemy.ChampionName + " - W - " + spell.Name, false));
+                    }
+                    else if (spell.Slot == SpellSlot.E)
+                    {
+                        EvadeMenu.Add(spell.SData.Name,
+                            new CheckBox(enemy.ChampionName + " - E - " + spell.Name, false));
+                    }
+                    else if (spell.Slot == SpellSlot.R)
+                    {
+                        EvadeMenu.Add(spell.SData.Name,
+                            new CheckBox(enemy.ChampionName + " - R - " + spell.Name, false));
+                    }
+                }
+            }
+        }
+
+        public static
+            bool Nodraw()
         {
             return DrawMeNu["nodraw"].Cast<CheckBox>().CurrentValue;
         }
-        
+
         public static bool DrawingsQ()
         {
             return DrawMeNu["draw.Q"].Cast<CheckBox>().CurrentValue;
@@ -146,15 +186,17 @@ namespace VladimirTheTroll
         {
             return DrawMeNu["draw.T"].Cast<CheckBox>().CurrentValue;
         }
+
         public static bool LaneQ()
         {
             return FarmMeNu["qFarmAlways"].Cast<CheckBox>().CurrentValue;
         }
+
         public static bool LastHitQ()
         {
             return FarmMeNu["qFarm"].Cast<CheckBox>().CurrentValue;
         }
-        
+
         public static bool SpellsPotionsCheck()
         {
             return Activator["spells.Potions.Check"].Cast<CheckBox>().CurrentValue;
@@ -179,13 +221,13 @@ namespace VladimirTheTroll
         {
             return Activator["spells.Ignite.Focus"].Cast<Slider>().CurrentValue;
         }
-        
+
         public static int SkinId()
         {
             return MiscMeNu["skin.Id"].Cast<Slider>().CurrentValue;
         }
 
-      
+
         public static bool SkinChanger()
         {
             return MiscMeNu["SkinChanger"].Cast<CheckBox>().CurrentValue;
@@ -195,5 +237,5 @@ namespace VladimirTheTroll
         {
             return MiscMeNu["checkSkin"].Cast<CheckBox>().CurrentValue;
         }
-     }
+    }
 }

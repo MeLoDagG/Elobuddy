@@ -14,11 +14,12 @@ namespace VladimirTheTroll
 {
     public static class Program
     {
-        public static string Version = "Version 1.3 7/7/2016";
+        public static string Version = "Version 1.4 11/7/2016";
         public static AIHeroClient Target = null;
         public static Spell.Targeted Q;
         public static Spell.Chargeable E;
         public static Spell.Skillshot W;
+        public static Spell.Active W1;
         public static Spell.Skillshot R;
         public static int CurrentSkin;
 
@@ -35,18 +36,21 @@ namespace VladimirTheTroll
         private static void OnLoadingComplete(EventArgs args)
         {
             if (Player.ChampionName != "Vladimir") return;
-            Chat.Print("<font color=\"#d80303\" >MeLoDag Presents </font><font color=\"#ffffff\" > Vladimir </font><font color=\"#d80303\" >Kappa Kippo</font>");
-            Chat.Print("Version Loaded 1.3 (7/7/2016)", Color.Red);
+            Chat.Print(
+                "<font color=\"#d80303\" >MeLoDag Presents </font><font color=\"#ffffff\" > Vladimir </font><font color=\"#d80303\" >Kappa Kippo</font>");
+            Chat.Print("Version Loaded 1.4 (11/7/2016)", Color.Red);
             Chat.Print("HF Gl And Dont Feed Kappa!!!", Color.Red);
             VladimirTheTrollMeNu.LoadMenu();
             Game.OnTick += GameOnTick;
             Activator.LoadSpells();
             Game.OnUpdate += OnGameUpdate;
+            Obj_AI_Base.OnProcessSpellCast += AIHeroClient_OnProcessSpellCast;
 
             #region Skill
 
             Q = new Spell.Targeted(SpellSlot.Q, 600);
             W = new Spell.Skillshot(SpellSlot.W, 600, SkillShotType.Circular);
+            W1 = new Spell.Active(SpellSlot.W, 600);
             E = new Spell.Chargeable(SpellSlot.E, 600, 600, 1250, 0, 1500, 70);
             R = new Spell.Skillshot(SpellSlot.R, 700, SkillShotType.Circular, 250, 1200, 150);
 
@@ -141,7 +145,6 @@ namespace VladimirTheTroll
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
             {
-                
             }
             KillSteal();
             AutoPotions();
@@ -206,6 +209,91 @@ namespace VladimirTheTroll
             }
         }
 
+
+        private static void AIHeroClient_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+                if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
+                    if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
+                        if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
+                            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.None))
+                            {
+                                if ((args.Slot == SpellSlot.Q || args.Slot == SpellSlot.W || args.Slot == SpellSlot.E ||
+                                     args.Slot == SpellSlot.R) && sender.IsEnemy && W.IsReady())
+                                {
+                                    if (args.SData.TargettingType == SpellDataTargetType.Unit ||
+                                        args.SData.TargettingType == SpellDataTargetType.SelfAndUnit ||
+                                        args.SData.TargettingType == SpellDataTargetType.Self)
+                                    {
+                                        if ((args.Target.NetworkId == Player.NetworkId && args.Time < 1.5 ||
+                                             args.End.Distance(Player.ServerPosition) <= Player.BoundingRadius*3) &&
+                                            VladimirTheTrollMeNu.EvadeMenu[args.SData.Name].Cast<CheckBox>()
+                                                .CurrentValue)
+                                        {
+                                            W1.Cast();
+                                        }
+                                    }
+                                    else if (args.SData.TargettingType == SpellDataTargetType.LocationAoe)
+                                    {
+                                        var castvector =
+                                            new Geometry.Polygon.Circle(args.End, args.SData.CastRadius).IsInside(
+                                                Player.ServerPosition);
+
+                                        if (castvector &&
+                                            VladimirTheTrollMeNu.EvadeMenu[args.SData.Name].Cast<CheckBox>()
+                                                .CurrentValue)
+                                        {
+                                            W1.Cast();
+                                        }
+                                    }
+
+                                    else if (args.SData.TargettingType == SpellDataTargetType.Cone)
+                                    {
+                                        var castvector =
+                                            new Geometry.Polygon.Arc(args.Start, args.End, args.SData.CastConeAngle,
+                                                args.SData.CastRange)
+                                                .IsInside(Player.ServerPosition);
+
+                                        if (castvector &&
+                                            VladimirTheTrollMeNu.EvadeMenu[args.SData.Name].Cast<CheckBox>()
+                                                .CurrentValue)
+                                        {
+                                            W1.Cast();
+                                        }
+                                    }
+
+                                    else if (args.SData.TargettingType == SpellDataTargetType.SelfAoe)
+                                    {
+                                        var castvector =
+                                            new Geometry.Polygon.Circle(sender.ServerPosition, args.SData.CastRadius)
+                                                .IsInside(
+                                                    Player.ServerPosition);
+
+                                        if (castvector &&
+                                            VladimirTheTrollMeNu.EvadeMenu[args.SData.Name].Cast<CheckBox>()
+                                                .CurrentValue)
+                                        {
+                                            W1.Cast();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var castvector =
+                                            new Geometry.Polygon.Rectangle(args.Start, args.End, args.SData.LineWidth)
+                                                .IsInside(
+                                                    Player.ServerPosition);
+
+                                        if (castvector &&
+                                            VladimirTheTrollMeNu.EvadeMenu[args.SData.Name].Cast<CheckBox>()
+                                                .CurrentValue)
+                                        {
+                                            W1.Cast();
+                                        }
+                                    }
+                                }
+                            }
+        }
+
         private static void KillSteal()
         {
             var ksQ = VladimirTheTrollMeNu.HarassMeNu["ksQ"].Cast<CheckBox>().CurrentValue;
@@ -240,24 +328,24 @@ namespace VladimirTheTroll
                 Q.Cast(qminion);
             }
         }
-        
+
         private static
             void OnJungle()
         {
             var useQ = VladimirTheTrollMeNu.FarmMeNu["useQJungle"].Cast<CheckBox>().CurrentValue;
             var useE = VladimirTheTrollMeNu.FarmMeNu["useEJungle"].Cast<CheckBox>().CurrentValue;
-           
+
             {
                 var junleminions =
                     EntityManager.MinionsAndMonsters.GetJungleMonsters()
                         .OrderByDescending(a => a.MaxHealth)
                         .FirstOrDefault(a => a.IsValidTarget(900));
 
-                if (useQ  && Q.IsReady() && junleminions.IsValidTarget(Q.Range))
+                if (useQ && Q.IsReady() && junleminions.IsValidTarget(Q.Range))
                 {
                     Q.Cast(junleminions);
                 }
-                if (useE  && E.IsReady() && junleminions.IsValidTarget(450))
+                if (useE && E.IsReady() && junleminions.IsValidTarget(450))
                 {
                     if (E.IsCharging)
                     {
