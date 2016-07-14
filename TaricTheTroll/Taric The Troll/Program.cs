@@ -171,7 +171,7 @@ namespace Taric_The_Troll
             if (target != null &&
                 (TarickTheTrollMeNu.ForceStun() && E.IsReady() &&
                  target.IsValidTarget(E.Range)))
-             {
+            {
                 E.Cast(target.Position);
             }
         }
@@ -199,14 +199,13 @@ namespace Taric_The_Troll
                 {
                     W.Cast(allies);
                 }
-                if (allies != null && (R.IsReady() && TarickTheTrollMeNu.AutoR() && allies.IsValidTarget(R.Range) &&
-                                       allies.HealthPercent <= TarickTheTrollMeNu.AutoRhp()))
-                {
-                    R.Cast();
-                }
+            }
+            if (allies != null && (R.IsReady() && TarickTheTrollMeNu.AutoR() && allies.IsValidTarget(R.Range) &&
+                                   allies.HealthPercent <= TarickTheTrollMeNu.AutoRhp()))
+            {
+                R.Cast();
             }
         }
-
 
         private static
             void AutoPotions()
@@ -421,14 +420,6 @@ namespace Taric_The_Troll
                     {
                         var predE = E.GetPrediction(target);
                         if (predE.HitChance >= HitChance.Medium)
-                        {
-                            E.Cast(predE.CastPosition);
-                        }
-                        else if (predE.HitChance >= HitChance.Dashing)
-                        {
-                            E.Cast(predE.CastPosition);
-                        }
-                        else if (predE.HitChance >= HitChance.Immobile)
                         {
                             E.Cast(predE.CastPosition);
                         }

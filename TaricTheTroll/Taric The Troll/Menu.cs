@@ -23,8 +23,8 @@ namespace Taric_The_Troll
 
         private static void TarickTheTrollPage()
         {
-            _myMenu = MainMenu.AddMenu("Tarick The Troll", "main");
-            _myMenu.AddLabel(" Tarick The Troll " + Program.Version);
+            _myMenu = MainMenu.AddMenu("Taric The Troll", "main");
+            _myMenu.AddLabel(" Taric The Troll " + Program.Version);
             _myMenu.AddLabel(" Made by MeLoDag");
         }
 
