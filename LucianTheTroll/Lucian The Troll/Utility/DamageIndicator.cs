@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace Lucian_The_Troll
+namespace Lucian_The_Troll.Utility
 {
     public static class DamageIndicator
     {
