@@ -103,6 +103,10 @@ namespace MissFortuneTheTroll
             }
             HarassMeNu.Add("harass.QE",
                 new Slider("Min. Mana for Harass Spells %", 55));
+            HarassMeNu.AddLabel("Auto Harass settigs:");
+            HarassMeNu.Add("AutoQextendharass", new CheckBox("Auto Q Exntend Harass"));
+            HarassMeNu.Add("AutoHarassmana",
+                new Slider("Min. Mana for Auto Harass Spells %", 55));
             HarassMeNu.AddLabel("KillSteal Settings:");
             HarassMeNu.Add("killsteal.Q",
                 new CheckBox("Use Q", true));
@@ -300,7 +304,16 @@ namespace MissFortuneTheTroll
         {
             return HarassMeNu["harass.QE"].Cast<Slider>().CurrentValue;
         }
+        public static float AutoHarassmana()
+        {
+            return HarassMeNu["AutoHarassmana"].Cast<Slider>().CurrentValue;
+        }
 
+        public static bool AutoQextendharass()
+        {
+            return HarassMeNu["AutoQextendharass"].Cast<CheckBox>().CurrentValue;
+        }
+        
         public static bool KillstealQ()
         {
             return HarassMeNu["killsteal.Q"].Cast<CheckBox>().CurrentValue;

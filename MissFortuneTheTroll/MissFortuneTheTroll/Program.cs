@@ -14,7 +14,7 @@ namespace MissFortuneTheTroll
 {
     public static class Program
     {
-        public static string Version = "Version 1 15/7/2016";
+        public static string Version = "Version 1.1 (16/7/2016)";
         public static AIHeroClient castOn = null;
         public static AIHeroClient Target = null;
         public static int QOff = 0, WOff = 0, EOff = 0, ROff = 0;
@@ -42,7 +42,7 @@ namespace MissFortuneTheTroll
                 return;
             }
             Chat.Print("Miss Fortune The Troll Loaded!", Color.Red);
-            Chat.Print("Version 1 (15.7.2016!", Color.Red);
+            Chat.Print("Version 1.1 (16.7.2016!", Color.Red);
             Chat.Print("Gl HF And dont feed kappa", Color.Red);
             MissFortuneTheTrollMenu.LoadMenu();
             Game.OnTick += GameOnTick;
@@ -166,9 +166,10 @@ namespace MissFortuneTheTroll
             KillSteal();
             AutoCc();
             AutoPotions();
-           
-        }
+            AutoHarass();
 
+        }
+        
         private static void OnSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (sender.IsMe && args.SData.Name == "Bullettime")
@@ -429,6 +430,20 @@ namespace MissFortuneTheTroll
                 junleminions.IsValidTarget(W.Range))
             {
                 W.Cast();
+            }
+        }
+
+        private static void AutoHarass()
+        {
+            var target = TargetSelector.GetTarget(Q1.Range, DamageType.Physical);
+            if (!target.IsValidTarget())
+            {
+                return;
+            }
+            if (Q.IsReady() && target.IsValidTarget(Q1.Range) && MissFortuneTheTrollMenu.AutoQextendharass() &&
+                Player.ManaPercent > MissFortuneTheTrollMenu.AutoHarassmana())
+            {
+                CastExtendedQ();
             }
         }
 
