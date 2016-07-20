@@ -1,6 +1,7 @@
 using System;
-using System.Drawing;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
@@ -8,7 +9,9 @@ using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
 using MissFortuneTheTroll.Utility;
+using SharpDX;
 using Activator = MissFortuneTheTroll.Utility.Activator;
+using Color = System.Drawing.Color;
 
 namespace MissFortuneTheTroll
 {
@@ -23,8 +26,8 @@ namespace MissFortuneTheTroll
         public static Spell.Active W;
         public static Spell.Skillshot E;
         public static Spell.Skillshot R;
-        public static bool Channeling;
-        public static bool Out;
+        public static bool Channeling ;
+        public static bool Out ;
         public static int CurrentSkin;
         public static readonly AIHeroClient Player = ObjectManager.Player;
 
@@ -42,7 +45,7 @@ namespace MissFortuneTheTroll
                 return;
             }
             Chat.Print("Miss Fortune The Troll Loaded!", Color.Red);
-            Chat.Print("Version 1.1 (16.7.2016!", Color.Red);
+            Chat.Print("Version 1.2 (20.7.2016!", Color.Red);
             Chat.Print("Gl HF And dont feed kappa", Color.Red);
             MissFortuneTheTrollMenu.LoadMenu();
             Game.OnTick += GameOnTick;
@@ -64,6 +67,7 @@ namespace MissFortuneTheTroll
             Obj_AI_Base.OnProcessSpellCast += OnSpellCast;
             Obj_AI_Base.OnBuffLose += OnBuffLose;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
+         //   Obj_AI_Base.OnBuffGain += OnBuffGain1;
             Drawing.OnDraw += GameOnDraw;
             DamageIndicator.Initialize(SpellDamage.GetTotalDamage);
         }
@@ -166,13 +170,13 @@ namespace MissFortuneTheTroll
             KillSteal();
             AutoCc();
             AutoPotions();
-            AutoHarass();
+         //   AutoHarass();
 
         }
-        
+
         private static void OnSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (sender.IsMe && args.SData.Name == "Bullettime")
+            if (sender.IsMe && args.SData.Name == "MissFortuneBulletSound")
             {
                 Orbwalker.DisableAttacking = true;
                 Orbwalker.DisableMovement = true;
@@ -181,13 +185,14 @@ namespace MissFortuneTheTroll
             }
         }
 
+        //  MissFortuneBulletTime
         private static void OnBuffLose(Obj_AI_Base sender, Obj_AI_BaseBuffLoseEventArgs args)
         {
-            if (sender.IsMe && args.Buff.DisplayName == "Bullettime")
+            if (sender.IsMe && args.Buff.DisplayName == "MissFortuneBulletSound")
             {
+                Channeling = false;
                 Orbwalker.DisableAttacking = false;
                 Orbwalker.DisableMovement = false;
-                Channeling = false;
                 Out = false;
             }
         }
@@ -351,37 +356,108 @@ namespace MissFortuneTheTroll
                 E.Cast(autoTarget.ServerPosition);
             }
         }
-
-        private static void CastExtendedQ()
+       
+        public static void castQ(bool NotkillOnly, bool killMinionOnly)
         {
-            var target = TargetSelector.GetTarget(Q.Range + 500, DamageType.Physical);
-            if (!target.IsValidTarget(Q.Range) || target == null && Channeling)
-            {
-                return;
-            }
-            if (Q.IsReady())
-            target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
-            var allMinion = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, target.Position, Q.Range);
-            if (target.IsValidTarget(Q.Range))
-            {
-                Q.Cast(target.Position);
+            castQ(NotkillOnly, killMinionOnly, false);
+        }
 
-            }
-            Obj_AI_Base nearestMinion =
-                allMinion.Where(
-                    minion =>
-                        minion.Distance(Player) <= target.Distance(Player) &&
-                        target.Distance(minion) < 450)
-                    .OrderBy(minion => minion.Distance(Player))
-                    .FirstOrDefault();
-               {
-                if (nearestMinion != null && nearestMinion.IsValidTarget(Q.Range))
+        public static void castQ(bool NotkillOnly, bool killMinionOnly, bool onChampsOnly)
+        {
+            foreach (var killable in EntityManager.Heroes.Enemies.Where(e => e.IsInRange(EloBuddy.Player.Instance, 1000) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && (e.Health < DamageLibrary.GetSpellDamage(EloBuddy.Player.Instance, e, SpellSlot.Q) || NotkillOnly)))
+            {
+                var killablePosition = Prediction.Position.PredictUnitPosition(killable, 250).To3D();
+                int i = -1;
+                for (int j = 0; j < EntityManager.Heroes.Enemies.Count; j++)
                 {
-                    Q.Cast(nearestMinion);
+                    if (killable.NetworkId == EntityManager.Heroes.Enemies[j].NetworkId)
+                        i = j;
+                }
+                if (i == -1 || !MissFortuneTheTrollMenu.ComboQ())
+                    continue;
+
+                bool buff = false;
+                foreach (var b in killable.Buffs)
+                {
+                    if (b.Name == "missfortunepassivestack")
+                        buff = true;
+                }
+                foreach (var t in EntityManager.Heroes.Enemies.Where(e => e.IsInRange(EloBuddy.Player.Instance, Q.Range) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && Prediction.Position.PredictUnitPosition(e, 250).To3D().Distance(killable) < 500))
+                {
+                    Vector3 meToTarget = Prediction.Position.PredictUnitPosition(t, 250).To3D() - Prediction.Position.PredictUnitPosition(EloBuddy.Player.Instance, 250).To3D();
+                    if (meToTarget.AngleBetween(killablePosition) < 0.6981 && buff && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        Q.Cast(t);
+                        return;
+                    }
+                    else if (meToTarget.AngleBetween(killablePosition) < 0.349066 && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        int m = EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(t, 500) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(Prediction.Position.PredictUnitPosition(e, 250).To3D()) < 0.349066 && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(killablePosition) > 0).Count();
+                        if (m == 0)
+                        {
+                            Q.Cast(t);
+                            return;
+                        }
+                    }
+                    else if (meToTarget.AngleBetween(killablePosition) < 0.6981 && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        int m = EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(t, 500) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(Prediction.Position.PredictUnitPosition(e, 250).To3D()) < 0.6981 && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(killablePosition) > 0).Count();
+                        if (m == 0)
+                        {
+                            Q.Cast(t);
+                            return;
+                        }
+                    }
+                    else if (meToTarget.AngleBetween(killablePosition) < 1.9 && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        int m = EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(t, 500) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(Prediction.Position.PredictUnitPosition(e, 250).To3D()) < 1.9 && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(killablePosition) > 0).Count();
+                        if (m == 0)
+                        {
+                            Q.Cast(t);
+                            return;
+                        }
+                    }
+                }
+                if (onChampsOnly)
+                    return;
+                foreach (var t in EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(EloBuddy.Player.Instance, Q.Range) && Prediction.Position.PredictUnitPosition(e, 250).To3D().Distance(killable) < 500 && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && (!killMinionOnly || e.Health < EloBuddy.Player.Instance.GetSpellDamage(e, SpellSlot.Q))).OrderBy(t => t.Health))
+                {
+                    Vector3 meToTarget = Prediction.Position.PredictUnitPosition(t, 250).To3D() - Prediction.Position.PredictUnitPosition(EloBuddy.Player.Instance, 250).To3D();
+                    if (meToTarget.AngleBetween(killablePosition) < 0.6981 && buff && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        Q.Cast(t);
+                        return;
+                    }
+                    else if (meToTarget.AngleBetween(killablePosition) < 0.349066 && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        int m = EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(t, 500) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(Prediction.Position.PredictUnitPosition(e, 250).To3D()) < 0.349066 && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(killablePosition) > 0).Count();
+                        if (m == 0)
+                        {
+                            Q.Cast(t);
+                            return;
+                        }
+                    }
+                    else if (meToTarget.AngleBetween(killablePosition) < 0.6981 && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        int m = EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(t, 500) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(Prediction.Position.PredictUnitPosition(e, 250).To3D()) < 0.6981 && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(killablePosition) > 0).Count();
+                        if (m == 0)
+                        {
+                            Q.Cast(t);
+                            return;
+                        }
+                    }
+                    else if (meToTarget.AngleBetween(killablePosition) < 1.9 && meToTarget.AngleBetween(killablePosition) > 0)
+                    {
+                        int m = EntityManager.MinionsAndMonsters.CombinedAttackable.Where(e => e.IsInRange(t, 500) && !e.IsDead && !e.IsInvulnerable && e.IsTargetable && !e.IsZombie && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(Prediction.Position.PredictUnitPosition(e, 250).To3D()) < 1.9 && Prediction.Position.PredictUnitPosition(t, 250).To3D().AngleBetween(killablePosition) > 0).Count();
+                        if (m == 0)
+                        {
+                            Q.Cast(t);
+                            return;
+                        }
+                    }
                 }
             }
         }
-
         private static void OnLaneClear()
         {
             var count =
@@ -409,6 +485,7 @@ namespace MissFortuneTheTroll
                 E.Cast(source);
             }
         }
+
 
         private static
             void OnJungle()
@@ -443,7 +520,11 @@ namespace MissFortuneTheTroll
             if (Q.IsReady() && target.IsValidTarget(Q1.Range) && MissFortuneTheTrollMenu.AutoQextendharass() &&
                 Player.ManaPercent > MissFortuneTheTrollMenu.AutoHarassmana())
             {
-                CastExtendedQ();
+                castQ(true, true);
+            }
+            else
+            {
+                castQ(true, false);
             }
         }
 
@@ -460,9 +541,13 @@ namespace MissFortuneTheTroll
             if (Q.IsReady() && target.IsValidTarget(Q1.Range) && MissFortuneTheTrollMenu.UseQextendharass() &&
                 Player.ManaPercent > MissFortuneTheTrollMenu.HarassQe())
             {
-                CastExtendedQ();
+                castQ(true, true);
             }
-            if (E.IsReady() && target.IsValidTarget(E.Range))
+            else
+            {
+               castQ(true, false);
+            }
+        if ( E.IsReady() && target.IsValidTarget(E.Range))
                 foreach (var eenemies in enemies)
                 {
                     var useE = MissFortuneTheTrollMenu.HarassMeNu["harass.E"
@@ -499,10 +584,14 @@ namespace MissFortuneTheTroll
             }
             if (Q.IsReady() && target.IsValidTarget(Q1.Range) && MissFortuneTheTrollMenu.ComboQextend())
             {
-                CastExtendedQ();
+                castQ(true, true);
+            }
+            else
+            {
+                castQ(true, false);
             }
             if (MissFortuneTheTrollMenu.ComboR() &&
-                Player.CountEnemiesInRange(1000) == MissFortuneTheTrollMenu.ComboREnemies() &&
+                Player.CountEnemiesInRange(1000) >= MissFortuneTheTrollMenu.ComboREnemies() &&
                 R.IsReady() && target.IsValidTarget(1000))
             {
                 var predR = R.GetPrediction(target);
