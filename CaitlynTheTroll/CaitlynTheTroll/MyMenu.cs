@@ -13,12 +13,12 @@ namespace CaitlynTheTroll
         public static void LoadMenu()
         {
             MyCaitlynTheTrollPage();
-            DrawMeNuPage();
             ComboMenuPage();
             FarmMeNuPage();
             HarassMeNuPage();
             ActivatorPage();
             MiscMeNuPage();
+            DrawMeNuPage();
         }
 
         private static void MyCaitlynTheTrollPage()
@@ -54,23 +54,28 @@ namespace CaitlynTheTroll
             {
                 ComboMenu.Add("combo.Q" + enemies.ChampionName, new CheckBox("" + enemies.ChampionName));
             }
-            ComboMenu.AddSeparator();
-            ComboMenu.Add("combo.E",
-                new CheckBox("Use E"));
-            ComboMenu.Add("combo.w",
-                new CheckBox("Use W"));
-          ComboMenu.Add("combo.R",
-                new CheckBox("Use Smart R"));
-            ComboMenu.AddSeparator();
-            ComboMenu.AddGroupLabel("Combo preferences:");
-           ComboMenu.Add("comboEQbind",
-                new KeyBind("Use E + Q Spells", false, KeyBind.BindTypes.HoldActive, 'Z'));
-            ComboMenu.Add("combo.CC",
-                new CheckBox("Use E CC"));
             ComboMenu.Add("combo.CCQ",
                 new CheckBox("Use Q CC"));
+            ComboMenu.AddLabel("E settings:");
+            ComboMenu.Add("combo.E",
+                new CheckBox("Use E"));
+            ComboMenu.Add("combo.CC",
+             new CheckBox("Use E CC"));
+            ComboMenu.AddLabel("W settings:");
+            ComboMenu.Add("combo.w",
+                new CheckBox("Use W"));
+            ComboMenu.AddLabel("also W use On recall Zhonyas Teleport Kata ulty and Mf ulty :)");
             ComboMenu.Add("combo.CCW",
-               new CheckBox("Use W CC"));
+            new CheckBox("Use W CC"));
+            ComboMenu.AddLabel("R settings:");
+            ComboMenu.Add("combo.R",
+                new CheckBox("Use Smart R"));
+            ComboMenu.AddSeparator();
+            ComboMenu.AddLabel("Combo preferences:");
+           ComboMenu.Add("comboEQbind",
+                new KeyBind("Use E > Q > AA", false, KeyBind.BindTypes.HoldActive, 'Z'));
+         
+         
            }
 
 
@@ -83,7 +88,7 @@ namespace CaitlynTheTroll
             FarmMeNu.Add("LaneMana",
                 new Slider("Min. Mana for Laneclear Spells %", 60));
             FarmMeNu.AddSeparator();
-            FarmMeNu.AddGroupLabel("Jungle Settings");
+            FarmMeNu.AddLabel("Jungle Settings");
             FarmMeNu.Add("jungle.Q",
                 new CheckBox("Use Q"));
         }
@@ -103,7 +108,7 @@ namespace CaitlynTheTroll
             HarassMeNu.Add("harass.QE",
                 new Slider("Min. Mana for Harass Spells %", 55));
             HarassMeNu.AddSeparator();
-            HarassMeNu.AddGroupLabel("KillSteal Settings:");
+            HarassMeNu.AddLabel("KillSteal Settings:");
             HarassMeNu.Add("killsteal.Q",
                 new CheckBox("Use Q", false));
         }
@@ -130,9 +135,8 @@ namespace CaitlynTheTroll
                 new CheckBox("Taunt"));
             Activator.Add("Suppression",
                 new CheckBox("Suppression"));
-            Activator.AddGroupLabel("Items usage:");
-            Activator.AddSeparator();
-       Activator.Add("bilgewater",
+            Activator.AddLabel("Items usage:");
+         Activator.Add("bilgewater",
                 new CheckBox("Use Bilgewater Cutlass"));
             Activator.Add("bilgewater.HP",
                 new Slider("Use Bilgewater Cutlass if hp is lower than {0}(%)", 60));
@@ -148,23 +152,18 @@ namespace CaitlynTheTroll
                 new Slider("Use Youmuss Ghostblade if hp is lower than {0}(%)", 60, 1));
             Activator.Add("youmus.Enemies",
                 new Slider("Use Youmus Ghostblade when there are {0} enemies in range", 3, 1, 5));
-            Activator.AddSeparator();
-            Activator.AddGroupLabel("Potion Settings");
+           Activator.AddLabel("Potion Settings");
             Activator.Add("spells.Potions.Check",
                 new CheckBox("Use Potions"));
             Activator.Add("spells.Potions.HP",
                 new Slider("Use Potions when HP is lower than {0}(%)", 60, 1));
             Activator.Add("spells.Potions.Mana",
                 new Slider("Use Potions when Mana is lower than {0}(%)", 60, 1));
-            Activator.AddSeparator();
-            Activator.AddGroupLabel("Spells settings:");
-            Activator.AddGroupLabel("Barrier settings:");
-            Activator.Add("spells.Barrier.Hp",
-                new Slider("Use Barrier when HP is lower than {0}(%)", 30, 1));
-            Activator.AddGroupLabel("Heal settings:");
+            Activator.AddLabel("Spells settings:");
+           Activator.AddLabel("Heal settings:");
             Activator.Add("spells.Heal.Hp",
                 new Slider("Use Heal when HP is lower than {0}(%)", 30, 1));
-            Activator.AddGroupLabel("Ignite settings:");
+            Activator.AddLabel("Ignite settings:");
             Activator.Add("spells.Ignite.Focus",
                 new Slider("Use Ignite when target HP is lower than {0}(%)", 10, 1));
         }
@@ -175,15 +174,14 @@ namespace CaitlynTheTroll
             MiscMeNu.AddGroupLabel("Settings for Flee");
             MiscMeNu.Add("useEmouse",
                 new KeyBind("Use E To Mouse", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
-            MiscMeNu.AddGroupLabel("Anti Gap Closer/Interrupt");
+            MiscMeNu.AddLabel("Anti Gap Closer/Interrupt");
             MiscMeNu.Add("gapcloser.E",
                 new CheckBox("Use E GapCloser"));
             MiscMeNu.Add("gapcloser.W",
                 new CheckBox("Use W GapCloser"));
             MiscMeNu.Add("interupt.W",
               new CheckBox("Use W Interrupt"));
-            MiscMeNu.AddSeparator();
-            MiscMeNu.AddGroupLabel("Skin settings");
+            MiscMeNu.AddLabel("Skin settings");
             MiscMeNu.Add("checkSkin",
                 new CheckBox("Use skin changer:", false));
             MiscMeNu.Add("skin.Id",

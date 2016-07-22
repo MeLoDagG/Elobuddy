@@ -26,10 +26,6 @@ namespace CaitlynTheTroll.Utility
                 Ignite = new Spell.Targeted(SpellSlot.Summoner1, 580);
             else if (ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner2).Name.Contains("dot"))
                 Ignite = new Spell.Targeted(SpellSlot.Summoner2, 580);
-            if (ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner1).Name.Contains("barrier"))
-                Barrier = new Spell.Active(SpellSlot.Summoner1);
-            else if (ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Summoner2).Name.Contains("barrier"))
-                Barrier = new Spell.Active(SpellSlot.Summoner2);
             var slot = ObjectManager.Player.GetSpellSlotFromName("summonerheal");
             if (slot != SpellSlot.Unknown)
             {
