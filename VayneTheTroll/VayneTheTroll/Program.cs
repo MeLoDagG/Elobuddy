@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -12,25 +13,26 @@ using Color = System.Drawing.Color;
 
 namespace VayneTheTroll
 {
-    internal class VayneTheTroll
+    internal class Program
     {
-        public static Spell.Ranged _q;
-        public static Spell.Targeted _e;
-        public static Spell.Skillshot _e2;
-        public static Spell.Active _r;
+        public static Spell.Ranged Q;
+        public static Spell.Targeted E;
+        public static Spell.Skillshot E2;
+        public static Spell.Active W;
+        public static Spell.Active R;
         public static Spell.Active Heal;
 
-        private static readonly string[] MobNames =
+        public static readonly string[] MobNames =
         {
             "SRU_Red", "SRU_Blue", "SRU_Gromp", "SRU_Murkwolf",
             "SRU_Razorbeak", "SRU_Krug"
         };
 
-        private static Item HealthPotion;
-        private static Item CorruptingPotion;
-        private static Item RefillablePotion;
-        private static Item TotalBiscuit;
-        private static Item HuntersPotion;
+        public static Item HealthPotion;
+        public static Item CorruptingPotion;
+        public static Item RefillablePotion;
+        public static Item TotalBiscuit;
+        public static Item HuntersPotion;
         public static Item Youmuu = new Item(ItemId.Youmuus_Ghostblade);
         public static Item Botrk = new Item(ItemId.Blade_of_the_Ruined_King);
         public static Item Cutlass = new Item(ItemId.Bilgewater_Cutlass);
@@ -38,7 +40,17 @@ namespace VayneTheTroll
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
         public static DangerLevel Dangerlvl;
+        public static List<Vector2> Points = new List<Vector2>();
 
+        public static bool UltActive()
+        {
+            return Player.HasBuff("vaynetumblefade") && !UnderEnemyTower((Vector2) Player.Position);
+        }
+
+        public static bool UnderEnemyTower(Vector2 pos)
+        {
+            return EntityManager.Turrets.Enemies.Where(a => a.Health > 0 && !a.IsDead).Any(a => a.Distance(pos) < 1100);
+        }
 
         public static Menu Menu,
             ComboMenu,
@@ -51,7 +63,7 @@ namespace VayneTheTroll
             AutoPotHealMenu,
             FleeMenu;
 
-        public static AIHeroClient _Player
+        public static AIHeroClient Player
         {
             get { return ObjectManager.Player; }
         }
@@ -65,18 +77,19 @@ namespace VayneTheTroll
 
         public static void Loading_OnLoadingComplete(EventArgs args)
         {
-            if (Player.Instance.Hero != Champion.Vayne)
+            if (EloBuddy.Player.Instance.Hero != Champion.Vayne)
             {
                 return;
             }
 
-            _q = new Spell.Skillshot(SpellSlot.Q, int.MaxValue, SkillShotType.Linear);
-            _e = new Spell.Targeted(SpellSlot.E, 590);
-            _e2 = new Spell.Skillshot(SpellSlot.E, 590, SkillShotType.Linear, 250, 1250);
-            _r = new Spell.Active(SpellSlot.R);
+            Q = new Spell.Skillshot(SpellSlot.Q, int.MaxValue, SkillShotType.Linear);
+            E = new Spell.Targeted(SpellSlot.E, 590);
+            E2 = new Spell.Skillshot(SpellSlot.E, 590, SkillShotType.Linear, 250, 1250);
+            VayneTheTroll.Condemn.ESpell = new Spell.Skillshot(SpellSlot.E, 590, SkillShotType.Linear, 250, 1250);
+            R = new Spell.Active(SpellSlot.R);
 
 
-            var slot = _Player.GetSpellSlotFromName("summonerheal");
+            var slot = Player.GetSpellSlotFromName("summonerheal");
             if (slot != SpellSlot.Unknown)
             {
                 Heal = new Spell.Active(slot, 600);
@@ -90,24 +103,23 @@ namespace VayneTheTroll
 
             Chat.Print(
                 "<font color=\"#ef0101\" >MeLoDag Presents </font><font color=\"#ffffff\" > VayneTHeTroll </font><font color=\"#ef0101\" >Kappa Kippo</font>");
-            Chat.Print("Version 1.3 (14/7/2016)", Color.AntiqueWhite);
+            Chat.Print("Version 1.4 (27/7/2016)", Color.AntiqueWhite);
             Chat.Print("Gl and HF also Dont Feed!!", Color.AntiqueWhite);
 
 
             Menu = MainMenu.AddMenu("VayneTheTroll", "VayneTheTroll");
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.AddGroupLabel("Q Settings");
-            ComboMenu.Add("useQcombo", new ComboBox("Q Logic", 0, "Side", "Cursor", "SmartQ", "SafeQ", "AggroQ"));
+            ComboMenu.Add("useQcombo",
+                new ComboBox("Q Logic", 0, "Side", "Cursor", "SmartQ", "SafeQ", "AggroQ", "Burst"));
             ComboMenu.Add("UseQulty", new CheckBox("Auto Q when using R", false));
             ComboMenu.AddLabel("W Settings:");
             ComboMenu.Add("FocusW", new CheckBox("Focus target With Silver Bolt"));
             ComboMenu.AddLabel("E Settings:");
-            ComboMenu.AddLabel("Use E on");
-            foreach (var enemies in EntityManager.Heroes.Enemies.Where(i => !i.IsMe))
-            {
-                ComboMenu.Add("useEcombo" + enemies.ChampionName, new CheckBox("" + enemies.ChampionName));
-            }
+            ComboMenu.Add("UseEks", new CheckBox("Use E Ks"));
+            ComboMenu.Add("useEcombo", new ComboBox("E Logic", 0, "VayneTheTroll", "360 Fluxy"));
             ComboMenu.Add("pushDistance", new Slider("Push Distance", 410, 350, 420));
+            ComboMenu.Add("condemnPercent", new Slider("HitChange %", 70));
             ComboMenu.AddLabel("Use R Settings");
             ComboMenu.Add("useRCombo", new CheckBox("Use R"));
             ComboMenu.Add("Rcount", new Slider("R when enemies >= ", 2, 1, 5));
@@ -124,15 +136,15 @@ namespace VayneTheTroll
             JungleLaneMenu = Menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
             JungleLaneMenu.AddLabel("Lane Clear");
             JungleLaneMenu.Add("useQFarm", new CheckBox("Use Q[LastHit]"));
-            JungleLaneMenu.Add("useQMana", new Slider("Q Mana > %", 75, 0, 100));
+            JungleLaneMenu.Add("useQMana", new Slider("Q Mana > %", 75));
             JungleLaneMenu.AddLabel("Jungle Clear");
             JungleLaneMenu.Add("useQJungle", new CheckBox("Use Q"));
             JungleLaneMenu.Add("useEJungle", new CheckBox("Use E"));
-            JungleLaneMenu.Add("useQJunglemana", new Slider("Mana > %", 40, 0, 100));
+            JungleLaneMenu.Add("useQJunglemana", new Slider("Mana > %", 40));
 
             MiscMenu = Menu.AddSubMenu("Misc Settings", "MiscSettings");
             MiscMenu.AddGroupLabel("Gapcloser Settings");
-            MiscMenu.Add("gapcloser", new CheckBox("Auto Q for Gapcloser"));
+            MiscMenu.Add("gapcloser", new CheckBox("Auto Q for Gapcloser", false));
             MiscMenu.AddGroupLabel("Interrupter Settings & Dangerlvl");
             MiscMenu.Add("interrupter", new CheckBox("Auto E for Interrupter"));
             MiscMenu.Add("Dangerlvl", new ComboBox("Min DangerLevel to interrupt", 2, "Low", "Medium", "High"));
@@ -152,19 +164,19 @@ namespace VayneTheTroll
 
             ItemMenu = Menu.AddSubMenu("Item Settings", "ItemMenuettings");
             ItemMenu.Add("useBOTRK", new CheckBox("Use BOTRK"));
-            ItemMenu.Add("useBotrkMyHP", new Slider("My Health < ", 60, 1, 100));
-            ItemMenu.Add("useBotrkEnemyHP", new Slider("Enemy Health < ", 60, 1, 100));
+            ItemMenu.Add("useBotrkMyHP", new Slider("My Health < ", 60));
+            ItemMenu.Add("useBotrkEnemyHP", new Slider("Enemy Health < ", 60));
             ItemMenu.Add("useYoumu", new CheckBox("Use Youmu"));
             ItemMenu.AddSeparator();
             ItemMenu.Add("useQSS", new CheckBox("Use QSS"));
             ItemMenu.Add("Qssmode", new ComboBox(" ", 0, "Auto", "Combo"));
-            ItemMenu.Add("Stun", new CheckBox("Stun", true));
-            ItemMenu.Add("Blind", new CheckBox("Blind", true));
-            ItemMenu.Add("Charm", new CheckBox("Charm", true));
-            ItemMenu.Add("Suppression", new CheckBox("Suppression", true));
-            ItemMenu.Add("Polymorph", new CheckBox("Polymorph", true));
-            ItemMenu.Add("Fear", new CheckBox("Fear", true));
-            ItemMenu.Add("Taunt", new CheckBox("Taunt", true));
+            ItemMenu.Add("Stun", new CheckBox("Stun"));
+            ItemMenu.Add("Blind", new CheckBox("Blind"));
+            ItemMenu.Add("Charm", new CheckBox("Charm"));
+            ItemMenu.Add("Suppression", new CheckBox("Suppression"));
+            ItemMenu.Add("Polymorph", new CheckBox("Polymorph"));
+            ItemMenu.Add("Fear", new CheckBox("Fear"));
+            ItemMenu.Add("Taunt", new CheckBox("Taunt"));
             ItemMenu.Add("Silence", new CheckBox("Silence", false));
             ItemMenu.Add("QssDelay", new Slider("Use QSS Delay(ms)", 250, 0, 1000));
 
@@ -190,19 +202,21 @@ namespace VayneTheTroll
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
             Orbwalker.OnPostAttack += OnAfterAttack;
+            //  Orbwalker.OnPostAttack += Orbwalking_AfterAttack1;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
             Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
             Drawing.OnDraw += Drawing_OnDraw;
-            Player.OnIssueOrder += Player_OnIssueOrder;
+            EloBuddy.Player.OnIssueOrder += Player_OnIssueOrder;
         }
+
 
         public static void Drawing_OnDraw(EventArgs args)
         {
             if (DrawMenu["drawStun"].Cast<CheckBox>().CurrentValue)
             {
-                var t = TargetSelector.GetTarget(_e.Range + _q.Range,
+                var t = TargetSelector.GetTarget(E.Range + Q.Range,
                     DamageType.Physical);
                 if (t.IsValidTarget())
                 {
@@ -252,7 +266,7 @@ namespace VayneTheTroll
                 }
                 if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
                 {
-                    new Circle {Color = Color.Red, Radius = _e.Range, BorderWidth = 2f}.Draw(_Player.Position);
+                    new Circle {Color = Color.Red, Radius = E.Range, BorderWidth = 2f}.Draw(Player.Position);
                 }
             }
         }
@@ -272,11 +286,11 @@ namespace VayneTheTroll
             Interrupter.InterruptableSpellEventArgs e)
         {
             var useEint = MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue;
-
-            if (sender.IsMe && sender.IsAlly && useEint)
-            {
-                return;
-            }
+            if (useEint)
+                if (sender.IsMe && sender.IsAlly)
+                {
+                    return;
+                }
 
             switch (MiscMenu["Dangerlvl"].Cast<ComboBox>().CurrentValue)
             {
@@ -293,11 +307,10 @@ namespace VayneTheTroll
                     Dangerlvl = DangerLevel.High;
                     break;
             }
-
-            if (_e.CanCast(sender) && sender.IsValidTarget(_e.Range) && e.DangerLevel == Dangerlvl)
+            if (E.CanCast(sender) && sender.IsValidTarget(E.Range) && e.DangerLevel == Dangerlvl)
             {
                 var delay = MiscMenu["delayinter"].Cast<Slider>().CurrentValue;
-                Core.DelayAction(() => _e.Cast(sender), delay);
+                Core.DelayAction(() => E.Cast(sender), delay);
             }
         }
 
@@ -307,9 +320,11 @@ namespace VayneTheTroll
             var useQgap = MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue;
 
             if (useQgap && sender.IsEnemy &&
-                e.End.Distance(_Player) <= 350)
+                e.End.Distance(Player) <= 350)
             {
-                Player.CastSpell(SpellSlot.Q, sender.Position - 450);
+                EloBuddy.Player.CastSpell(SpellSlot.Q,
+                    e.End.Extend(EloBuddy.Player.Instance.Position, e.End.Distance(EloBuddy.Player.Instance) - 325)
+                        .To3D());
             }
         }
 
@@ -318,9 +333,9 @@ namespace VayneTheTroll
             if (sender.IsMe)
             {
                 if (args.Slot == SpellSlot.R)
-                    if (ComboMenu["UseQulty"].Cast<CheckBox>().CurrentValue && _q.IsReady())
+                    if (ComboMenu["UseQulty"].Cast<CheckBox>().CurrentValue && Q.IsReady())
                     {
-                        Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                        EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
                     }
             }
         }
@@ -330,9 +345,9 @@ namespace VayneTheTroll
             if (sender.IsMe && ComboMenu["noaa"].Cast<CheckBox>().CurrentValue
                 && (args.Order == GameObjectOrder.AttackUnit || args.Order == GameObjectOrder.AttackTo)
                 &&
-                (_Player.CountEnemiesInRange(1000f) >=
+                (Player.CountEnemiesInRange(1000f) >=
                  ComboMenu["Noaaslider"].Cast<Slider>().CurrentValue)
-                && UltActive() || _Player.HasBuffOfType(BuffType.Invisibility)
+                && UltActive() || Player.HasBuffOfType(BuffType.Invisibility)
                 && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
                 args.Process = false;
@@ -344,7 +359,7 @@ namespace VayneTheTroll
         {
             if (CheckSkin())
             {
-                Player.SetSkinId(SkinId());
+                EloBuddy.Player.SetSkinId(SkinId());
             }
         }
 
@@ -358,7 +373,6 @@ namespace VayneTheTroll
             return SkinMenu["checkSkin"].Cast<CheckBox>().CurrentValue;
         }
 
-
         public static
             void OnGameUpdate(EventArgs args)
         {
@@ -369,7 +383,9 @@ namespace VayneTheTroll
                 UseHeal();
                 ItemUsage();
                 ComboR();
+                Burst();
                 Condemn();
+                Condemn360();
                 FocusW();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
@@ -389,16 +405,19 @@ namespace VayneTheTroll
                 Flee();
             }
             AutoPot();
+            KillSteal();
         }
 
         public static
             void AutoPot()
         {
-            if (AutoPotHealMenu["potion"].Cast<CheckBox>().CurrentValue && !Player.Instance.IsInShopRange() &&
-                Player.Instance.HealthPercent <= AutoPotHealMenu["potionminHP"].Cast<Slider>().CurrentValue &&
-                !(Player.Instance.HasBuff("RegenerationPotion") || Player.Instance.HasBuff("ItemCrystalFlaskJungle") ||
-                  Player.Instance.HasBuff("ItemMiniRegenPotion") || Player.Instance.HasBuff("ItemCrystalFlask") ||
-                  Player.Instance.HasBuff("ItemDarkCrystalFlask")))
+            if (AutoPotHealMenu["potion"].Cast<CheckBox>().CurrentValue && !EloBuddy.Player.Instance.IsInShopRange() &&
+                EloBuddy.Player.Instance.HealthPercent <= AutoPotHealMenu["potionminHP"].Cast<Slider>().CurrentValue &&
+                !(EloBuddy.Player.Instance.HasBuff("RegenerationPotion") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemCrystalFlaskJungle") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemMiniRegenPotion") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemCrystalFlask") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemDarkCrystalFlask")))
             {
                 if (Item.HasItem(HealthPotion.Id) && Item.CanUseItem(HealthPotion.Id))
                 {
@@ -425,9 +444,11 @@ namespace VayneTheTroll
                     return;
                 }
             }
-            if (Player.Instance.ManaPercent <= AutoPotHealMenu["potionMinMP"].Cast<Slider>().CurrentValue &&
-                !(Player.Instance.HasBuff("RegenerationPotion") || Player.Instance.HasBuff("ItemMiniRegenPotion") ||
-                  Player.Instance.HasBuff("ItemCrystalFlask") || Player.Instance.HasBuff("ItemDarkCrystalFlask")))
+            if (EloBuddy.Player.Instance.ManaPercent <= AutoPotHealMenu["potionMinMP"].Cast<Slider>().CurrentValue &&
+                !(EloBuddy.Player.Instance.HasBuff("RegenerationPotion") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemMiniRegenPotion") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemCrystalFlask") ||
+                  EloBuddy.Player.Instance.HasBuff("ItemDarkCrystalFlask")))
             {
                 if (Item.HasItem(CorruptingPotion.Id) && Item.CanUseItem(CorruptingPotion.Id))
                 {
@@ -441,8 +462,8 @@ namespace VayneTheTroll
             void UseHeal()
         {
             if (Heal != null && AutoPotHealMenu["UseHeal"].Cast<CheckBox>().CurrentValue && Heal.IsReady() &&
-                _Player.HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
-                && _Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
+                Player.HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
+                && Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
             {
                 Heal.Cast();
                 Chat.Print("<font color=\"#ffffff\" > USe Heal Noob </font>");
@@ -466,14 +487,14 @@ namespace VayneTheTroll
             {
                 if (ItemMenu["useBOTRK"].Cast<CheckBox>().CurrentValue && Item.HasItem(Cutlass.Id) &&
                     Item.CanUseItem(Cutlass.Id) &&
-                    Player.Instance.HealthPercent < ItemMenu["useBotrkMyHP"].Cast<Slider>().CurrentValue &&
+                    EloBuddy.Player.Instance.HealthPercent < ItemMenu["useBotrkMyHP"].Cast<Slider>().CurrentValue &&
                     target.HealthPercent < ItemMenu["useBotrkEnemyHP"].Cast<Slider>().CurrentValue)
                 {
                     Item.UseItem(Cutlass.Id, target);
                 }
                 if (ItemMenu["useBOTRK"].Cast<CheckBox>().CurrentValue && Item.HasItem(Botrk.Id) &&
                     Item.CanUseItem(Botrk.Id) &&
-                    Player.Instance.HealthPercent < ItemMenu["useBotrkMyHP"].Cast<Slider>().CurrentValue &&
+                    EloBuddy.Player.Instance.HealthPercent < ItemMenu["useBotrkMyHP"].Cast<Slider>().CurrentValue &&
                     target.HealthPercent < ItemMenu["useBotrkEnemyHP"].Cast<Slider>().CurrentValue)
                 {
                     Botrk.Cast(target);
@@ -581,19 +602,35 @@ namespace VayneTheTroll
             }
         }
 
-        public static void Flee()
+        public static void KillSteal()
         {
-            var target = TargetSelector.GetTarget(_e.Range, DamageType.Physical);
+            foreach (
+                var enemy in
+                    EntityManager.Heroes.Enemies.Where(
+                        e => e.Distance(Player) <= E.Range && e.IsValidTarget(1000) && !e.IsInvulnerable))
+            {
+                if (ComboMenu["UseEks"].Cast<CheckBox>().CurrentValue && E.IsReady() &&
+                    Player.GetSpellDamage(enemy, SpellSlot.E) >= enemy.Health)
+                {
+                    E.Cast(enemy);
+                }
+            }
+        }
+
+        public static
+            void Flee()
+        {
+            var target = TargetSelector.GetTarget(E.Range, DamageType.Physical);
             var fleeQ = FleeMenu["fleeQ"].Cast<CheckBox>().CurrentValue;
             var fleeE = FleeMenu["fleeE"].Cast<CheckBox>().CurrentValue;
 
-            if (fleeE && _e.IsReady() && target.IsValidTarget(_e.Range))
+            if (fleeE && E.IsReady() && target.IsValidTarget(E.Range))
             {
-                _e.Cast(target);
+                E.Cast(target);
             }
-            if (fleeQ && _q.IsReady())
+            if (fleeQ && Q.IsReady())
             {
-                Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
             }
         }
 
@@ -606,18 +643,18 @@ namespace VayneTheTroll
             foreach (
                 var mob in
                     EntityManager.MinionsAndMonsters.Monsters.Where(
-                        x => x.IsValid && !x.IsDead && x.Position.Distance(_Player) < _Player.GetAutoAttackRange(x)))
+                        x => x.IsValid && !x.IsDead && x.Position.Distance(Player) < Player.GetAutoAttackRange(x)))
             {
-                if (useQJungle && _q.IsReady() && mob != null && mob.IsValidTarget(_q.Range) &&
-                    _Player.ManaPercent >= usemana)
+                if (useQJungle && Q.IsReady() && mob != null && mob.IsValidTarget(Q.Range) &&
+                    Player.ManaPercent >= usemana)
                 {
-                    Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                    EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
                 }
-                if (useEJungle && _e.IsReady() && mob != null && mob.IsValidTarget(_e.Range) &&
+                if (useEJungle && E.IsReady() && mob != null && mob.IsValidTarget(E.Range) &&
                     MobNames.Contains(mob.BaseSkinName) &&
-                    _Player.ManaPercent >= usemana)
+                    Player.ManaPercent >= usemana)
                 {
-                    _e.Cast(mob);
+                    E.Cast(mob);
                 }
             }
         }
@@ -628,29 +665,29 @@ namespace VayneTheTroll
             var useQ = JungleLaneMenu["useQFarm"].Cast<CheckBox>().CurrentValue;
             var useQMana = JungleLaneMenu["useQMana"].Cast<Slider>().CurrentValue;
 
-            if (_q.IsReady() && useQ && _Player.ManaPercent >= useQMana)
+            if (Q.IsReady() && useQ && Player.ManaPercent >= useQMana)
             {
                 var Minions = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy,
-                    _Player.Position, _Player.GetAutoAttackRange());
+                    Player.Position, Player.GetAutoAttackRange());
                 foreach (var minions in
                     Minions.Where(
-                        minions => minions.Health < QDamage(minions)))
+                        minions => minions.Health < DamageLibrary.QDamage(minions)))
                 {
                     if (minions != null)
                     {
-                        Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                        EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
                     }
                 }
             }
         }
 
-        private static void FocusW()
+        public static void FocusW()
         {
             var focusW = ComboMenu["FocusW"].Cast<CheckBox>().CurrentValue;
             var focusWtarget =
                 EntityManager.Heroes.Enemies.FirstOrDefault(
                     h =>
-                        h.ServerPosition.Distance(_Player.ServerPosition) < 600 &&
+                        h.ServerPosition.Distance(Player.ServerPosition) < 600 &&
                         h.GetBuffCount("vaynesilvereddebuff") == 1);
             if (focusW && focusWtarget.IsValidTarget())
             {
@@ -660,44 +697,42 @@ namespace VayneTheTroll
 
         public static void Condemn()
         {
-            {
-                var enemies = EntityManager.Heroes.Enemies.OrderByDescending
-                    (a => a.HealthPercent).Where(a => !a.IsMe && a.IsValidTarget() && a.Distance(_Player) <= _e.Range);
-                var target = TargetSelector.GetTarget(_e.Range, DamageType.Physical);
-                var distance = ComboMenu["pushDistance"].Cast<Slider>().CurrentValue;
-                if (!target.IsValidTarget(_e.Range) || target == null)
+            var distance = ComboMenu["pushDistance"].Cast<Slider>().CurrentValue;
+
+            if (ComboMenu["useEcombo"].Cast<ComboBox>().CurrentValue == 0 && E.IsReady())
+                foreach (
+                    var enemy in
+                        from enemy in ObjectManager.Get<AIHeroClient>().Where(enemy => enemy.IsValidTarget(550f))
+                        let prediction = E2.GetPrediction(enemy)
+                        where NavMesh.GetCollisionFlags(
+                            prediction.UnitPosition.To2D()
+                                .Extend(ObjectManager.Player.ServerPosition.To2D(),
+                                    -distance)
+                                .To3D())
+                            .HasFlag(CollisionFlags.Wall) || NavMesh.GetCollisionFlags(
+                                prediction.UnitPosition.To2D()
+                                    .Extend(ObjectManager.Player.ServerPosition.To2D(),
+                                        -(distance/2))
+                                    .To3D())
+                                .HasFlag(CollisionFlags.Wall)
+                        select enemy)
                 {
-                    return;
+                    E.Cast(enemy);
                 }
-                if (_e.IsReady() && target.IsValidTarget(_e.Range))
-                    foreach (var eenemies in enemies)
-                    {
-                        var useE = ComboMenu["useEcombo"
-                                             + eenemies.ChampionName].Cast<CheckBox>().CurrentValue;
-                        if (useE)
-                        {
-                            foreach (
-                                var enemy in
-                                    from enemy in
-                                        ObjectManager.Get<AIHeroClient>().Where(enemy => enemy.IsValidTarget(550f))
-                                    let prediction = _e2.GetPrediction(enemy)
-                                    where NavMesh.GetCollisionFlags(
-                                        prediction.UnitPosition.To2D()
-                                            .Extend(ObjectManager.Player.ServerPosition.To2D(),
-                                                -distance)
-                                            .To3D())
-                                        .HasFlag(CollisionFlags.Wall) || NavMesh.GetCollisionFlags(
-                                            prediction.UnitPosition.To2D()
-                                                .Extend(ObjectManager.Player.ServerPosition.To2D(),
-                                                    -(distance/2))
-                                                .To3D())
-                                            .HasFlag(CollisionFlags.Wall)
-                                    select enemy)
-                            {
-                                _e.Cast(enemy);
-                            }
-                        }
-                    }
+        }
+
+
+        public static void Condemn360()
+        {
+            var target = TargetSelector.GetTarget((int) Player.GetAutoAttackRange(), DamageType.Physical);
+            {
+                if (!target.IsValidTarget() || Orbwalker.IsAutoAttacking) return;
+
+                if (E.IsReady() && target.IsValidTarget(E.Range) && target.IsCondemable() &&
+                    ComboMenu["useEcombo"].Cast<ComboBox>().CurrentValue == 1)
+                {
+                    E.Cast(target);
+                }
             }
         }
 
@@ -705,120 +740,71 @@ namespace VayneTheTroll
         {
             var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
             var comboR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
-            var targetR = TargetSelector.GetTarget(_r.Range, DamageType.Magical);
+            var targetR = TargetSelector.GetTarget(R.Range, DamageType.Magical);
 
-            if (comboR && _Player.CountEnemiesInRange(_Player.AttackRange + 350) >= rCount && _r.IsReady()
+            if (comboR && Player.CountEnemiesInRange(Player.AttackRange + 350) >= rCount && R.IsReady()
                 && targetR != null)
             {
-                _r.Cast();
+                R.Cast();
+            }
+        }
+
+        public static void Burst()
+        {
+            var target = TargetSelector.GetTarget(E.Range, DamageType.Physical);
+            if (!target.IsValidTarget())
+            {
+                return;
+            }
+            if (Q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 5 && target.IsValidTarget(600) &&
+                target.GetBuffCount("vaynesilvereddebuff") == 2 && !UnderEnemyTower((Vector2) Player.Position))
+            {
+                EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                Orbwalker.ResetAutoAttack();
             }
         }
 
         public static void OnAfterAttack(AttackableUnit target, EventArgs args)
         {
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && target.IsValid)
-                if (_q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 0)
+                if (Q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 0 &&
+                    !UnderEnemyTower((Vector2) Player.Position))
                 {
-                    Player.CastSpell(SpellSlot.Q, Side(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                    EloBuddy.Player.CastSpell(SpellSlot.Q,
+                        Qlogic.Side(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
                     Orbwalker.ResetAutoAttack();
                 }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && target.IsValid)
-                if (_q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 1)
+                if (Q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 1 &&
+                    !UnderEnemyTower((Vector2) Player.Position))
                 {
-                    Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                    EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
                     Orbwalker.ResetAutoAttack();
                 }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && target.IsValid)
-                if (_q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 2)
-                    if (_Player.Position.Extend(Game.CursorPos, 700).CountEnemiesInRange(700) <= 1)
+                if (Q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 2 &&
+                    !UnderEnemyTower((Vector2) Player.Position))
+                    if (Player.Position.Extend(Game.CursorPos, 700).CountEnemiesInRange(700) <= 1)
                     {
-                        Player.CastSpell(SpellSlot.Q, Game.CursorPos);
+                        EloBuddy.Player.CastSpell(SpellSlot.Q, Game.CursorPos);
                         Orbwalker.ResetAutoAttack();
                     }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && target.IsValid)
-                if (_q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 3)
+                if (Q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 3 &&
+                    !UnderEnemyTower((Vector2) Player.Position))
                 {
-                    Player.CastSpell(SpellSlot.Q, DefQ(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                    EloBuddy.Player.CastSpell(SpellSlot.Q,
+                        Qlogic.DefQ(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
                     Orbwalker.ResetAutoAttack();
                 }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && target.IsValid)
-                if (_q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 4)
+                if (Q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 4 &&
+                    !UnderEnemyTower((Vector2) Player.Position))
                 {
-                    Player.CastSpell(SpellSlot.Q, AggroQ(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
-                    Orbwalker.ResetAutoAttack();
-                }
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && target.IsValid)
-                if (_q.IsReady() && ComboMenu["useQcombo"].Cast<ComboBox>().CurrentValue == 5)
-                {
-                    Player.CastSpell(SpellSlot.Q, AggroQ(_Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                    EloBuddy.Player.CastSpell(SpellSlot.Q,
+                        Qlogic.AggroQ(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
                     Orbwalker.ResetAutoAttack();
                 }
         }
-
-        public static
-            Vector2 Side(Vector2 point1, Vector2 point2, double angle)
-        {
-            angle *= Math.PI/180.0;
-            var temp = Vector2.Subtract(point2, point1);
-            var result = new Vector2(0);
-            result.X = (float) (temp.X*Math.Cos(angle) - temp.Y*Math.Sin(angle))/4;
-            result.Y = (float) (temp.X*Math.Sin(angle) + temp.Y*Math.Cos(angle))/4;
-            result = Vector2.Add(result, point1);
-            return result;
-        }
-
-        public static
-            Vector2 DefQ(Vector2 point1, Vector2 point2, double angle)
-        {
-            angle *= Math.PI/-50.0;
-            var temp = Vector2.Subtract(point2, point1);
-            var result = new Vector2(0);
-            result.X = (float) (temp.X*Math.Cos(angle) - temp.Y*Math.Sin(angle))/4;
-            result.Y = (float) (temp.X*Math.Sin(angle) + temp.Y*Math.Cos(angle))/4;
-            result = Vector2.Add(result, point1);
-            return result;
-        }
-
-        public static
-            Vector2 AggroQ(Vector2 point1, Vector2 point2, double angle)
-        {
-            angle *= Math.PI/300;
-            var temp = Vector2.Subtract(point2, point1);
-            var result = new Vector2(0);
-            result.X = (float) (temp.X*Math.Cos(angle) - temp.Y*Math.Sin(angle))/50;
-            result.Y = (float) (temp.X*Math.Sin(angle) + temp.Y*Math.Cos(angle))/50;
-            result = Vector2.Add(result, point1);
-            return result;
-        }
-
-        private static double QDamage(Obj_AI_Base target)
-        {
-            return _Player.CalculateDamageOnUnit(target, DamageType.Physical,
-                (float)
-                    new[] {0.3, 0.35, 0.4, 0.45, 0.5}[
-                        _Player.Spellbook.GetSpell(SpellSlot.Q).Level - 1]*
-                _Player.TotalAttackDamage);
-        }
-
-
-        public static bool UltActive()
-        {
-            return _Player.HasBuff("vaynetumblefade") && !UnderEnemyTower((Vector2) _Player.Position);
-        }
-
-        public static bool UnderEnemyTower(Vector2 pos)
-        {
-            return EntityManager.Turrets.Enemies.Where(a => a.Health > 0 && !a.IsDead).Any(a => a.Distance(pos) < 950);
-        }
-
-        /*   public static
-            void Harass()
-        {
-            var targetE = TargetSelector.GetTarget(_e.Range, DamageType.Physical);
-            var targetQ = TargetSelector.GetTarget(_q.Range, DamageType.Physical);
-            var Emana = HarassMenu["useEHarassMana"].Cast<Slider>().CurrentValue;
-            var Qmana = HarassMenu["useQHarassMana"].Cast<Slider>().CurrentValue;
-            
-       }*/
     }
 }
