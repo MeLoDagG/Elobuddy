@@ -52,11 +52,12 @@ namespace ZyraTheTroll
             ComboMenu.Add("useWCombo", new CheckBox("Use W Combo"));
             ComboMenu.Add("useRCombo", new CheckBox("Use R Combo"));
             ComboMenu.Add("Rcount", new Slider("Use R If Hit Enemy ", 2, 1, 5));
-            ComboMenu.AddGroupLabel("Combo preferences:");
+            ComboMenu.AddLabel("Combo preferences:");
             ComboMenu.Add("combo.CC",
                 new CheckBox("Use E CC"));
             ComboMenu.Add("combo.CCQ",
                 new CheckBox("Use Q CC"));
+            ComboMenu.Add("Rlogic", new CheckBox("Smart R 1vs1"));
         }
 
 
@@ -76,8 +77,7 @@ namespace ZyraTheTroll
             HarassMeNu.AddGroupLabel("Harass Setttings");
             HarassMeNu.Add("useQHarass", new CheckBox("Use Q"));
             HarassMeNu.Add("useEHarass", new CheckBox("Use E"));
-            HarassMeNu.AddSeparator();
-            HarassMeNu.AddGroupLabel("KillSteal Settings:");
+            HarassMeNu.AddLabel("KillSteal Settings:");
             HarassMeNu.Add("ksQ",
                 new CheckBox("Use Q", false));
                  HarassMeNu.Add("ksE",
@@ -87,23 +87,20 @@ namespace ZyraTheTroll
         private static void ActivatorPage()
         {
             Activator = _myMenu.AddSubMenu("Activator Settings", "Items");
-            Activator.AddLabel("Zhonyas Settings");
+            Activator.AddGroupLabel("Zhonyas Settings");
             Activator.Add("Zhonyas", new CheckBox("Use Zhonyas Hourglass"));
             Activator.Add("ZhonyasHp", new Slider("Use Zhonyas Hourglass If Your HP%", 20, 0, 100));
-            Activator.AddSeparator();
-            Activator.AddGroupLabel("Potion Settings");
+            Activator.AddLabel("Potion Settings");
             Activator.Add("spells.Potions.Check",
                 new CheckBox("Use Potions"));
             Activator.Add("spells.Potions.HP",
                 new Slider("Use Potions when HP is lower than {0}(%)", 60, 1));
             Activator.Add("spells.Potions.Mana",
                 new Slider("Use Potions when Mana is lower than {0}(%)", 60, 1));
-            Activator.AddSeparator();
-            Activator.AddGroupLabel("Spells settings:");
-            Activator.AddGroupLabel("Heal settings:");
+            Activator.AddLabel("Heal settings:");
             Activator.Add("spells.Heal.Hp",
                 new Slider("Use Heal when HP is lower than {0}(%)", 30, 1));
-            Activator.AddGroupLabel("Ignite settings:");
+            Activator.AddLabel("Ignite settings:");
             Activator.Add("spells.Ignite.Focus",
                 new Slider("Use Ignite when target HP is lower than {0}(%)", 10, 1));
         }
@@ -116,7 +113,7 @@ namespace ZyraTheTroll
                 new CheckBox("Use E GapCloser"));
             MiscMeNu.Add("interupt.E",
                 new CheckBox("Use E Interrupt"));
-            MiscMeNu.AddGroupLabel("Skin settings");
+            MiscMeNu.AddLabel("Skin settings");
             MiscMeNu.Add("checkSkin",
                 new CheckBox("Use skin changer:", false));
             MiscMeNu.Add("skin.Id",

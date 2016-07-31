@@ -15,11 +15,11 @@ namespace ZyraTheTroll
 {
     public static class Program
     {
-        public static string Version = "Version 1 23/5/2016";
+        public static string Version = "Version 1.1 31/7/2016";
         public static AIHeroClient Target = null;
         public static int QOff = 0, WOff = 0, EOff = 0, ROff = 0;
         public static Spell.Skillshot Q;
-        public static Spell.Active W;
+        public static Spell.Skillshot W;
         public static Spell.Skillshot E;
         public static Spell.Skillshot R;
         public static bool Out = false;
@@ -48,9 +48,10 @@ namespace ZyraTheTroll
             #region Skill
 
             Q = new Spell.Skillshot(SpellSlot.Q, 800, SkillShotType.Cone);
-            W = new Spell.Active(SpellSlot.W, 850);
+            W = new Spell.Skillshot(SpellSlot.W, 820, SkillShotType.Circular, 500, int.MaxValue, 80);
             E = new Spell.Skillshot(SpellSlot.E, 1100, SkillShotType.Linear, 250, 1150, 80);
             {
+                
                 E.AllowedCollisionCount = 0;
             }
             R = new Spell.Skillshot(SpellSlot.R, 700, SkillShotType.Circular, 250, 1200, 150);
@@ -128,6 +129,7 @@ namespace ZyraTheTroll
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
                 OnCombo();
+                SmartR();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
@@ -143,7 +145,7 @@ namespace ZyraTheTroll
                 OnJungle();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.None))
-                KillSteal();
+            KillSteal();
             AutoCc();
             AutoPotions();
             AutoHourglass();
@@ -177,10 +179,10 @@ namespace ZyraTheTroll
         private static
             void AutoHourglass()
         {
-            var Zhonyas = ZyraTheTrollMeNu.Activator["Zhonyas"].Cast<CheckBox>().CurrentValue;
-            var ZhonyasHp = ZyraTheTrollMeNu.Activator["ZhonyasHp"].Cast<Slider>().CurrentValue;
+            var zhonyas = ZyraTheTrollMeNu.Activator["Zhonyas"].Cast<CheckBox>().CurrentValue;
+            var zhonyasHp = ZyraTheTrollMeNu.Activator["ZhonyasHp"].Cast<Slider>().CurrentValue;
 
-            if (Zhonyas && Player.HealthPercent <= ZhonyasHp && Activator.ZhonyaHourglass.IsReady())
+            if (zhonyas && Player.HealthPercent <= zhonyasHp && Activator.ZhonyaHourglass.IsReady())
             {
                 Activator.ZhonyaHourglass.Cast();
                 Chat.Print("<font color=\"#fffffff\" > Use Zhonyas <font>");
@@ -328,8 +330,7 @@ namespace ZyraTheTroll
                 Q.Cast(qminion);
             }
         }
-
-
+        
         private static
             void OnJungle()
         {
@@ -386,9 +387,24 @@ namespace ZyraTheTroll
         }
 
         private static
-                void OnCombo()
+            void SmartR()
         {
-            var target = TargetSelector.GetTarget(1400, DamageType.Physical);
+            var target = TargetSelector.GetTarget(R.Range, DamageType.Magical);
+            if (!target.IsValidTarget(R.Range) || target == null)
+            {
+                return;
+            }
+            if (R.IsReady() && ZyraTheTrollMeNu.ComboMenu["Rlogic"].Cast<CheckBox>().CurrentValue && Player.CountEnemiesInRange(1000) == 1 &&
+                target.HealthPercent <= 45 && !target.IsInvulnerable)
+            {
+                R.Cast(target);
+            }
+        }
+
+        private static
+            void OnCombo()
+        {
+            var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
             if (!target.IsValidTarget(Q.Range) || target == null)
             {
                 return;
@@ -398,38 +414,32 @@ namespace ZyraTheTroll
             var useR = ZyraTheTrollMeNu.ComboMenu["useRCombo"].Cast<CheckBox>().CurrentValue;
             var rCount = ZyraTheTrollMeNu.ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
             var useE = ZyraTheTrollMeNu.ComboMenu["useECombo"].Cast<CheckBox>().CurrentValue;
-            {
-               
-                if (W.IsReady() && useW && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
-                {
-                    W.Cast();
-                    W.Cast();
-                }
-                if (useE && E.IsReady() && target.IsValidTarget(E.Range) && !target.IsInvulnerable)
+           {
+                if (useE && E.IsReady() && target.IsValidTarget(900) && !target.IsInvulnerable)
                 {
                     var prede = E.GetPrediction(target);
-                    if (prede.HitChance >= HitChance.Medium)
-                    {
-                        E.Cast(prede.CastPosition);
-                    }
-                    else if (prede.HitChance >= HitChance.Immobile)
+                    if (prede.HitChance >= HitChance.High)
                     {
                         E.Cast(prede.CastPosition);
                     }
                 }
-                if (useQ && Q.IsReady() && target.IsValidTarget(Q.Range) && !target.IsInvulnerable)
+                if (W.IsReady() && useW && target.IsValidTarget(800) && !target.IsInvulnerable)
+                {
+                    var predw = W.GetPrediction(target);
+                    if (predw.HitChance >= HitChance.High)
+                    {
+                        W.Cast(predw.CastPosition);
+                    }
+                }
+                if (useQ && Q.IsReady() && target.IsValidTarget(700) && !target.IsInvulnerable)
                 {
                     var predQ = Q.GetPrediction(target);
-                    if (predQ.HitChance >= HitChance.Medium)
-                    {
-                        Q.Cast(predQ.CastPosition);
-                    }
-                    else if (predQ.HitChance >= HitChance.Immobile)
+                    if (predQ.HitChance >= HitChance.High)
                     {
                         Q.Cast(predQ.CastPosition);
                     }
                 }
-                if (R.IsReady() && Player.CountEnemiesInRange(R.Range) >= rCount && useR)
+                if (R.IsReady() && Player.CountEnemiesInRange(1200) >= rCount && useR)
                 {
                     var predR = R.GetPrediction(target);
                     if (predR.HitChance >= HitChance.High)
@@ -437,7 +447,7 @@ namespace ZyraTheTroll
                         R.Cast(predR.CastPosition);
                     }
                 }
-            }
+             }
         }
     }
 }
