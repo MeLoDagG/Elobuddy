@@ -215,7 +215,7 @@ namespace AsheTheTroll
             Game.OnUpdate += OnGameUpdate;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
-            Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
+        //    Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Drawing.OnDraw += Drawing_OnDraw;
             Orbwalker.OnPostAttack += OnAfterAttack;
         }
@@ -299,7 +299,7 @@ namespace AsheTheTroll
             }
         }
 
-        public static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
+      /*  public static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
             Interrupter.InterruptableSpellEventArgs e)
         {
             var value = MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue;
@@ -313,7 +313,7 @@ namespace AsheTheTroll
             {
                 _r.Cast(sender);
             }
-        }
+        } */
 
         public static void OnAfterAttack(AttackableUnit target, EventArgs args)
         {
