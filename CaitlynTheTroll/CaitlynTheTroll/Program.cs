@@ -505,7 +505,7 @@ namespace CaitlynTheTroll
             {
                 return;
             }
-            if (E.IsReady() && target.IsValidTarget(650) && CaitlynTheTrollMeNu.ComboE())
+            if (E.IsReady() && target.IsValidTarget(750) && CaitlynTheTrollMeNu.ComboE())
             {
                 var predE = Q.GetPrediction(target);
                 if (predE.HitChance >= HitChance.High)
@@ -513,7 +513,7 @@ namespace CaitlynTheTroll
                     E.Cast(predE.CastPosition);
                 }
             }
-            if (Q.IsReady() && target.IsValidTarget(500))
+            if (Q.IsReady() && target.IsValidTarget(Q.Range))
                 foreach (var eenemies in enemies)
                 {
                     var useQ = CaitlynTheTrollMeNu.ComboMenu["combo.q"
