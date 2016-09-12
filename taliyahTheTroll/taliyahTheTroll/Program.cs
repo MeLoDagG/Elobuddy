@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -15,7 +16,7 @@ namespace taliyahTheTroll
 {
     public static class Program
     {
-        public static string Version = "Version 1 23/5/2016";
+        public static string Version = "Version 1.2 12/9/2016";
         public static AIHeroClient Target = null;
         public static int QOff = 0, WOff = 0, EOff = 0, ROff = 0;
         public static Spell.Skillshot Q;
@@ -25,7 +26,6 @@ namespace taliyahTheTroll
         public static bool Out = false;
         public static int CurrentSkin;
 
-     
 
         public static readonly AIHeroClient Player = ObjectManager.Player;
 
@@ -35,12 +35,13 @@ namespace taliyahTheTroll
             Loading.OnLoadingComplete += OnLoadingComplete;
             Bootstrap.Init(null);
         }
-        
+
         private static void OnLoadingComplete(EventArgs args)
         {
             if (Player.ChampionName != "Taliyah") return;
             Chat.Print(
                 "<font color=\"#d80303\" >MeLoDag Presents </font><font color=\"#fffffff\" >Taliyah </font><font color=\"#d80303\" >Kappa Kippo</font>");
+            Chat.Print("Version 1.2 12 / 9 / 2016", Color.Chartreuse);
             TalliyahTheTrollMeNu.LoadMenu();
             Game.OnTick += GameOnTick;
             Activator.LoadSpells();
@@ -56,6 +57,7 @@ namespace taliyahTheTroll
             E = new Spell.Skillshot(SpellSlot.E, 700, SkillShotType.Cone);
             R = new Spell.Skillshot(SpellSlot.R, 3000, SkillShotType.Linear);
 
+
             #endregion
 
             Gapcloser.OnGapcloser += AntiGapCloser;
@@ -63,8 +65,10 @@ namespace taliyahTheTroll
             Drawing.OnDraw += GameOnDraw;
             DamageIndicator.Initialize(SpellDamage.GetTotalDamage);
         }
+        
 
-        private static void GameOnDraw(EventArgs args)
+        private static
+            void GameOnDraw(EventArgs args)
         {
             if (TalliyahTheTrollMeNu.Nodraw()) return;
 
@@ -169,12 +173,12 @@ namespace taliyahTheTroll
                 OnJungle();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
-            KillSteal();
+                KillSteal();
             AutoCc();
             AutoPotions();
             AutoHourglass();
         }
-         
+
         private static
             void AutoHourglass()
         {
@@ -301,6 +305,7 @@ namespace taliyahTheTroll
                 }
             }
         }
+
         private static
             void OnJungle()
         {
@@ -343,46 +348,49 @@ namespace taliyahTheTroll
                 }
         }
 
-
         private static
             void OnCombo()
         {
             var enemies = EntityManager.Heroes.Enemies.OrderByDescending
                 (a => a.HealthPercent).Where(a => !a.IsMe && a.IsValidTarget() && a.Distance(Player) <= Q.Range);
-            var target = TargetSelector.GetTarget(1400, DamageType.Physical);
+            var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
             if (!target.IsValidTarget(Q.Range) || target == null)
             {
                 return;
             }
-            if (TalliyahTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
+          if (TalliyahTheTrollMeNu.ComboW() && W.IsReady() && target.IsValidTarget(W.Range) && !target.IsInvulnerable)
             {
                 var pred = W.GetPrediction(target);
-                if (pred.HitChance >= HitChance.High)
+                if (pred.HitChancePercent >= TalliyahTheTrollMeNu.Predw())
                 {
-                    W.Cast(pred.CastPosition);
-                    W.Cast(Player.Position.Normalized());
+                    W.Cast(pred.UnitPosition);
+                 //  Core.DelayAction(() => W.Cast(pred.UnitPosition), 50);
+                   Core.DelayAction(() => W.Cast(Player.ServerPosition), 150);
                 }
             }
             if (E.IsReady() && target.IsValidTarget(600) && TalliyahTheTrollMeNu.ComboE())
             {
                 var predE = E.GetPrediction(target);
-                if (predE.HitChance >= HitChance.High)
+                if (predE.HitChancePercent >= TalliyahTheTrollMeNu.Prede())
                 {
-                    E.Cast(predE.CastPosition);
+                    E.Cast(predE.UnitPosition);
+                }
+                else
+                {
+                    if (target.IsValidTarget(300))
+                    {
+                        E.Cast(target);
+                    }
                 }
             }
-          if (TalliyahTheTrollMeNu.UseQonly5() && Q.IsReady() && !Player.HasBuff("Taliyah_Base_Q_aoe_bright.troy") &&
+            if (TalliyahTheTrollMeNu.UseQonly5() && Q.IsReady() && !Player.HasBuff("Taliyah_Base_Q_aoe_bright.troy") &&
                 target.IsValidTarget(Q.Range) &&
                 !target.IsInvulnerable)
-                {
+            {
                 var predQ = Q.GetPrediction(target);
-                if (predQ.HitChance >= HitChance.High)
+                if (predQ.HitChancePercent >= TalliyahTheTrollMeNu.Predq())
                 {
-                  Core.DelayAction(() => Q.Cast(predQ.CastPosition), 250);
-                }
-                else if (predQ.HitChance >= HitChance.Immobile)
-                {
-                    Core.DelayAction(() => Q.Cast(predQ.CastPosition), 250);
+                    Q.Cast(predQ.UnitPosition);
                 }
             }
             if (Q.IsReady() && target.IsValidTarget(Q.Range))
@@ -393,13 +401,9 @@ namespace taliyahTheTroll
                     if (useQ)
                     {
                         var predQ = Q.GetPrediction(target);
-                        if (predQ.HitChance >= HitChance.High)
+                        if (predQ.HitChancePercent >= TalliyahTheTrollMeNu.Predq())
                         {
-                            Core.DelayAction(() => Q.Cast(predQ.CastPosition), 250);
-                        }
-                        else if (predQ.HitChance >= HitChance.Immobile)
-                        {
-                            Core.DelayAction(() => Q.Cast(predQ.CastPosition), 250);
+                            Q.Cast(predQ.UnitPosition);
                         }
                     }
                 }

@@ -66,8 +66,8 @@ namespace taliyahTheTroll.Utility
                     break;
 
                 case SpellSlot.E:
-
-                    damage = new float[] {80, 105, 130, 155, 180}[spellLevel] + 0.4f*Program.Player.TotalMagicalDamage;
+                    
+                    damage = new float[] {70, 90, 110, 130, 150}[spellLevel] + 0.4f*Program.Player.TotalMagicalDamage;
                     break;
 
                 case SpellSlot.R:

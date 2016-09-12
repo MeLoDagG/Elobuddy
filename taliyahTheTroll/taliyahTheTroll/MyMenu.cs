@@ -9,12 +9,13 @@ namespace taliyahTheTroll
     internal static class TalliyahTheTrollMeNu
     {
         private static Menu _myMenu;
-        public static Menu ComboMenu, DrawMeNu, HarassMeNu, Activator, FarmMeNu, MiscMeNu;
+        public static Menu ComboMenu, DrawMeNu, HarassMeNu,Prediction, Activator, FarmMeNu, MiscMeNu;
 
         public static void LoadMenu()
         {
             MyTalliyahTheTrollPage();
             ComboMenuPage();
+            PredictionMenuPage();
             FarmMeNuPage();
             HarassMeNuPage();
             ActivatorPage();
@@ -68,8 +69,19 @@ namespace taliyahTheTroll
             ComboMenu.Add("use.onlyq5", new CheckBox("Use Q Only If 5X Q",false));
             ComboMenu.Add("combo.CCQ",
                 new CheckBox("Use Q CC"));
-          }
+        }
 
+        private static void PredictionMenuPage()
+        {
+            Prediction = _myMenu.AddSubMenu("Prediction  settings", "Prediction");
+            Prediction.AddGroupLabel("Prediction Settings:");
+            Prediction.Add("predq",
+              new Slider("Prediction Hitchange Q {0}(%)", 70));
+            Prediction.Add("predw",
+             new Slider("Prediction Hitchange W {0}(%)", 70));
+            Prediction.Add("prede",
+             new Slider("Prediction Hitchange E {0}(%)", 70));
+        }
 
         private static void FarmMeNuPage()
         {
@@ -186,7 +198,19 @@ namespace taliyahTheTroll
         public static bool UseQonly5()
         {
             return ComboMenu["use.onlyq5"].Cast<CheckBox>().CurrentValue;
-        } 
+        }
+        public static float Predw()
+        {
+            return Prediction["predw"].Cast<Slider>().CurrentValue;
+        }
+        public static float Predq()
+        {
+            return Prediction["predq"].Cast<Slider>().CurrentValue;
+        }
+        public static float Prede()
+        {
+            return Prediction["prede"].Cast<Slider>().CurrentValue;
+        }
         public static bool LaneQ()
         {
             return FarmMeNu["lane.Q"].Cast<CheckBox>().CurrentValue;
