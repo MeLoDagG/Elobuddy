@@ -249,7 +249,7 @@ namespace Lucian_The_Troll
 
         public static bool AArange()
         {
-            return ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 3;
+            return ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 2;
         }
 
         public static bool Fast()
