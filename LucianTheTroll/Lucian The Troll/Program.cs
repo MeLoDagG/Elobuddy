@@ -538,7 +538,7 @@ namespace Lucian_The_Troll
 
         private static void OnAfterAttack(AttackableUnit target, EventArgs args)
         {
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo) && LucianTheTrollMenu.AArange())
+            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
                 if (target == null || !(target is AIHeroClient) || target.IsDead || target.IsInvulnerable ||
                     !target.IsEnemy || target.IsPhysicalImmune || target.IsZombie)
                     return;
@@ -546,7 +546,8 @@ namespace Lucian_The_Troll
             var enemy = target as AIHeroClient;
             if (enemy == null)
                 return;
-            
+            if (LucianTheTrollMenu.AArange())
+            {
                 if (!E.IsReady() && Q.IsReady())
                 {
                     Q.Cast(enemy);
@@ -557,7 +558,8 @@ namespace Lucian_The_Troll
                     // Core.DelayAction(() => W.Cast(enemy), 300);
                 }
             }
-        
+        }
+
         private static
             void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
