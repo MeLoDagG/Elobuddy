@@ -25,20 +25,21 @@ namespace Lucian_The_Troll
         {
             _myMenu = MainMenu.AddMenu("Lucian The Troll", "main");
             _myMenu.AddLabel(" Lucian The Troll " + Program.Version);
-            _myMenu.AddLabel(" Made by MeLoDag");
+            _myMenu.AddLabel(" Made by MeLoSenpai");
         }
 
         private static void ComboMenuPage()
         {
             ComboMenu = _myMenu.AddSubMenu("Combo settings", "Combo");
             ComboMenu.AddGroupLabel("Combo Settings");
-            ComboMenu.Add("useQcombo", new CheckBox("Use Q"));
-            ComboMenu.AddLabel("W Settings:");
-            ComboMenu.Add("useWcombo", new CheckBox("Use W"));
-            ComboMenu.Add("useWnopred", new CheckBox("Use No prediction W", false));
+            ComboMenu.Add("ComboLogic", new ComboBox("ComboLogic", 0, "Smooth", "Fast", "AArange"));
+            //  ComboMenu.Add("useQcombo", new CheckBox("Use Q"));
+            //   ComboMenu.AddLabel("W Settings:");
+            //   ComboMenu.Add("useWcombo", new CheckBox("Use W"));
+            //   ComboMenu.Add("useWnopred", new CheckBox("Use No prediction W", false));
             ComboMenu.AddLabel("E Settings:");
             ComboMenu.Add("useEstartcombo", new CheckBox("Use E"));
-            ComboMenu.Add("ELogic", new ComboBox("E Logic ", 0, "Side", "Cursor"));
+            ComboMenu.Add("ELogic", new ComboBox("E Logic ", 0, "Side", "Cursor", "Auto"));
          //   ComboMenu.Add("combo.E.undertower", new Slider("E enemy under tower only if their health % under", 40));
             ComboMenu.AddLabel("R Settings");
             ComboMenu.Add("UseRcomboHp", new CheckBox("Use R"));
@@ -224,7 +225,10 @@ namespace Lucian_The_Troll
         {
             return ComboMenu["useQcombo"].Cast<CheckBox>().CurrentValue;
         }
-
+        public static bool Eauto()
+        {
+            return ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue == 2;
+        }
         public static bool Eside()
         {
             return ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue == 0;
@@ -236,6 +240,21 @@ namespace Lucian_The_Troll
         public static bool Ecursor()
         {
             return ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue == 1;
+        }
+
+        public static bool Smooth()
+        {
+            return ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 0;
+        }
+
+        public static bool AArange()
+        {
+            return ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 3;
+        }
+
+        public static bool Fast()
+        {
+            return ComboMenu["ComboLogic"].Cast<ComboBox>().CurrentValue == 1;
         }
 
         public static bool ComboWNopred()
