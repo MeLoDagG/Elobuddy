@@ -16,7 +16,7 @@ namespace Lucian_The_Troll
 {
     public static class Program
     {
-        public static string Version = "Version 1.1 (13/9/2016)";
+        public static string Version = "Version 1.1.1 (14/9/2016)";
         public static AIHeroClient Target = null;
         public static Spell.Targeted Q;
         public static Spell.Skillshot Q1;
@@ -45,7 +45,7 @@ namespace Lucian_The_Troll
         private static void OnLoadingComplete(EventArgs args)
         {
             if (Player.ChampionName != "Lucian") return;
-            Chat.Print("Lucian The Troll Loaded! Version 1.1 (13/9/2016)", Color.DeepSkyBlue);
+            Chat.Print("Lucian The Troll Loaded! Version 1.1.1 (14/9/2016)", Color.DeepSkyBlue);
             Chat.Print("Have Fun And Dont Feed Kappa!", Color.DeepSkyBlue);
             LucianTheTrollMenu.LoadMenu();
             Game.OnTick += GameOnTick;
@@ -573,53 +573,62 @@ namespace Lucian_The_Troll
                 {
                     if (LucianTheTrollMenu.ComboEStart())
                     {
-                        if (LucianTheTrollMenu.Eside() && E.IsReady() && target.IsValidTarget(Q1.Range) &&
-                            !UnderEnemyTower((Vector2) Player.Position) &&
-                            !HasPassive())
+                        if (LucianTheTrollMenu.Eside())
                         {
-                            E.Cast(Side(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                            if (E.IsReady() && target.IsValidTarget(Q1.Range) &&
+                                !UnderEnemyTower((Vector2) Player.Position) &&
+                                !HasPassive())
+                            {
+                                E.Cast(Side(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                            }
                         }
-                        if (LucianTheTrollMenu.Ecursor() && E.IsReady() && target.IsValidTarget(Q1.Range) &&
-                            !UnderEnemyTower((Vector2) Player.Position) &&
-                            !HasPassive())
+                        if (LucianTheTrollMenu.Ecursor())
                         {
-                            EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
+                            if (E.IsReady() && target.IsValidTarget(Q1.Range) &&
+                                !UnderEnemyTower((Vector2) Player.Position) &&
+                                !HasPassive())
+                            {
+                                EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
+                            }
                         }
-                        if (LucianTheTrollMenu.Eauto() &&
-                            Game.CursorPos.Distance(Player.Position) > Player.AttackRange + Player.BoundingRadius*2 &&
-                            !Player.Position.Extend(Game.CursorPos, E.Range).IsUnderTurret() && !HasPassive())
+                        if (LucianTheTrollMenu.Eauto())
                         {
-                            E.Cast(Player.Position.Extend(Game.CursorPos, E.Range).To3D());
-                        }
-                        else
-                        {
-                            E.Cast(Side(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                            if (Game.CursorPos.Distance(Player.Position) > Player.AttackRange + Player.BoundingRadius*2 &&
+                                !Player.Position.Extend(Game.CursorPos, E.Range).IsUnderTurret() && !HasPassive())
+                            {
+                                E.Cast(Player.Position.Extend(Game.CursorPos, E.Range).To3D());
+                            }
+                            else
+                            {
+                                E.Cast(Side(Player.Position.To2D(), target.Position.To2D(), 65).To3D());
+                            }
                         }
                     }
-                }
-                {
-                    if (LucianTheTrollMenu.Smooth())
                     {
-                        if (!E.IsReady() && Q.IsReady() && Player.Distance(target.Position) < Q.Range && !HasPassive() &&
-                            !Player.IsDashing())
+                        if (LucianTheTrollMenu.Smooth())
                         {
-                            Q.Cast(target);
-                           // Core.DelayAction(() => Q.Cast(target), 350);
-                        }
-                        if (!E.IsReady() && W.IsReady() && Player.Distance(target.Position) < W.Range &&
-                            !Player.IsDashing() && !HasPassive())
-                        {
-                            var predW = W.GetPrediction(target);
-                            if (predW.HitChance >= HitChance.High)
+                            if (!E.IsReady() && Q.IsReady() && Player.Distance(target.Position) < Q.Range &&
+                                !HasPassive() && !Player.IsDashing())
                             {
-                                Core.DelayAction(() => W.Cast(predW.UnitPosition), 350);
+                                   Q.Cast(target);
+                              //  Core.DelayAction(() => Q.Cast(target), 1);
+                            }
+                            if (!E.IsReady() && W.IsReady() && Player.Distance(target.Position) < W.Range &&
+                                !Player.IsDashing() && !HasPassive())
+                            {
+                                var predW = W.GetPrediction(target);
+                                if (predW.HitChance >= HitChance.High)
+                                {
+                                    W.Cast(predW.CastPosition);
+                                    //  Core.DelayAction(() => W.Cast(predW.UnitPosition), 350);
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        
+
         private static
             void OnCombo()
         {
@@ -631,28 +640,27 @@ namespace Lucian_The_Troll
             {
                 if (LucianTheTrollMenu.Fast())
                 {
-                    if (!E.IsReady() && Q.IsReady() &&
-                        Player.Distance(target.Position) < Q.Range && !HasPassive() &&
+                    if (!E.IsReady() && Q.IsReady() && Player.Distance(target.Position) < Q.Range && !HasPassive() &&
                         !Player.IsDashing())
                     {
                       //  Q.Cast(target);
-                         Core.DelayAction(() => Q.Cast(target), 350);
+                         Core.DelayAction(() => Q.Cast(target), 1);
                     }
                     if (!E.IsReady() && W.IsReady() &&
                         Player.Distance(target.Position) < W.Range &&
                         !Player.IsDashing() && !HasPassive())
                     {
                         var predW = W.GetPrediction(target);
-                        if (predW.HitChance >= HitChance.Medium)
+                        if (predW.HitChance >= HitChance.High)
                         {
                             //   W.Cast(predW.CastPosition);
-                            Core.DelayAction(() => W.Cast(predW.UnitPosition), 350);
+                            Core.DelayAction(() => W.Cast(predW.CastPosition), 350);
                         }
                         else
                         {
-                            if (target.IsValidTarget(450))
+                            if (target.IsValidTarget(300))
                             {
-                                Core.DelayAction(() => W.Cast(target), 350);
+                                Core.DelayAction(() => W.Cast(target.Position), 350);
                             }
                         }
                     }
