@@ -10,7 +10,7 @@ namespace AsheTheTroll
         {
             return
                 (int)
-                    (new[] { 10, 60, 110, 160, 210 }[AsheTheTroll._w.Level - 1] +
+                    (new[] { 10, 60, 110, 160, 210 }[AsheTheTroll.W.Level - 1] +
                      1.4 * (AsheTheTroll._Player.TotalAttackDamage));
         }
 
@@ -19,7 +19,7 @@ namespace AsheTheTroll
 
             if (!Player.GetSpell(SpellSlot.R).IsLearned) return 0;
             return Player.Instance.CalculateDamageOnUnit(target, DamageType.Magical,
-                (float)new double[] { 250, 425, 600 }[AsheTheTroll._r.Level - 1] + 1 * Player.Instance.FlatMagicDamageMod);
+                (float)new double[] { 250, 425, 600 }[AsheTheTroll.R.Level - 1] + 1 * Player.Instance.FlatMagicDamageMod);
 
         }
     }

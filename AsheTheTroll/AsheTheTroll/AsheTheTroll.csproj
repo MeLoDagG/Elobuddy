@@ -61,8 +61,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsheTheTroll.cs" />
+    <Compile Include="DamageIndicator.cs" />
     <Compile Include="DmgLibrary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpellDamage.cs" />
     <Compile Include="Volley.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -54,13 +54,13 @@ namespace AsheTheTroll
 
         private static void OnTick(EventArgs args)
         {
-           if (AsheTheTroll.VolleyMenu["Volley.enable"].Cast<CheckBox>().CurrentValue && AsheTheTroll._e.IsReady() && Player.Instance.ManaPercent >= AsheTheTroll.VolleyMenu["Volley.mana"].Cast<Slider>().CurrentValue && !Player.Instance.IsRecalling())
+           if (AsheTheTroll.VolleyMenu["Volley.enable"].Cast<CheckBox>().CurrentValue && AsheTheTroll.E.IsReady() && Player.Instance.ManaPercent >= AsheTheTroll.VolleyMenu["Volley.mana"].Cast<Slider>().CurrentValue && !Player.Instance.IsRecalling())
             {
                 if (!AsheTheTroll.VolleyMenu["Volley.noMode"].Cast<CheckBox>().CurrentValue || Orbwalker.ActiveModesFlags == Orbwalker.ActiveModes.None)
                 {
                     if (OpenLocations.Count > 0 && SentLocation == null)
                     {
-                        var closestLocation = OpenLocations.Where(o => Locations[o.Item1][o.Item2].IsInRange(Player.Instance, AsheTheTroll._e.Range - MaxRandomRadius / 2))
+                        var closestLocation = OpenLocations.Where(o => Locations[o.Item1][o.Item2].IsInRange(Player.Instance, AsheTheTroll.E.Range - MaxRandomRadius / 2))
                             .OrderByDescending(o => Locations[o.Item1][o.Item2].Distance(Player.Instance, true))
                             .FirstOrDefault();
                         if (closestLocation != null)
@@ -69,7 +69,7 @@ namespace AsheTheTroll
                             var randomized = (new Vector2(position.X - MaxRandomRadius / 2 + Random.NextFloat(0, MaxRandomRadius),
                                 position.Y - MaxRandomRadius / 2 + Random.NextFloat(0, MaxRandomRadius))).To3DWorld();
                             SentLocation = closestLocation;
-                            AsheTheTroll._e.Cast(randomized);
+                            AsheTheTroll.E.Cast(randomized);
                             Core.DelayAction(() => SentLocation = null, 2000);
                         }
                     }
