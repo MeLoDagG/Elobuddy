@@ -58,6 +58,7 @@ namespace Veigar_The_Troll
 
             _menu = MainMenu.AddMenu("VeigarTheTroll", "VeigarTheTroll");
             _comboMenu = _menu.AddSubMenu("Combo", "Combo");
+            _comboMenu.AddGroupLabel("Combo Settings:");
             _comboMenu.Add("useQCombo", new CheckBox("Use Q", true));
             _comboMenu.Add("useWCombo", new CheckBox("Use W", true));
             _comboMenu.Add("useECombo", new CheckBox("Use E", true));
@@ -72,12 +73,13 @@ namespace Veigar_The_Troll
             _comboMenu.Add("UseIgnite", new CheckBox("Use Ignite If Combo Killable", true));
 
             _autostuckEnemy = _menu.AddSubMenu("Harass", "Harass");
+            _autostuckEnemy.AddGroupLabel("Harass Settings:");
             _autostuckEnemy.Add("UseQstuck", new CheckBox("Use Q", true));
             _autostuckEnemy.Add("UseWstuck", new CheckBox("Use W", true));
             _autostuckEnemy.Add("StuckEnemyMana", new Slider("Use Q W Mana", 70, 0, 100));
 
             _jungleLaneMenu = _menu.AddSubMenu("Lane Clear Settings", "FarmSettings");
-            _jungleLaneMenu.AddLabel("Lane Clear");
+            _jungleLaneMenu.AddGroupLabel("Lane Clear");
             _jungleLaneMenu.Add("qFarm", new CheckBox("Cast Q LastHit[ForAllMode]", true));
             _jungleLaneMenu.Add("wwFarm", new CheckBox("Use W", false));
             _jungleLaneMenu.Add("wFarm", new Slider("Cast W if >= minions hit", 4, 1, 15));
@@ -92,9 +94,9 @@ namespace Veigar_The_Troll
             _miscMenu.AddGroupLabel("Auto SKills CC settings");
             _miscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             _miscMenu.Add("CCW", new CheckBox("Auto W on Enemy CC"));
-            _miscMenu.AddGroupLabel("Ks settings");
+            _miscMenu.AddLabel("Ks settings");
             _miscMenu.Add("ksQ", new CheckBox("Killsteal Q"));
-             _miscMenu.Add("ksIgnite", new CheckBox("Killsteal Ignite"));
+            _miscMenu.Add("ksIgnite", new CheckBox("Killsteal Ignite"));
             _miscMenu.AddLabel("Auto Zhonyas Hourglass");
             _miscMenu.Add("Zhonyas", new CheckBox("Use Zhonyas Hourglass"));
             _miscMenu.Add("ZhonyasHp", new Slider("Use Zhonyas Hourglass If Your HP%", 20, 0, 100));
@@ -354,7 +356,7 @@ namespace Veigar_The_Troll
             void Killsteal()
         {
             var ksQ = _miscMenu["ksQ"].Cast<CheckBox>().CurrentValue;
-             var ksIgnite = _miscMenu["ksIgnite"].Cast<CheckBox>().CurrentValue;
+            var ksIgnite = _miscMenu["ksIgnite"].Cast<CheckBox>().CurrentValue;
 
             foreach (
                 var enemy in
@@ -376,7 +378,7 @@ namespace Veigar_The_Troll
                             t =>
                                 t.IsEnemy && !t.IsZombie && !t.IsDead && t.IsValid && !t.IsInvulnerable &&
                                 t.IsInRange(Player.Instance.Position, SpellManager.Ignite.Range) &&
-                                DamageLibrary.GetSummonerSpellDamage(Player.Instance, t,
+                                Player.Instance.GetSummonerSpellDamage(t,
                                     DamageLibrary.SummonerSpells.Ignite) > t.Health).FirstOrDefault();
                     if (enemyignite != null)
                         if (SpellManager.Ignite.IsReady())
@@ -386,9 +388,9 @@ namespace Veigar_The_Troll
                 }
             }
         }
-    
 
-    private static
+
+        private static
             void UseEpercent()
         {
             var useECombopred = _comboMenu["useECombopred"].Cast<CheckBox>().CurrentValue;
@@ -423,7 +425,9 @@ namespace Veigar_The_Troll
                 if (SpellManager.E.IsReady() && useE && eTarget.Distance(_Player) <= 750)
                 {
                     var ePosition = eTarget.ServerPosition.Extend(_Player.Position, 350);
-                    SpellManager.E.Cast(ePosition.To3D());
+                    {
+                        SpellManager.E.Cast(ePosition.To3D());
+                    }
                 }
             if (useW && SpellManager.W.IsReady() && target.IsValidTarget(SpellManager.W.Range) && !target.IsInvulnerable)
             {
@@ -436,18 +440,18 @@ namespace Veigar_The_Troll
                 {
                     SpellManager.W.Cast(predW.CastPosition);
                 }
-                if (useQ && SpellManager.Q.IsReady() && target.IsValidTarget(SpellManager.Q.Range) &&
-                    !target.IsInvulnerable)
+            }
+            if (useQ && SpellManager.Q.IsReady() && target.IsValidTarget(SpellManager.Q.Range) &&
+                !target.IsInvulnerable)
+            {
+                var predq = SpellManager.Q.GetPrediction(target);
+                if (predq.HitChance >= HitChance.Medium)
                 {
-                    var predq = SpellManager.Q.GetPrediction(target);
-                    if (predq.HitChance >= HitChance.Medium)
-                    {
-                        SpellManager.Q.Cast(predq.CastPosition);
-                    }
-                    else if (predq.HitChance >= HitChance.Immobile)
-                    {
-                        SpellManager.Q.Cast(predq.CastPosition);
-                    }
+                    SpellManager.Q.Cast(predq.CastPosition);
+                }
+                else if (predq.HitChance >= HitChance.Immobile)
+                {
+                    SpellManager.Q.Cast(predq.CastPosition);
                 }
             }
         }
