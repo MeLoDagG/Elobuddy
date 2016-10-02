@@ -119,11 +119,10 @@ namespace AsheTheTroll
             ComboMenu.AddLabel("Work Only For Normal W Logic");
             ComboMenu.AddLabel("Higher % ->Higher chance of spell landing on target but takes more time to get casted");
             ComboMenu.AddLabel("Lower % ->Faster casting but lower chance that the spell will land on your target. ");
-            //  ComboMenu.AddLabel("R Settings:");
+            ComboMenu.AddLabel("R Settings:");
+            ComboMenu.Add("useRCombo", new CheckBox("Use R",false));
             ComboMenu.Add("Rlogic", new ComboBox("Ulty Logic ", 0, "EnemyHp", "HitCountEnemys"));
-            //   ComboMenu.Add("useRCombo", new CheckBox("Use R [Hp%]",false));
             ComboMenu.Add("Hp", new Slider("Use R Enemy Health {0}(%)", 45, 0, 100));
-            //    ComboMenu.Add("useRComboENEMIES", new CheckBox("Use R[Count Enemy]"));
             ComboMenu.Add("Rcount", new Slider("If Ulty Hit Enemy ", 2, 1, 5));
             ComboMenu.AddLabel("Use R Range Settigs For all Logic:");
             ComboMenu.Add("useRRange", new Slider("Use Ulty Max Range", 1800, 500, 2000));
@@ -778,7 +777,7 @@ namespace AsheTheTroll
         {
             var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
           //  var comboR = ComboMenu["useRComboENEMIES"].Cast<CheckBox>().CurrentValue;
-         //   var useR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
+            var useR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
             //  var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
             var hp = ComboMenu["Hp"].Cast<Slider>().CurrentValue;
             var wpred = ComboMenu["Wpred"].Cast<Slider>().CurrentValue;
@@ -806,7 +805,7 @@ namespace AsheTheTroll
                     }
                 }
             }
-            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 0)
+            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 0 && useR)
             {
                 if (R.IsReady() && targetR.Distance(_Player) <= distance &&
                     R.GetPrediction(targetR).HitChance >= HitChance.High && target.HealthPercent <= hp)
@@ -818,7 +817,7 @@ namespace AsheTheTroll
                     }
                 }
             }
-            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 1)
+            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 1 && useR)
             {
                 if ( _Player.CountEnemiesInRange(1800) >= rCount && R.IsReady()
                     && targetR.Distance(_Player) <= distance)
