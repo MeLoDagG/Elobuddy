@@ -54,7 +54,7 @@ namespace ChogathTheTroll
             }
 
             Q = new Spell.Skillshot(SpellSlot.Q, 950, SkillShotType.Circular, 750, int.MaxValue, 175);
-            W = new Spell.Skillshot(SpellSlot.W, 575, SkillShotType.Cone, 250, 1750, 100);
+            W = new Spell.Skillshot(SpellSlot.W, 650, SkillShotType.Cone, 250, 1750, 100);
             E = new Spell.Active(SpellSlot.E);
             R = new Spell.Targeted(SpellSlot.R, 500);
             HealthPotion = new Item(2003, 0);
