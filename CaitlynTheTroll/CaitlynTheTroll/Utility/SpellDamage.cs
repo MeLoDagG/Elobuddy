@@ -8,18 +8,27 @@ namespace CaitlynTheTroll.Utility
         public static float GetTotalDamage(AIHeroClient target)
         {
 
-            var damage = Program.Player.GetAutoAttackDamage(target);
-            if (Program.R.IsReady())
-                damage = Program.Player.GetSpellDamage(target, SpellSlot.R);
-            if (Program.E.IsReady())
-                damage = Program.Player.GetSpellDamage(target, SpellSlot.E);
-            if (Program.W.IsReady())
-                damage = Program.Player.GetSpellDamage(target, SpellSlot.W);
-            if (Program.Q.IsReady())
-                damage = Program.Player.GetSpellDamage(target, SpellSlot.Q);
-
+            float damage = 0;
+            if (target != null)
+            {
+                if (Program.Q.IsReady())
+                {
+                    damage += Player.Instance.GetSpellDamage(target, SpellSlot.Q);
+                    damage += Player.Instance.GetAutoAttackDamage(target);
+                }
+                if (Program.E.IsReady())
+                {
+                    damage += Player.Instance.GetSpellDamage(target, SpellSlot.E);
+                    damage += Player.Instance.GetAutoAttackDamage(target);
+                 }
+                if (Program.R.IsReady())
+                {
+                    damage += Player.Instance.GetAutoAttackDamage(target);
+                    damage += Player.Instance.GetSpellDamage(target, SpellSlot.R);
+                }
+            }
             return damage;
         }
-     }
+    }
 }
        

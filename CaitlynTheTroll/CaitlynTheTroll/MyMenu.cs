@@ -25,7 +25,7 @@ namespace CaitlynTheTroll
         {
             _myMenu = MainMenu.AddMenu("Caitlyn The Troll", "main");
             _myMenu.AddLabel(" Caitlyn The Troll " + Program.Version);
-            _myMenu.AddLabel(" Made by MeLoDag");
+            _myMenu.AddLabel(" Made by MeLoSenpai");
         }
 
         private static void DrawMeNuPage()
@@ -34,7 +34,7 @@ namespace CaitlynTheTroll
             DrawMeNu.AddGroupLabel("Draw Settings:");
             DrawMeNu.Add("nodraw",
                 new CheckBox("No Display Drawing", false));
-          DrawMeNu.AddSeparator();
+            DrawMeNu.AddSeparator();
             DrawMeNu.Add("draw.Q",
                 new CheckBox("Draw Q"));
             DrawMeNu.Add("draw.W",
@@ -43,40 +43,42 @@ namespace CaitlynTheTroll
                 new CheckBox("Draw E"));
             DrawMeNu.Add("draw.R",
                 new CheckBox("Draw R"));
-          }
+            DrawMeNu.AddLabel("Damage indicators");
+            DrawMeNu.Add("healthbar", new CheckBox("Healthbar overlay"));
+            DrawMeNu.Add("percent", new CheckBox("Damage percent info"));
+        }
 
         private static void ComboMenuPage()
         {
             ComboMenu = _myMenu.AddSubMenu("Combo settings", "Combo");
             ComboMenu.AddGroupLabel("Combo settings:");
-            ComboMenu.AddLabel("Use Q  Spell on");
-            foreach (var enemies in EntityManager.Heroes.Enemies.Where(i => !i.IsMe))
-            {
-                ComboMenu.Add("combo.Q" + enemies.ChampionName, new CheckBox("" + enemies.ChampionName));
-            }
+            ComboMenu.Add("Qlogic", new ComboBox("Q Logic ", 0, "Normal", "After AA"));
             ComboMenu.Add("combo.CCQ",
                 new CheckBox("Use Q CC"));
             ComboMenu.AddLabel("E settings:");
-            ComboMenu.Add("combo.E",
-                new CheckBox("Use E"));
+            ComboMenu.Add("Elogic", new ComboBox("E Logic ", 0, "Normal", "After AA"));
             ComboMenu.Add("combo.CC",
-             new CheckBox("Use E CC"));
+                new CheckBox("Use E CC"));
             ComboMenu.AddLabel("W settings:");
             ComboMenu.Add("combo.w",
                 new CheckBox("Use W"));
-            ComboMenu.AddLabel("also W use On recall Zhonyas Teleport Kata ulty and Mf ulty :)");
+            ComboMenu.Add("limittrap", new Slider("Limit Traps ", 2, 1, 5));
             ComboMenu.Add("combo.CCW",
-            new CheckBox("Use W CC"));
+                new CheckBox("Use W CC"));
+            ComboMenu.AddLabel("Prediction settings:");
+            ComboMenu.Add("Qpred", new Slider("Select Q {0}(%) Hitchance", 85));
+            ComboMenu.Add("Epred", new Slider("Select E {0}(%) Hitchance", 70));
+            ComboMenu.AddLabel("Work Only For Normal Q/E Logic");
+            ComboMenu.AddLabel("Higher % ->Higher chance of spell landing on target but takes more time to get casted");
+            ComboMenu.AddLabel("Lower % ->Faster casting but lower chance that the spell will land on your target. ");
             ComboMenu.AddLabel("R settings:");
             ComboMenu.Add("combo.R",
                 new CheckBox("Use Smart R"));
             ComboMenu.AddSeparator();
             ComboMenu.AddLabel("Combo preferences:");
-           ComboMenu.Add("comboEQbind",
+            ComboMenu.Add("comboEQbind",
                 new KeyBind("Use E > Q > AA", false, KeyBind.BindTypes.HoldActive, 'Z'));
-         
-         
-           }
+        }
 
 
         private static void FarmMeNuPage()
@@ -86,7 +88,7 @@ namespace CaitlynTheTroll
             FarmMeNu.Add("Lane.Q",
                 new CheckBox("Use Q"));
             FarmMeNu.Add("LaneMana",
-                new Slider("Min. Mana for Laneclear Spells %", 60));
+                new Slider("Min. Mana for Laneclear Spells {0}(%)", 60));
             FarmMeNu.AddSeparator();
             FarmMeNu.AddLabel("Jungle Settings");
             FarmMeNu.Add("jungle.Q",
@@ -106,7 +108,7 @@ namespace CaitlynTheTroll
             HarassMeNu.AddSeparator();
             HarassMeNu.Add("UseWharass", new CheckBox("Use W"));
             HarassMeNu.Add("harass.QE",
-                new Slider("Min. Mana for Harass Spells %", 55));
+                new Slider("Min. Mana for Harass Spells {0}(%)", 55));
             HarassMeNu.AddSeparator();
             HarassMeNu.AddLabel("KillSteal Settings:");
             HarassMeNu.Add("killsteal.Q",
@@ -136,7 +138,7 @@ namespace CaitlynTheTroll
             Activator.Add("Suppression",
                 new CheckBox("Suppression"));
             Activator.AddLabel("Items usage:");
-         Activator.Add("bilgewater",
+            Activator.Add("bilgewater",
                 new CheckBox("Use Bilgewater Cutlass"));
             Activator.Add("bilgewater.HP",
                 new Slider("Use Bilgewater Cutlass if hp is lower than {0}(%)", 60));
@@ -152,7 +154,7 @@ namespace CaitlynTheTroll
                 new Slider("Use Youmuss Ghostblade if hp is lower than {0}(%)", 60, 1));
             Activator.Add("youmus.Enemies",
                 new Slider("Use Youmus Ghostblade when there are {0} enemies in range", 3, 1, 5));
-           Activator.AddLabel("Potion Settings");
+            Activator.AddLabel("Potion Settings");
             Activator.Add("spells.Potions.Check",
                 new CheckBox("Use Potions"));
             Activator.Add("spells.Potions.HP",
@@ -160,7 +162,7 @@ namespace CaitlynTheTroll
             Activator.Add("spells.Potions.Mana",
                 new Slider("Use Potions when Mana is lower than {0}(%)", 60, 1));
             Activator.AddLabel("Spells settings:");
-           Activator.AddLabel("Heal settings:");
+            Activator.AddLabel("Heal settings:");
             Activator.Add("spells.Heal.Hp",
                 new Slider("Use Heal when HP is lower than {0}(%)", 30, 1));
             Activator.AddLabel("Ignite settings:");
@@ -180,7 +182,7 @@ namespace CaitlynTheTroll
             MiscMeNu.Add("gapcloser.W",
                 new CheckBox("Use W GapCloser"));
             MiscMeNu.Add("interupt.W",
-              new CheckBox("Use W Interrupt"));
+                new CheckBox("Use W Interrupt"));
             MiscMeNu.AddLabel("Skin settings");
             MiscMeNu.Add("checkSkin",
                 new CheckBox("Use skin changer:", false));
@@ -192,7 +194,7 @@ namespace CaitlynTheTroll
         {
             return DrawMeNu["nodraw"].Cast<CheckBox>().CurrentValue;
         }
-        
+
         public static bool DrawingsQ()
         {
             return DrawMeNu["draw.Q"].Cast<CheckBox>().CurrentValue;
@@ -218,28 +220,62 @@ namespace CaitlynTheTroll
             return DrawMeNu["draw.T"].Cast<CheckBox>().CurrentValue;
         }
 
-        public static bool ComboE()
-        {
-            return ComboMenu["combo.E"].Cast<CheckBox>().CurrentValue;
-        }
-
-        public static bool ComboW()
+     public static bool ComboW()
         {
             return ComboMenu["combo.W"].Cast<CheckBox>().CurrentValue;
         }
+
         public static float ComboREnemies()
         {
             return ComboMenu["combo.REnemies"].Cast<Slider>().CurrentValue;
         }
+
         public static bool ComboR()
         {
             return ComboMenu["combo.R"].Cast<CheckBox>().CurrentValue;
         }
+
         public static bool ComboEq()
         {
             return ComboMenu["comboEQbind"].Cast<KeyBind>().CurrentValue;
         }
-       public static bool LaneQ()
+
+        public static bool Aaq()
+        {
+            return ComboMenu["Qlogic"].Cast<ComboBox>().CurrentValue == 1;
+        }
+
+        public static float PredE()
+        {
+            return ComboMenu["Epred"].Cast<Slider>().CurrentValue;
+        }
+
+        public static float LimitTrap()
+        {
+            return ComboMenu["limittrap"].Cast<Slider>().CurrentValue;
+        }
+        
+        public static float PredQ()
+        {
+            return ComboMenu["Qpred"].Cast<Slider>().CurrentValue;
+        }
+
+        public static bool ComboQ()
+        {
+            return ComboMenu["Qlogic"].Cast<ComboBox>().CurrentValue == 0;
+        }
+
+        public static bool AaE()
+        {
+            return ComboMenu["Elogic"].Cast<ComboBox>().CurrentValue == 1;
+        }
+
+        public static bool ComboE()
+        {
+            return ComboMenu["Elogic"].Cast<ComboBox>().CurrentValue == 0;
+        }
+
+        public static bool LaneQ()
         {
             return FarmMeNu["lane.Q"].Cast<CheckBox>().CurrentValue;
         }
@@ -258,10 +294,12 @@ namespace CaitlynTheTroll
         {
             return HarassMeNu["harass.Q"].Cast<CheckBox>().CurrentValue;
         }
+
         public static bool HarassW()
         {
             return HarassMeNu["UseWharass"].Cast<CheckBox>().CurrentValue;
         }
+
         public static float HarassQe()
         {
             return HarassMeNu["harass.QE"].Cast<Slider>().CurrentValue;
@@ -296,6 +334,7 @@ namespace CaitlynTheTroll
         {
             return Activator["youmus"].Cast<CheckBox>().CurrentValue;
         }
+
         public static float YoumusEnemies()
         {
             return Activator["youmus.Enemies"].Cast<Slider>().CurrentValue;
@@ -395,6 +434,7 @@ namespace CaitlynTheTroll
         {
             return MiscMeNu["gapcloser.W"].Cast<CheckBox>().CurrentValue;
         }
+
         public static bool InterupteW()
         {
             return MiscMeNu["interupt.W"].Cast<CheckBox>().CurrentValue;
