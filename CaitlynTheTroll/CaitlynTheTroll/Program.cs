@@ -522,45 +522,24 @@ namespace CaitlynTheTroll
                     var predE = E.GetPrediction(target);
                     if (predE.HitChancePercent >= CaitlynTheTrollMeNu.PredE())
                     {
-                        E.Cast(predE.CastPosition);
+                        Core.DelayAction(() => E.Cast(predE.CastPosition), 250);
                     }
                     else
                     {
                         if (target.IsValidTarget(200))
                         {
-                            E.Cast(predE.CastPosition);
-                        }
-                        else
-                        {
-                            if (target.Health + target.AttackShield < Player.GetSpellDamage(target, SpellSlot.E))
-                            {
-                                E.Cast(predE.CastPosition);
-                            }
+                            Core.DelayAction(() => E.Cast(predE.CastPosition), 250);
                         }
                     }
                 }
-            }
-            if (CaitlynTheTrollMeNu.ComboQ() && CaitlynTheTrollMeNu.LogicQ())
-            {
-                if (Q.IsReady() && target.IsValidTarget(900))
+                if (CaitlynTheTrollMeNu.ComboQ() && CaitlynTheTrollMeNu.LogicQ())
                 {
-                    var predq = W.GetPrediction(target);
-                    if (predq.HitChancePercent >= CaitlynTheTrollMeNu.PredQ())
+                    if (Q.IsReady() && target.IsValidTarget(900))
                     {
-                        Q.Cast(predq.CastPosition);
-                    }
-                    else
-                    {
-                        if (target.IsValidTarget(300))
+                        var predq = W.GetPrediction(target);
+                        if (predq.HitChancePercent >= CaitlynTheTrollMeNu.PredQ())
                         {
-                            Q.Cast(predq.CastPosition);
-                        }
-                        else
-                        {
-                            if (target.Health + target.AttackShield < Player.GetSpellDamage(target, SpellSlot.Q))
-                            {
-                                Q.Cast(predq.CastPosition);
-                            }
+                            Core.DelayAction(() => Q.Cast(predq.CastPosition), 250);
                         }
                     }
                     if (CaitlynTheTrollMeNu.ComboW() && W.CanCast(target) &&
