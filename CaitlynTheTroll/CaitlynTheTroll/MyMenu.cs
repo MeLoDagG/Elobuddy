@@ -8,12 +8,13 @@ namespace CaitlynTheTroll
     internal static class CaitlynTheTrollMeNu
     {
         private static Menu _myMenu;
-        public static Menu ComboMenu, DrawMeNu, HarassMeNu, Activator, FarmMeNu, MiscMeNu;
+        public static Menu ComboMenu, DrawMeNu, HarassMeNu, Activator, FarmMeNu, MiscMeNu, PredictionMenu;
 
         public static void LoadMenu()
         {
             MyCaitlynTheTrollPage();
             ComboMenuPage();
+            PredictionMenuPage();
             FarmMeNuPage();
             HarassMeNuPage();
             ActivatorPage();
@@ -52,34 +53,42 @@ namespace CaitlynTheTroll
         {
             ComboMenu = _myMenu.AddSubMenu("Combo settings", "Combo");
             ComboMenu.AddGroupLabel("Combo settings:");
+            ComboMenu.AddGroupLabel("Q settings:");
+            ComboMenu.Add("combo.Q", new CheckBox("Use Q"));
             ComboMenu.Add("Qlogic", new ComboBox("Q Logic ", 0, "Normal", "After AA"));
-            ComboMenu.Add("combo.CCQ",
-                new CheckBox("Use Q CC"));
             ComboMenu.AddLabel("E settings:");
+            ComboMenu.Add("combo.E", new CheckBox("Use E"));
             ComboMenu.Add("Elogic", new ComboBox("E Logic ", 0, "Normal", "After AA"));
-            ComboMenu.Add("combo.CC",
-                new CheckBox("Use E CC"));
             ComboMenu.AddLabel("W settings:");
             ComboMenu.Add("combo.w",
                 new CheckBox("Use W"));
             ComboMenu.Add("limittrap", new Slider("Limit Traps ", 2, 1, 5));
-            ComboMenu.Add("combo.CCW",
-                new CheckBox("Use W CC"));
-            ComboMenu.AddLabel("Prediction settings:");
-            ComboMenu.Add("Qpred", new Slider("Select Q {0}(%) Hitchance", 85));
-            ComboMenu.Add("Epred", new Slider("Select E {0}(%) Hitchance", 70));
-            ComboMenu.AddLabel("Work Only For Normal Q/E Logic");
-            ComboMenu.AddLabel("Higher % ->Higher chance of spell landing on target but takes more time to get casted");
-            ComboMenu.AddLabel("Lower % ->Faster casting but lower chance that the spell will land on your target. ");
             ComboMenu.AddLabel("R settings:");
             ComboMenu.Add("combo.R",
                 new CheckBox("Use Smart R"));
-            ComboMenu.AddSeparator();
+            ComboMenu.AddLabel("Use Auto Skills On CC Target:");
+            ComboMenu.Add("combo.CCQ", new CheckBox("Use Q CC"));
+            ComboMenu.Add("combo.CC",
+                new CheckBox("Use E CC"));
+            ComboMenu.Add("combo.CCW",
+                new CheckBox("Use W CC"));
             ComboMenu.AddLabel("Combo preferences:");
             ComboMenu.Add("comboEQbind",
                 new KeyBind("Use E > Q > AA", false, KeyBind.BindTypes.HoldActive, 'Z'));
         }
 
+        private static void PredictionMenuPage()
+        {
+            PredictionMenu = _myMenu.AddSubMenu("Prediction settings", "Prediction");
+            PredictionMenu.AddGroupLabel("Prediction settings:");
+            PredictionMenu.Add("Qpred", new Slider("Select Q {0}(%) Hitchance", 85));
+            PredictionMenu.Add("Epred", new Slider("Select E {0}(%) Hitchance", 70));
+            PredictionMenu.AddLabel("Work Only For Normal Q/E Logic");
+            PredictionMenu.AddLabel(
+                "Higher % ->Higher chance of spell landing on target but takes more time to get casted");
+            PredictionMenu.AddLabel(
+                "Lower % ->Faster casting but lower chance that the spell will land on your target. ");
+        }
 
         private static void FarmMeNuPage()
         {
@@ -220,7 +229,7 @@ namespace CaitlynTheTroll
             return DrawMeNu["draw.T"].Cast<CheckBox>().CurrentValue;
         }
 
-     public static bool ComboW()
+        public static bool ComboW()
         {
             return ComboMenu["combo.W"].Cast<CheckBox>().CurrentValue;
         }
@@ -235,6 +244,16 @@ namespace CaitlynTheTroll
             return ComboMenu["combo.R"].Cast<CheckBox>().CurrentValue;
         }
 
+        public static bool ComboQ()
+        {
+            return ComboMenu["combo.Q"].Cast<CheckBox>().CurrentValue;
+        }
+
+        public static bool ComboE()
+        {
+            return ComboMenu["combo.E"].Cast<CheckBox>().CurrentValue;
+        }
+
         public static bool ComboEq()
         {
             return ComboMenu["comboEQbind"].Cast<KeyBind>().CurrentValue;
@@ -247,20 +266,20 @@ namespace CaitlynTheTroll
 
         public static float PredE()
         {
-            return ComboMenu["Epred"].Cast<Slider>().CurrentValue;
+            return PredictionMenu["Epred"].Cast<Slider>().CurrentValue;
         }
 
         public static float LimitTrap()
         {
             return ComboMenu["limittrap"].Cast<Slider>().CurrentValue;
         }
-        
+
         public static float PredQ()
         {
-            return ComboMenu["Qpred"].Cast<Slider>().CurrentValue;
+            return PredictionMenu["Qpred"].Cast<Slider>().CurrentValue;
         }
 
-        public static bool ComboQ()
+        public static bool LogicQ()
         {
             return ComboMenu["Qlogic"].Cast<ComboBox>().CurrentValue == 0;
         }
@@ -270,7 +289,7 @@ namespace CaitlynTheTroll
             return ComboMenu["Elogic"].Cast<ComboBox>().CurrentValue == 1;
         }
 
-        public static bool ComboE()
+        public static bool LogicE()
         {
             return ComboMenu["Elogic"].Cast<ComboBox>().CurrentValue == 0;
         }
