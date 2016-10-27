@@ -24,6 +24,12 @@ namespace CaitlynTheTroll
 
         public static readonly AIHeroClient Player = ObjectManager.Player;
 
+   
+        public static bool Boom()
+        {
+            return ObjectManager.Player.HasBuff("caitlynheadshot");
+        }
+
 
         internal static void Main(string[] args)
         {
@@ -349,12 +355,12 @@ namespace CaitlynTheTroll
                     return;
                 }
 
-                if (CaitlynTheTrollMeNu.KillstealQ() && target.Distance(Player) >= 635 && Q.IsReady() &&
+                if (CaitlynTheTrollMeNu.KillstealQ() && target.Distance(Player) >= 615 && Q.IsReady() &&
                     target.Health + target.AttackShield <
                     Player.GetSpellDamage(target, SpellSlot.Q))
                 {
                     var predQks = (Q.GetPrediction(target));
-                    if (predQks.HitChance >= HitChance.Medium)
+                    if (predQks.HitChance >= HitChance.High)
                     {
                         Q.Cast(predQks.CastPosition);
                     }
@@ -377,12 +383,6 @@ namespace CaitlynTheTroll
                         x.HasBuffOfType(BuffType.Snare) || x.HasBuff("zhonyasringshield") || x.HasBuff("Recall")
                         || x.HasBuff("teleport") || x.HasBuff("crowstorm") || x.HasBuff("katarinar") ||
                         x.HasBuff("MissFortuneBulletTime"));
-            var autoTargetw =
-                EntityManager.Heroes.Enemies.FirstOrDefault(
-                    x =>
-                        x.HasBuffOfType(BuffType.Charm) || x.HasBuffOfType(BuffType.Knockup) ||
-                        x.HasBuffOfType(BuffType.Stun) || x.HasBuffOfType(BuffType.Suppression) ||
-                        x.HasBuffOfType(BuffType.Snare));
             if (autoTarget != null)
             {
                 E.Cast(autoTarget.ServerPosition);
@@ -391,9 +391,9 @@ namespace CaitlynTheTroll
             {
                 return;
             }
-            if (autoTargetw != null)
+            if (autoTarget != null)
             {
-                Q.Cast(autoTargetw.ServerPosition);
+                Q.Cast(autoTarget.ServerPosition);
             }
             if (!CaitlynTheTrollMeNu.ComboMenu["combo.CCW"].Cast<CheckBox>().CurrentValue)
             {
@@ -515,68 +515,68 @@ namespace CaitlynTheTroll
             {
                 return;
             }
-            if (CaitlynTheTrollMeNu.ComboE() && CaitlynTheTrollMeNu.LogicE())
+            if (CaitlynTheTrollMeNu.ComboE() && CaitlynTheTrollMeNu.LogicE() && !Boom())
             {
-                if (E.IsReady() && target.IsValidTarget(750))
+                if (E.IsReady() && E.CanCast(target))
                 {
                     var predE = E.GetPrediction(target);
                     if (predE.HitChancePercent >= CaitlynTheTrollMeNu.PredE())
                     {
-                        Core.DelayAction(() => E.Cast(predE.CastPosition), 250);
+                        E.Cast(predE.CastPosition);
                     }
                     else
                     {
                         if (target.IsValidTarget(200))
                         {
-                            Core.DelayAction(() => E.Cast(predE.CastPosition), 250);
+                            E.Cast(predE.CastPosition);
                         }
                     }
                 }
-                if (CaitlynTheTrollMeNu.ComboQ() && CaitlynTheTrollMeNu.LogicQ())
+            }
+            if (CaitlynTheTrollMeNu.ComboQ() && CaitlynTheTrollMeNu.LogicQ() && !Boom())
+            {
+                if (Q.IsReady() && Q.CanCast(target))
                 {
-                    if (Q.IsReady() && target.IsValidTarget(900))
+                    var predq = W.GetPrediction(target);
+                    if (predq.HitChancePercent >= CaitlynTheTrollMeNu.PredQ())
                     {
-                        var predq = W.GetPrediction(target);
-                        if (predq.HitChancePercent >= CaitlynTheTrollMeNu.PredQ())
-                        {
-                            Core.DelayAction(() => Q.Cast(predq.CastPosition), 250);
-                        }
-                    }
-                    if (CaitlynTheTrollMeNu.ComboW() && W.CanCast(target) &&
-                        W.Handle.Ammo >= CaitlynTheTrollMeNu.LimitTrap())
-                    {
-                        if (W.IsReady())
-                        {
-                            var predw = W.GetPrediction(target);
-                            if (predw.HitChancePercent >= 90)
-                            {
-                                W.Cast(predw.CastPosition);
-                            }
-                        }
-                    }
-                    if ((ObjectManager.Player.CountEnemiesInRange(ObjectManager.Player.AttackRange) >=
-                         CaitlynTheTrollMeNu.YoumusEnemies() ||
-                         Player.HealthPercent >= CaitlynTheTrollMeNu.ItemsYoumuShp()) &&
-                        Activator.Youmus.IsReady() && CaitlynTheTrollMeNu.Youmus() && Activator.Youmus.IsOwned())
-                    {
-                        Activator.Youmus.Cast();
-                        return;
-                    }
-                    if (Player.HealthPercent <= CaitlynTheTrollMeNu.BilgewaterHp() &&
-                        CaitlynTheTrollMeNu.Bilgewater() &&
-                        Activator.Bilgewater.IsReady() && Activator.Bilgewater.IsOwned())
-                    {
-                        Activator.Bilgewater.Cast(target);
-                        return;
-                    }
-
-                    if (Player.HealthPercent <= CaitlynTheTrollMeNu.BotrkHp() && CaitlynTheTrollMeNu.Botrk() &&
-                        Activator.Botrk.IsReady() &&
-                        Activator.Botrk.IsOwned())
-                    {
-                        Activator.Botrk.Cast(target);
+                        Q.Cast(predq.CastPosition);
                     }
                 }
+            }
+            if (CaitlynTheTrollMeNu.ComboW() && W.Handle.Ammo >= CaitlynTheTrollMeNu.LimitTrap())
+            {
+                if (W.IsReady())
+                {
+                    var predictionPos = Prediction.Position.PredictUnitPosition(target, 500).To3D();
+
+                    if (W.IsInRange(predictionPos))
+                    {
+                        W.Cast(predictionPos);
+                    }
+                }
+            }
+            if ((ObjectManager.Player.CountEnemiesInRange(ObjectManager.Player.AttackRange) >=
+                 CaitlynTheTrollMeNu.YoumusEnemies() ||
+                 Player.HealthPercent >= CaitlynTheTrollMeNu.ItemsYoumuShp()) &&
+                Activator.Youmus.IsReady() && CaitlynTheTrollMeNu.Youmus() && Activator.Youmus.IsOwned())
+            {
+                Activator.Youmus.Cast();
+                return;
+            }
+            if (Player.HealthPercent <= CaitlynTheTrollMeNu.BilgewaterHp() &&
+                CaitlynTheTrollMeNu.Bilgewater() &&
+                Activator.Bilgewater.IsReady() && Activator.Bilgewater.IsOwned())
+            {
+                Activator.Bilgewater.Cast(target);
+                return;
+            }
+
+            if (Player.HealthPercent <= CaitlynTheTrollMeNu.BotrkHp() && CaitlynTheTrollMeNu.Botrk() &&
+                Activator.Botrk.IsReady() &&
+                Activator.Botrk.IsOwned())
+            {
+                Activator.Botrk.Cast(target);
             }
         }
     }
