@@ -51,7 +51,7 @@ namespace CaitlynTheTroll
 
             #region Skill
 
-            Q = new Spell.Skillshot(SpellSlot.Q, 1300, SkillShotType.Linear, 625, 2200, 90)
+            Q = new Spell.Skillshot(SpellSlot.Q, 1200, SkillShotType.Linear, 625, 2200, 90)
             {
                 AllowedCollisionCount = -1
             };
