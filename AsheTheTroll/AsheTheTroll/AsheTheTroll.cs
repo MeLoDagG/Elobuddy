@@ -8,14 +8,13 @@ using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
 using SharpDX;
+using SharpDX.Direct3D9;
 using Color = System.Drawing.Color;
 
 namespace AsheTheTroll
 {
     internal class AsheTheTroll
     {
-        private static AIHeroClient _target;
-
         public static Spell.Active Q;
         public static Spell.Skillshot W;
         public static Spell.Skillshot E;
@@ -24,7 +23,7 @@ namespace AsheTheTroll
 
         private static readonly Vector2 Baron = new Vector2(5007.124f, 10471.45f);
         private static readonly Vector2 Dragon = new Vector2(9866.148f, 4414.014f);
-
+        private static Font Thm;
         private static Item HealthPotion;
         private static Item CorruptingPotion;
         private static Item RefillablePotion;
@@ -36,10 +35,15 @@ namespace AsheTheTroll
         public static Item Tear = new Item(ItemId.Tear_of_the_Goddess);
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
+        //   public static bool UnderEnemyTower(Vector2 pos)
+        //     {
+        //          return EntityManager.Turrets.Enemies.Where(a => a.Health > 0 && !a.IsDead).Any(a => a.Distance(pos) < 950);
+        //    }
 
 
         public static Menu Menu,
             ComboMenu,
+            PredictionMenu,
             VolleyMenu,
             HarassMenu,
             JungleLaneMenu,
@@ -98,37 +102,49 @@ namespace AsheTheTroll
             RefillablePotion = new Item(2031, 0);
             HuntersPotion = new Item(2032, 0);
             Teleport.OnTeleport += Teleport_OnTeleport;
+            Thm = new Font(Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = 32,
+                    Weight = FontWeight.Bold,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.ClearType
+                });
 
 
             Chat.Print(
-                "<font color=\"#4dd5ea\" >MeLoDag Presents </font><font color=\"#ffffff\" >AsheTheToLL </font><font color=\"#4dd5ea\" >Kappa Kippo</font>");
+                "<font color=\"#4dd5ea\" >MeLoSenpai Presents </font><font color=\"#ffffff\" > AsheTheToLL </font><font color=\"#4dd5ea\" >Kappa Kippo</font>");
+            Chat.Print("Version 2 Loaded 15/11/2016", Color.Chartreuse);
+            Chat.Print("Gl And HF", Color.Aqua);
 
 
             Menu = MainMenu.AddMenu("AsheTheTroll", "AsheTheTroll");
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.AddGroupLabel("Combo Settigns:");
             ComboMenu.Add("Qlogic", new ComboBox("Q Logic ", 0, "Normal", "After AA"));
-            // ComboMenu.Add("useQCombo", new CheckBox("Use Q"));
-            //  ComboMenu.Add("UseQAAcombo", new CheckBox("Use Q After AA", false));
-            //   ComboMenu.AddLabel("W Settings:");
             ComboMenu.Add("Wlogic", new ComboBox("W Logic ", 0, "Normal", "After AA"));
-            //   ComboMenu.Add("useWCombo", new CheckBox("Use W"));
-            //   ComboMenu.Add("UseWAAcombo", new CheckBox("Use W After AA", false));
             ComboMenu.Add("CCE", new CheckBox("Auto W on Enemy CC"));
-            ComboMenu.Add("Wpred", new Slider("Select % Hitchance", 70, 0, 100));
-            ComboMenu.AddLabel("Work Only For Normal W Logic");
-            ComboMenu.AddLabel("Higher % ->Higher chance of spell landing on target but takes more time to get casted");
-            ComboMenu.AddLabel("Lower % ->Faster casting but lower chance that the spell will land on your target. ");
             ComboMenu.AddLabel("R Settings:");
-            ComboMenu.Add("useRCombo", new CheckBox("Use R",false));
+            ComboMenu.Add("useRCombo", new CheckBox("Use R", false));
             ComboMenu.Add("Rlogic", new ComboBox("Ulty Logic ", 0, "EnemyHp", "HitCountEnemys"));
             ComboMenu.Add("Hp", new Slider("Use R Enemy Health {0}(%)", 45, 0, 100));
-            ComboMenu.Add("Rcount", new Slider("If Ulty Hit Enemy ", 2, 1, 5));
+            ComboMenu.Add("Rcount", new Slider("If Ulty Hit {0} Enemy ", 2, 1, 5));
             ComboMenu.AddLabel("Use R Range Settigs For all Logic:");
             ComboMenu.Add("useRRange", new Slider("Use Ulty Max Range", 1800, 500, 2000));
             ComboMenu.Add("ForceR",
                 new KeyBind("Force R On Target Selector", false, KeyBind.BindTypes.HoldActive, "T".ToCharArray()[0]));
 
+
+            PredictionMenu = Menu.AddSubMenu("Prediction Settings", "Prediction");
+            PredictionMenu.AddGroupLabel("Prediction Settings:");
+            PredictionMenu.Add("Wpred", new Slider("Select W {0}(%) Hitchance", 70, 0, 100));
+            PredictionMenu.Add("rpred", new Slider("Select Ulty {0}(%) Hitchance", 70, 0, 100));
+            PredictionMenu.AddLabel("Work Only For Normal W Logic");
+            PredictionMenu.AddLabel(
+                "Higher % ->Higher chance of spell landing on target but takes more time to get casted");
+            PredictionMenu.AddLabel(
+                "Lower % ->Faster casting but lower chance that the spell will land on your target. ");
 
             VolleyMenu = Menu.AddSubMenu("Volley Settings", "Volley");
             VolleyMenu.AddGroupLabel("Volley Settings:");
@@ -171,6 +187,7 @@ namespace AsheTheTroll
             MiscMenu.AddLabel("Interrupter Settings:");
             MiscMenu.Add("interrupter", new CheckBox("Enable Interrupter Using R"));
             MiscMenu.Add("interrupt.value", new ComboBox("Interrupter DangerLevel", 0, "High", "Medium", "Low"));
+            MiscMenu.Add("distinter", new Slider("Use Ulty For interupt Max Range {0}", 1800, 1, 2500));
             MiscMenu.AddGroupLabel("Ks Settings:");
             MiscMenu.Add("UseWks", new CheckBox("Use W ks"));
             MiscMenu.Add("UseRks", new CheckBox("Use R ks"));
@@ -216,12 +233,18 @@ namespace AsheTheTroll
             DrawMenu.AddLabel("Damage indicators");
             DrawMenu.Add("healthbar", new CheckBox("Healthbar overlay"));
             DrawMenu.Add("percent", new CheckBox("Damage percent info"));
+            DrawMenu.Add("howaa", new CheckBox("How Many AA"));
+            DrawMenu.Add("Rkill", new CheckBox("R kill "));
 
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
-            Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
-            //    Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
+            Gapcloser.OnGapcloser += OnGapcloser;
+            Interrupter.OnInterruptableSpell += Interupthighlvl;
+            Interrupter.OnInterruptableSpell += Interuptmediumlvl;
+            Interrupter.OnInterruptableSpell += Interuptlowlvl;
+
+
             Drawing.OnDraw += Drawing_OnDraw;
             Orbwalker.OnPostAttack += OnAfterAttack;
             DamageIndicator.Initialize(SpellDamage.GetRawDamage);
@@ -253,8 +276,49 @@ namespace AsheTheTroll
                 DamageIndicator.HealthbarEnabled = DrawMenu["healthbar"].Cast<CheckBox>().CurrentValue;
                 DamageIndicator.PercentEnabled = DrawMenu["percent"].Cast<CheckBox>().CurrentValue;
             }
+            if (DrawMenu["howaa"].Cast<CheckBox>().CurrentValue)
+            {
+                // double temp = 0;
+                foreach (
+                    var noob in
+                        ObjectManager.Get<AIHeroClient>().Where(x => x.IsVisible && x.IsEnemy && x.IsValid))
+                {
+                    var dmg = _Player.GetAutoAttackDamage(noob);
+
+                    var howmanyaa = noob.Health/dmg;
+                    if (howmanyaa >= 10)
+                    {
+                        Drawing.DrawText(noob.HPBarPosition.X, noob.HPBarPosition.Y - 44, Color.Yellow,
+                            "" + "  How Many AA: " + string.Format("{0:0.00}", howmanyaa));
+                    }
+                    if (howmanyaa < 8)
+                    {
+                        Drawing.DrawText(noob.HPBarPosition.X, noob.HPBarPosition.Y - 44, Color.LawnGreen,
+                            "" + "  How Many AA: " + string.Format("{0:0.00}", howmanyaa));
+                    }
+                }
+            }
+            foreach (
+                var noob in
+                    ObjectManager.Get<AIHeroClient>().Where(x => x.IsVisible && x.IsEnemy && x.IsValid))
+                if (DrawMenu["Rkill"].Cast<CheckBox>().CurrentValue && R.IsReady())
+                {
+                    var ft = Drawing.WorldToScreen(noob.Position);
+                    if (noob.IsValidTarget(R.Range) &&
+                        Player.Instance.GetSpellDamage(noob, SpellSlot.R) > noob.Health + noob.AttackShield)
+                    {
+                        DrawFont(Thm, "Use R  Killable " + noob.ChampionName, ft[0] - 140,
+                            ft[1] + 80, SharpDX.Color.LawnGreen);
+                    }
+                }
         }
-        
+
+        public static void DrawFont(Font vFont, string vText, float vPosX, float vPosY, ColorBGRA vColor)
+        {
+            vFont.DrawText(null, vText, (int) vPosX, (int) vPosY, vColor);
+        }
+
+
         private static string FormatTime(double time)
         {
             var t = TimeSpan.FromSeconds(time);
@@ -302,31 +366,72 @@ namespace AsheTheTroll
             return SkinMenu["checkSkin"].Cast<CheckBox>().CurrentValue;
         }
 
-        public static void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)
+        public static void OnGapcloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs args)
+
         {
-            if (MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && sender.IsEnemy &&
-                e.End.Distance(_Player) <= 350)
+            if (sender.IsEnemy && MiscMenu["gapcloser"].Cast<CheckBox>().CurrentValue && W.IsReady() &&
+                W.IsInRange(args.End))
             {
-                W.Cast(e.End);
+                W.Cast(sender);
+                Chat.Print("Wgapcloser kappa", Color.Yellow);
             }
         }
 
-        /*  public static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
-            Interrupter.InterruptableSpellEventArgs e)
+        public static void Interupthighlvl(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
         {
-            var value = MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue;
-            var danger = value == 0
-                ? DangerLevel.High
-                : value == 1 ? DangerLevel.Medium : value == 2 ? DangerLevel.Low : DangerLevel.High;
-            if (sender.IsEnemy
-                && MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue
-                && sender.IsValidTarget(_r.Range - 800)
-                && e.DangerLevel == danger)
+            if (!sender.IsEnemy) return;
+
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
             {
-                _r.Cast(sender);
+                if (MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue == 0)
+                {
+                    if (interruptableSpellEventArgs.DangerLevel == DangerLevel.High && R.IsReady() &&
+                        sender.Distance(_Player) <= MiscMenu["distinter"].Cast<Slider>().CurrentValue)
+                    {
+                        R.Cast(sender.Position);
+                    }
+                }
             }
-        } */
-        
+        }
+
+        public static void Interuptmediumlvl(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
+        {
+            if (!sender.IsEnemy) return;
+
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
+            {
+                if (MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue == 1)
+                {
+                    if (interruptableSpellEventArgs.DangerLevel == DangerLevel.Medium && R.IsReady() &&
+                        sender.Distance(_Player) <= MiscMenu["distinter"].Cast<Slider>().CurrentValue)
+                    {
+                        R.Cast(sender.Position);
+                    }
+                }
+            }
+        }
+
+        public static void Interuptlowlvl(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
+        {
+            if (!sender.IsEnemy) return;
+
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
+            {
+                if (MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue == 2)
+                {
+                    if (interruptableSpellEventArgs.DangerLevel == DangerLevel.Low && R.IsReady() &&
+                        sender.Distance(_Player) <= MiscMenu["distinter"].Cast<Slider>().CurrentValue)
+                    {
+                        R.Cast(sender.Position);
+                    }
+                }
+            }
+        }
+
+
         private static
             void OnGameUpdate(EventArgs args)
         {
@@ -600,7 +705,7 @@ namespace AsheTheTroll
 
         public static void OnAfterAttack(AttackableUnit target, EventArgs args)
         {
-           {
+            {
                 if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
                     if (target == null || !(target is AIHeroClient) || target.IsDead || target.IsInvulnerable ||
                         !target.IsEnemy || target.IsPhysicalImmune || target.IsZombie)
@@ -637,22 +742,33 @@ namespace AsheTheTroll
             foreach (
                 var enemy in
                     EntityManager.Heroes.Enemies.Where(
-                        e => e.Distance(_Player) <= W.Range && e.IsValidTarget() && !e.IsInvulnerable))
+                        x => x.Distance(_Player) <= W.Range && x.IsValidTarget() && !x.IsInvulnerable && !x.IsZombie
+                             && !x.HasBuff("JudicatorIntervention") //kayle R
+                             && !x.HasBuff("zhonyasringshield") //zhonya
+                             && !x.HasBuff("VladimirSanguinePool") //vladimir W
+                             && !x.HasBuff("ChronoShift") //zilean R
+                             && !x.HasBuff("mordekaisercotgself") //mordekaiser R
+                             && !x.HasBuff("UndyingRage") //tryndamere R
+                             && !x.HasBuff("sionpassivezombie") //sion Passive
+                             && !x.HasBuff("KarthusDeathDefiedBuff") //karthus passive
+                             && !x.HasBuff("kogmawicathiansurprise"))) //kog'maw passive
             {
                 if (usewks && W.IsReady() &&
                     DmgLibrary.WDamage(enemy) >= enemy.Health && enemy.Distance(_Player) >= 650)
+
                 {
                     var predW = W.GetPrediction(enemy);
-                    if (predW.HitChance == HitChance.High)
+                    if (predW.HitChance >= HitChance.High)
                     {
                         W.Cast(predW.CastPosition);
                     }
                 }
                 if (useRks && R.IsReady() &&
-                    DmgLibrary.RDamage(enemy) >= enemy.Health && enemy.Distance(_Player) >= 900)
+                    DmgLibrary.RDamage(enemy) >= enemy.Health && enemy.Distance(_Player) >= 650)
+
                 {
                     var predR = R.GetPrediction(enemy);
-                    if (predR.HitChance == HitChance.Medium)
+                    if (predR.HitChance >= HitChance.High)
                     {
                         R.Cast(predR.CastPosition);
                     }
@@ -775,21 +891,20 @@ namespace AsheTheTroll
         private static
             void Combo()
         {
-            var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
-          //  var comboR = ComboMenu["useRComboENEMIES"].Cast<CheckBox>().CurrentValue;
-            var useR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
-            //  var useW = ComboMenu["useWCombo"].Cast<CheckBox>().CurrentValue;
-            var hp = ComboMenu["Hp"].Cast<Slider>().CurrentValue;
-            var wpred = ComboMenu["Wpred"].Cast<Slider>().CurrentValue;
-            var targetR = TargetSelector.GetTarget(R.Range, DamageType.Magical);
-            var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
             var distance = ComboMenu["useRRange"].Cast<Slider>().CurrentValue;
+            var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
+            var rpred = PredictionMenu["rpred"].Cast<Slider>().CurrentValue;
+            var useR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
+            var hp = ComboMenu["Hp"].Cast<Slider>().CurrentValue;
+            var wpred = PredictionMenu["Wpred"].Cast<Slider>().CurrentValue;
+            var targetR = TargetSelector.GetTarget(R.Range, DamageType.Magical);
+            var target = TargetSelector.GetTarget(W.Range, DamageType.Magical);
 
             if (target == null || !target.IsValidTarget()) return;
 
             if (ComboMenu["Wlogic"].Cast<ComboBox>().CurrentValue == 0)
             {
-                if (W.IsReady() && target.IsValidTarget(1000))
+                if (W.IsReady() && W.CanCast(target))
                 {
                     var predW = W.GetPrediction(target);
                     if (predW.HitChancePercent >= wpred)
@@ -798,7 +913,7 @@ namespace AsheTheTroll
                     }
                     else
                     {
-                        if (target.IsValidTarget(450))
+                        if (target.IsValidTarget(250))
                         {
                             W.Cast(target);
                         }
@@ -807,26 +922,21 @@ namespace AsheTheTroll
             }
             if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 0 && useR)
             {
-                if (R.IsReady() && targetR.Distance(_Player) <= distance &&
-                    R.GetPrediction(targetR).HitChance >= HitChance.High && target.HealthPercent <= hp)
+                if (R.IsReady() && targetR.Distance(_Player) <= distance && target.HealthPercent <= hp &&
+                    !target.IsUnderEnemyturret())
                 {
                     var predR = R.GetPrediction(target);
-                    if (predR.HitChancePercent >= wpred)
+                    if (predR.HitChancePercent >= rpred)
                     {
                         R.Cast(predR.CastPosition);
                     }
                 }
             }
-            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 1 && useR)
+            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 1 && useR && targetR.Distance(_Player) <= distance &&
+                !target.IsUnderEnemyturret())
             {
-                if ( _Player.CountEnemiesInRange(1800) >= rCount && R.IsReady()
-                    && targetR.Distance(_Player) <= distance)
                 {
-                    var predR = R.GetPrediction(target);
-                    if (predR.HitChancePercent >= wpred)
-                    {
-                        R.Cast(predR.CastPosition);
-                    }
+                    R.CastIfItWillHit(rCount, rpred);
                 }
             }
         }

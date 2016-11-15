@@ -72,7 +72,7 @@ namespace AsheTheTroll
                     if (PercentEnabled)
                     {
                         // Get damage in percent and draw next to the health bar
-                        Drawing.DrawText(unit.HPBarPosition - new Vector2(0, 12), unit.TotalShieldHealth() < damage ? Color.LawnGreen : Color.Red, string.Concat(Math.Ceiling((damage / unit.TotalShieldHealth()) * 100), "%"), 10);
+                        Drawing.DrawText(unit.HPBarPosition - new Vector2(0, 12), unit.TotalShieldHealth() < damage ? Color.LawnGreen : Color.Yellow, string.Concat(Math.Ceiling((damage / unit.TotalShieldHealth()) * 100), "%"), 10);
                     }
                 }
             }

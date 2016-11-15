@@ -25,6 +25,8 @@ namespace AsheTheTroll
                     damage += Player.Instance.GetSpellDamage(target, SpellSlot.R);
                     damage += Player.Instance.GetAutoAttackDamage(target);
                 }
+                if (ObjectManager.Player.CanAttack)
+                damage += ObjectManager.Player.GetAutoAttackDamage(target);
             }
             return damage;
         }
