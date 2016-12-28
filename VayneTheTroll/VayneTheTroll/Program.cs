@@ -13,7 +13,7 @@ using Color = System.Drawing.Color;
 
 namespace VayneTheTroll
 {
-    internal class Program
+    internal class Vayne
     {
         public static Spell.Ranged Q;
         public static Spell.Targeted E;
@@ -21,6 +21,7 @@ namespace VayneTheTroll
         public static Spell.Active W;
         public static Spell.Active R;
         public static Spell.Active Heal;
+        public static AIHeroClient Target;
 
         public static readonly string[] MobNames =
         {
@@ -39,7 +40,7 @@ namespace VayneTheTroll
         public static Item Tear = new Item(ItemId.Tear_of_the_Goddess);
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
-        public static DangerLevel Dangerlvl;
+
         public static List<Vector2> Points = new List<Vector2>();
 
         public static bool UltActive()
@@ -102,9 +103,9 @@ namespace VayneTheTroll
             HuntersPotion = new Item(2032, 0);
 
             Chat.Print(
-                "<font color=\"#ef0101\" >MeLoDag Presents </font><font color=\"#ffffff\" > VayneTHeTroll </font><font color=\"#ef0101\" >Kappa Kippo</font>");
-            Chat.Print("Version 1.4 (27/7/2016)", Color.AntiqueWhite);
-            Chat.Print("Gl and HF also Dont Feed!!", Color.AntiqueWhite);
+                "<font color=\"#ef0101\" >MeLoSenpai Presents </font><font color=\"#ffffff\" > VayneTHeTroll </font><font color=\"#ef0101\" >Kappa Kippo</font>");
+            Chat.Print("Version 1.5 (28/12/2016)", Color.GreenYellow);
+            Chat.Print("Gl and HF also Dont Feed!!", Color.GreenYellow);
 
 
             Menu = MainMenu.AddMenu("VayneTheTroll", "VayneTheTroll");
@@ -145,9 +146,9 @@ namespace VayneTheTroll
             MiscMenu = Menu.AddSubMenu("Misc Settings", "MiscSettings");
             MiscMenu.AddGroupLabel("Gapcloser Settings");
             MiscMenu.Add("gapcloser", new CheckBox("Auto Q for Gapcloser", false));
-            MiscMenu.AddGroupLabel("Interrupter Settings & Dangerlvl");
-            MiscMenu.Add("interrupter", new CheckBox("Auto E for Interrupter"));
-            MiscMenu.Add("Dangerlvl", new ComboBox("Min DangerLevel to interrupt", 2, "Low", "Medium", "High"));
+            MiscMenu.AddLabel("Interrupter Settings:");
+            MiscMenu.Add("interrupter", new CheckBox("Enable Interrupter Using E"));
+            MiscMenu.Add("interrupt.value", new ComboBox("Interrupter DangerLevel", 0, "High", "Medium", "Low"));
             MiscMenu.Add("delayinter", new Slider("Use Interrupter Delay(ms)", 50));
 
 
@@ -194,6 +195,7 @@ namespace VayneTheTroll
                 },
                 0);
 
+
             DrawMenu = Menu.AddSubMenu("Drawing Settings");
             DrawMenu.Add("drawStun", new CheckBox("Draw Stun Pos"));
             DrawMenu.Add("drawE", new CheckBox("Draw E Range"));
@@ -205,7 +207,9 @@ namespace VayneTheTroll
             //  Orbwalker.OnPostAttack += Orbwalking_AfterAttack1;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
-            Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
+            Interrupter.OnInterruptableSpell += Interupthighlvl;
+            Interrupter.OnInterruptableSpell += Interuptmediumlvl;
+            Interrupter.OnInterruptableSpell += Interuptlowlvl;
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
             Drawing.OnDraw += Drawing_OnDraw;
             EloBuddy.Player.OnIssueOrder += Player_OnIssueOrder;
@@ -282,37 +286,60 @@ namespace VayneTheTroll
                 };
         }
 
-        public static void Interrupter_OnInterruptableSpell(Obj_AI_Base sender,
-            Interrupter.InterruptableSpellEventArgs e)
+        public static void Interupthighlvl(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
         {
-            var useEint = MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue;
-            if (useEint)
-                if (sender.IsMe && sender.IsAlly)
-                {
-                    return;
-                }
+            if (!sender.IsEnemy) return;
 
-            switch (MiscMenu["Dangerlvl"].Cast<ComboBox>().CurrentValue)
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
             {
-                case 0:
-                    Dangerlvl = DangerLevel.Low;
-                    break;
-                case 1:
-                    Dangerlvl = DangerLevel.Medium;
-                    break;
-                case 2:
-                    Dangerlvl = DangerLevel.High;
-                    break;
-                default:
-                    Dangerlvl = DangerLevel.High;
-                    break;
-            }
-            if (E.CanCast(sender) && sender.IsValidTarget(E.Range) && e.DangerLevel == Dangerlvl)
-            {
-                var delay = MiscMenu["delayinter"].Cast<Slider>().CurrentValue;
-                Core.DelayAction(() => E.Cast(sender), delay);
+                if (MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue == 0)
+                {
+                    if (interruptableSpellEventArgs.DangerLevel == DangerLevel.High && E.IsReady() && sender.IsValidTarget(E.Range))
+                     {
+                        E.Cast(sender);
+                        Chat.Print("use Condemn For Interrupter spell", Color.Chartreuse);
+                    }
+                }
             }
         }
+
+        public static void Interuptmediumlvl(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
+        {
+            if (!sender.IsEnemy) return;
+
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
+            {
+                if (MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue == 1)
+                {
+                    if (interruptableSpellEventArgs.DangerLevel == DangerLevel.Medium && E.IsReady() && sender.IsValidTarget(E.Range))
+                    {
+                        E.Cast(sender);
+                        Chat.Print("use Condemn For Interrupter spell", Color.Chartreuse);
+                    }
+                }
+            }
+        }
+
+        public static void Interuptlowlvl(Obj_AI_Base sender,
+            Interrupter.InterruptableSpellEventArgs interruptableSpellEventArgs)
+        {
+            if (!sender.IsEnemy) return;
+
+            if (MiscMenu["interrupter"].Cast<CheckBox>().CurrentValue)
+            {
+                if (MiscMenu["interrupt.value"].Cast<ComboBox>().CurrentValue == 2)
+                {
+                    if (interruptableSpellEventArgs.DangerLevel == DangerLevel.Low && E.IsReady() && sender.IsValidTarget(E.Range))
+                    {
+                        E.Cast(sender);
+                        Chat.Print("use Condemn For Interrupter spell", Color.Chartreuse);
+                    }
+                }
+            }
+        }
+
 
         public static
             void Gapcloser_OnGapCloser(AIHeroClient sender, Gapcloser.GapcloserEventArgs e)

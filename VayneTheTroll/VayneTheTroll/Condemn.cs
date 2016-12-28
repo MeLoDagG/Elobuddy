@@ -35,15 +35,15 @@ namespace VayneTheTroll
                 };
 
             var wallsFound = 0;
-            Program.Points = new List<Vector2>();
+            Vayne.Points = new List<Vector2>();
             foreach (var position in predictionsList)
             {
                 for (var i = 0;
-                    i < Program.ComboMenu["pushDistance"].Cast<Slider>().CurrentValue;
+                    i < Vayne.ComboMenu["pushDistance"].Cast<Slider>().CurrentValue;
                     i += (int) unit.BoundingRadius)
                 {
                     var cPos = _Player.Position.Extend(position, _Player.Distance(position) + i).To3D();
-                    Program.Points.Add(cPos.To2D());
+                    Vayne.Points.Add(cPos.To2D());
                     if (NavMesh.GetCollisionFlags(cPos).HasFlag(CollisionFlags.Wall) ||
                         NavMesh.GetCollisionFlags(cPos).HasFlag(CollisionFlags.Building))
                     {
@@ -52,7 +52,7 @@ namespace VayneTheTroll
                     }
                 }
             }
-            if ((wallsFound/predictionsList.Count) >= Program.ComboMenu["condemnPercent"].Cast<Slider>().CurrentValue/100f)
+            if ((wallsFound/predictionsList.Count) >= Vayne.ComboMenu["condemnPercent"].Cast<Slider>().CurrentValue/100f)
             {
                 return true;
             }
@@ -63,7 +63,7 @@ namespace VayneTheTroll
         public static Vector2 GetFirstNonWallPos(Vector2 startPos, Vector2 endPos)
         {
             int distance = 0;
-            for (int i = 0; i < Program.ComboMenu["pushDistance"].Cast<Slider>().CurrentValue; i += 20)
+            for (int i = 0; i < Vayne.ComboMenu["pushDistance"].Cast<Slider>().CurrentValue; i += 20)
             {
                 var cell = startPos.Extend(endPos, endPos.Distance(startPos) + i);
                 if (NavMesh.GetCollisionFlags(cell).HasFlag(CollisionFlags.Wall) ||
