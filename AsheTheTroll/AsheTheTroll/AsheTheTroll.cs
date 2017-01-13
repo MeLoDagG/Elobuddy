@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -35,6 +36,14 @@ namespace AsheTheTroll
         public static Item Tear = new Item(ItemId.Tear_of_the_Goddess);
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
+
+        private static List<BuffType> DeBuffsList = new List<BuffType>
+            {
+            BuffType.Blind, BuffType.Charm, BuffType.Fear, BuffType.Knockback, BuffType.Knockup, BuffType.NearSight,
+            BuffType.Poison, BuffType.Polymorph, BuffType.Silence, BuffType.Shred, BuffType.Sleep, BuffType.Slow, BuffType.Snare,
+            BuffType.Stun, BuffType.Suppression, BuffType.Taunt, 
+            };
+
         //   public static bool UnderEnemyTower(Vector2 pos)
         //     {
         //          return EntityManager.Turrets.Enemies.Where(a => a.Health > 0 && !a.IsDead).Any(a => a.Distance(pos) < 950);
@@ -209,14 +218,11 @@ namespace AsheTheTroll
             ItemMenu.AddLabel("QQs Settings");
             ItemMenu.Add("useQSS", new CheckBox("Use QSS"));
             ItemMenu.Add("Qssmode", new ComboBox(" ", 0, "Auto", "Combo"));
-            ItemMenu.Add("Stun", new CheckBox("Stun", true));
-            ItemMenu.Add("Blind", new CheckBox("Blind", true));
-            ItemMenu.Add("Charm", new CheckBox("Charm", true));
-            ItemMenu.Add("Suppression", new CheckBox("Suppression", true));
-            ItemMenu.Add("Polymorph", new CheckBox("Polymorph", true));
-            ItemMenu.Add("Fear", new CheckBox("Fear", true));
-            ItemMenu.Add("Taunt", new CheckBox("Taunt", true));
-            ItemMenu.Add("Silence", new CheckBox("Silence", false));
+            foreach (var debuff in DeBuffsList)
+            {
+                ItemMenu.Add(debuff.ToString(), new CheckBox(debuff.ToString()));
+            }
+
             ItemMenu.Add("QssDelay", new Slider("Use QSS Delay(ms)", 250, 0, 1000));
 
 
@@ -553,87 +559,27 @@ namespace AsheTheTroll
 
         private static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
         {
-            if (!sender.IsMe) return;
+            if (sender == null || args.Buff == null || !sender.IsMe)
+                return;
+
             var type = args.Buff.Type;
+
+            if(!DeBuffsList.Contains(type))
+                return;
+
+            if(!ItemMenu[type.ToString()].Cast<CheckBox>().CurrentValue)
+                return;
 
             if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 0)
             {
-                if (type == BuffType.Taunt && ItemMenu["Taunt"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Stun && ItemMenu["Stun"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Snare && ItemMenu["Snare"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Polymorph && ItemMenu["Polymorph"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Blind && ItemMenu["Blind"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Charm && ItemMenu["Charm"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Suppression && ItemMenu["Suppression"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Silence && ItemMenu["Silence"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
+                DoQss();
+                return;
             }
+
             if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 1 &&
                 Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
-                if (type == BuffType.Taunt && ItemMenu["Taunt"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Stun && ItemMenu["Stun"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Snare && ItemMenu["Snare"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Polymorph && ItemMenu["Polymorph"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Blind && ItemMenu["Blind"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Charm && ItemMenu["Charm"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Suppression && ItemMenu["Suppression"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Silence && ItemMenu["Silence"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
+                DoQss();
             }
         }
 
