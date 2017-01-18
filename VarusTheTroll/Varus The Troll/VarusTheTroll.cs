@@ -132,6 +132,9 @@ namespace Varus_The_Troll
             Chat.Print(
                 "<font color=\"#580dd9\" >MeloSenpai Presents </font><font color=\"#ffffff\" > VarusTheTroll </font><font color=\"#580dd9\" >Kappa Kippo</font>");
 
+            Chat.Print("Hf Gl enjoy!!",Color.Aqua
+                );
+
 
             Menu = MainMenu.AddMenu("Varus The Troll", "VarusTheTroll");
             Menu.AddLabel(" Varus The Troll " + Version);
