@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Drawing;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -8,18 +8,21 @@ using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using EloBuddy.SDK.Rendering;
+using SharpDX;
+using SharpDX.Direct3D9;
+using Color = System.Drawing.Color;
 
 namespace Varus_The_Troll
 {
     internal class VarusTheTroll
     {
-        public static string Version = "Version 1 Rework (23/5/2016)";
+        public static string Version = "Version 1.1 (18/1/2017)";
         public static Spell.Chargeable Q;
         public static Spell.Active W;
         public static Spell.Skillshot E;
         public static Spell.Skillshot R;
         public static Spell.Active Heal;
-
+        private static Font Thm;
         public static bool IsCharging = false;
         public static Item HealthPotion;
         public static Item CorruptingPotion;
@@ -32,6 +35,26 @@ namespace Varus_The_Troll
         public static Item Tear = new Item(ItemId.Tear_of_the_Goddess);
         public static Item Qss = new Item(ItemId.Quicksilver_Sash);
         public static Item Simitar = new Item(ItemId.Mercurial_Scimitar);
+
+        private static readonly List<BuffType> DeBuffsList = new List<BuffType>
+        {
+            BuffType.Blind,
+            BuffType.Charm,
+            BuffType.Fear,
+            BuffType.Knockback,
+            BuffType.Knockup,
+            BuffType.NearSight,
+            BuffType.Poison,
+            BuffType.Polymorph,
+            BuffType.Silence,
+            BuffType.Shred,
+            BuffType.Sleep,
+            BuffType.Slow,
+            BuffType.Snare,
+            BuffType.Stun,
+            BuffType.Suppression,
+            BuffType.Taunt
+        };
 
 
         public static Menu Menu,
@@ -89,6 +112,15 @@ namespace Varus_The_Troll
             {
                 Heal = new Spell.Active(slot, 600);
             }
+            Thm = new Font(Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = 32,
+                    Weight = FontWeight.Bold,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.ClearType
+                });
             Ignite = ObjectManager.Player.GetSpellSlotFromName("summonerdot");
 
             HealthPotion = new Item(2003, 0);
@@ -98,25 +130,26 @@ namespace Varus_The_Troll
             HuntersPotion = new Item(2032, 0);
 
             Chat.Print(
-                "<font color=\"#580dd9\" >MeLoDag Presents </font><font color=\"#ffffff\" > VarusTheTroll </font><font color=\"#580dd9\" >Kappa Kippo</font>");
+                "<font color=\"#580dd9\" >MeloSenpai Presents </font><font color=\"#ffffff\" > VarusTheTroll </font><font color=\"#580dd9\" >Kappa Kippo</font>");
 
 
             Menu = MainMenu.AddMenu("Varus The Troll", "VarusTheTroll");
             Menu.AddLabel(" Varus The Troll " + Version);
-            Menu.AddLabel(" Made by MeLoDag");
+            Menu.AddLabel(" Made by MeloSenpai");
 
             ComboMenu = Menu.AddSubMenu("Combo Settings", "Combo");
             ComboMenu.AddGroupLabel("Q Settings");
-            ComboMenu.Add("useQComboAlways", new CheckBox("Use Q[Always]"));
-            ComboMenu.Add("useQCombo", new CheckBox("Use Q[StackCount]", false));
-            ComboMenu.Add("StackCount", new Slider("Q when stacks >= ", 3, 1, 3));
+            ComboMenu.Add("Qlogic", new ComboBox("Q Logic ", 0, "Always", "If 3 Stacks"));
             ComboMenu.AddLabel("E Settings");
-            ComboMenu.Add("useEComboAlways", new CheckBox("Use E"));
-            ComboMenu.AddLabel("R Settings");
-            ComboMenu.Add("useRCombo", new CheckBox("Use R"));
-            ComboMenu.Add("Rcount", new Slider("R when enemies >= ", 1, 1, 5));
-            ComboMenu.Add("UseRcomboHP", new CheckBox("Use R[HpEnemy]"));
-            ComboMenu.Add("RHP", new Slider("Use R If Hp enemies >= ", 50));
+            ComboMenu.Add("ELogic", new ComboBox("E Logic ", 0, "Normal", "After AA"));
+            ComboMenu.AddLabel("R Settings:");
+            ComboMenu.Add("useRCombo", new CheckBox("Use R", false));
+            ComboMenu.Add("Rlogic", new ComboBox("Ulty Logic ", 0, "EnemyHp", "HitCountEnemys"));
+            ComboMenu.Add("Hp", new Slider("Use R Enemy Health {0}(%)", 45, 0, 100));
+            ComboMenu.Add("Rcount", new Slider("If Ulty Hit {0} Enemy ", 2, 1, 5));
+            ComboMenu.Add("rpred", new Slider("Select Ulty {0}(%) Hitchance", 70, 0, 100));
+            ComboMenu.AddLabel("Use R Range Settigs For all Logic:");
+            ComboMenu.Add("useRRange", new Slider("Use Ulty Max Range", 1800, 500, 2000));
             ComboMenu.AddSeparator();
             ComboMenu.AddGroupLabel("Combo preferences:");
             ComboMenu.Add("useWComboFocus", new CheckBox("Focus Target W"));
@@ -148,7 +181,6 @@ namespace Varus_The_Troll
             MiscMenu.AddLabel("Auto Skills On CC Enemy");
             MiscMenu.Add("CCQ", new CheckBox("Auto Q on Enemy CC"));
             MiscMenu.AddLabel("KillSteal Settings");
-            MiscMenu.Add("UseQks", new CheckBox("Use Q ks"));
             MiscMenu.Add("UseRKs", new CheckBox("Use R Ks"));
 
             AutoPotHealMenu = Menu.AddSubMenu("Potion & Heal", "Potion & Heal");
@@ -168,14 +200,10 @@ namespace Varus_The_Troll
             ItemMenu.AddSeparator();
             ItemMenu.Add("useQSS", new CheckBox("Use QSS"));
             ItemMenu.Add("Qssmode", new ComboBox(" ", 0, "Auto", "Combo"));
-            ItemMenu.Add("Stun", new CheckBox("Stun", true));
-            ItemMenu.Add("Blind", new CheckBox("Blind", true));
-            ItemMenu.Add("Charm", new CheckBox("Charm", true));
-            ItemMenu.Add("Suppression", new CheckBox("Suppression", true));
-            ItemMenu.Add("Polymorph", new CheckBox("Polymorph", true));
-            ItemMenu.Add("Fear", new CheckBox("Fear", true));
-            ItemMenu.Add("Taunt", new CheckBox("Taunt", true));
-            ItemMenu.Add("Silence", new CheckBox("Silence", false));
+            foreach (var debuff in DeBuffsList)
+            {
+                ItemMenu.Add(debuff.ToString(), new CheckBox(debuff.ToString()));
+            }
             ItemMenu.Add("QssDelay", new Slider("Use QSS Delay(ms)", 250, 0, 1000));
 
 
@@ -190,12 +218,15 @@ namespace Varus_The_Troll
             DrawMenu.AddLabel("Damage indicators");
             DrawMenu.Add("healthbar", new CheckBox("Healthbar overlay"));
             DrawMenu.Add("percent", new CheckBox("Damage percent info"));
+            DrawMenu.Add("howaa", new CheckBox("How Many AA"));
+            DrawMenu.Add("Rkill", new CheckBox("R kill "));
 
 
             Game.OnTick += Game_OnTick;
             Game.OnUpdate += OnGameUpdate;
             Obj_AI_Base.OnBuffGain += OnBuffGain;
             Gapcloser.OnGapcloser += Gapcloser_OnGapCloser;
+            Orbwalker.OnPostAttack += OnAfterAttack;
             Interrupter.OnInterruptableSpell += Interrupter_OnInterruptableSpell;
             Drawing.OnDraw += Drawing_OnDraw;
             DamageIndicator.Initialize(ComboDamage);
@@ -325,7 +356,7 @@ namespace Varus_The_Troll
 
             if (ItemMenu["useYoumu"].Cast<CheckBox>().CurrentValue && Youmuu.IsOwned() && Youmuu.IsReady())
             {
-                if (ObjectManager.Player.CountEnemiesInRange(1500) == 1)
+                if (ObjectManager.Player.CountEnemiesInRange(1800) >= 1)
                 {
                     Youmuu.Cast();
                 }
@@ -351,89 +382,32 @@ namespace Varus_The_Troll
 
         public static void OnBuffGain(Obj_AI_Base sender, Obj_AI_BaseBuffGainEventArgs args)
         {
-            if (!sender.IsMe) return;
-            var type = args.Buff.Type;
+            {
+                if (sender == null || args.Buff == null || !sender.IsMe)
+                    return;
 
-            if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 0)
-            {
-                if (type == BuffType.Taunt && ItemMenu["Taunt"].Cast<CheckBox>().CurrentValue)
+                var type = args.Buff.Type;
+
+                if (!DeBuffsList.Contains(type))
+                    return;
+
+                if (!ItemMenu[type.ToString()].Cast<CheckBox>().CurrentValue)
+                    return;
+
+                if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 0)
                 {
                     DoQss();
+                    return;
                 }
-                if (type == BuffType.Stun && ItemMenu["Stun"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Snare && ItemMenu["Snare"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Polymorph && ItemMenu["Polymorph"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Blind && ItemMenu["Blind"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Charm && ItemMenu["Charm"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Suppression && ItemMenu["Suppression"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Silence && ItemMenu["Silence"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-            }
-            if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 1 &&
-                Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
-            {
-                if (type == BuffType.Taunt && ItemMenu["Taunt"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Stun && ItemMenu["Stun"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Snare && ItemMenu["Snare"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Polymorph && ItemMenu["Polymorph"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Blind && ItemMenu["Blind"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Flee && ItemMenu["Fear"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Charm && ItemMenu["Charm"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Suppression && ItemMenu["Suppression"].Cast<CheckBox>().CurrentValue)
-                {
-                    DoQss();
-                }
-                if (type == BuffType.Silence && ItemMenu["Silence"].Cast<CheckBox>().CurrentValue)
+
+                if (ItemMenu["Qssmode"].Cast<ComboBox>().CurrentValue == 1 &&
+                    Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
                 {
                     DoQss();
                 }
             }
         }
+
 
         public static
             void DoQss()
@@ -500,36 +474,9 @@ namespace Varus_The_Troll
                 {
                     R.Cast(enemy.Position);
                 }
-                var enemies = EntityManager.Heroes.Enemies.OrderByDescending
-                    (a => a.HealthPercent)
-                    .Where(
-                        a =>
-                            !a.IsMe && a.IsValidTarget() && a.Distance(Player) <= Q.Range && !a.IsDead && !a.IsZombie &&
-                            a.HealthPercent <= 35);
-                foreach (
-                    var target in
-                        enemies)
-                {
-                    if (!target.IsValidTarget())
-                    {
-                        return;
-                    }
-
-                    if (MiscMenu["UseQks"].Cast<CheckBox>().CurrentValue && Q.IsReady() &&
-                        target.Health + target.AttackShield <
-                        Player.GetSpellDamage(target, SpellSlot.Q))
-
-                        if (Q.IsCharging)
-                        {
-                            Q.Cast(target.Position);
-                        }
-                        else
-                        {
-                            Q.StartCharging();
-                        }
-                }
             }
         }
+
 
         public static
             void WaveClear()
@@ -639,6 +586,27 @@ namespace Varus_The_Troll
             }
         }
 
+        public static void OnAfterAttack(AttackableUnit target, EventArgs args)
+        {
+            {
+                if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
+                    if (target == null || !(target is AIHeroClient) || target.IsDead || target.IsInvulnerable ||
+                        !target.IsEnemy || target.IsPhysicalImmune || target.IsZombie)
+                        return;
+
+                var enemy = target as AIHeroClient;
+                if (enemy == null)
+                    return;
+                if (ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue == 1)
+                {
+                    if (E.IsReady())
+                    {
+                        E.Cast(enemy);
+                    }
+                }
+            }
+        }
+
         public static void Combo()
 
         {
@@ -646,86 +614,92 @@ namespace Varus_The_Troll
                 EntityManager.Heroes.Enemies.Find(
                     x => x.HasBuff("varuswdebuff") && x.IsValidTarget(Player.CastRange));
             var target = TargetSelector.GetTarget(Q.MaximumRange, DamageType.Physical);
-
-
-            if (target == null || !target.IsValidTarget())
-            {
-                return;
-            }
-            if (wTarget != null && ComboMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue)
-
-            {
-                Orbwalker.ForcedTarget = wTarget;
-                Chat.Print("<font color=\"#ffffff\" > Focus W </font>");
-            }
-
-
-            var stackCount = ComboMenu["StackCount"].Cast<Slider>().CurrentValue;
-            var comboQ = ComboMenu["useQcombo"].Cast<CheckBox>().CurrentValue;
-            var comboQalways = ComboMenu["useQComboAlways"].Cast<CheckBox>().CurrentValue;
-            var useEalways = ComboMenu["useEComboAlways"].Cast<CheckBox>().CurrentValue;
-
             if (Heal != null && AutoPotHealMenu["UseHeal"].Cast<CheckBox>().CurrentValue && Heal.IsReady() &&
                 HealthPercent <= AutoPotHealMenu["useHealHP"].Cast<Slider>().CurrentValue
                 && Player.CountEnemiesInRange(600) > 0 && Heal.IsReady())
             {
                 Heal.Cast();
-                Chat.Print("<font color=\"#ffffff\" > Use Heal Noob </font>");
             }
-
-            if (useEalways && E.IsReady())
+            if (target == null || !target.IsValidTarget())
             {
-                E.Cast(target);
-             //   Orbwalker.ResetAutoAttack();
-            }
-            if (comboQalways && Q.IsReady() && target != null)
-            {
-                if (Q.IsCharging)
-                {
-                    Q.Cast(target);
-                    return;
-                }
-                Q.StartCharging();
                 return;
             }
-
-            if (comboQ && Q.IsReady())
+            if (wTarget != null && ComboMenu["useWComboFocus"].Cast<CheckBox>().CurrentValue)
             {
-                if (target.GetBuffCount("varuswdebuff") >= stackCount)
+                Orbwalker.ForcedTarget = wTarget;
+            }
+            if (ComboMenu["ELogic"].Cast<ComboBox>().CurrentValue == 0 && E.CanCast(target))
+            {
+                var prediction = E.GetPrediction(target);
+                if (prediction.HitChance >= HitChance.Medium)
+                {
+                    E.Cast(target);
+                }
+            }
+            if (ComboMenu["QLogic"].Cast<ComboBox>().CurrentValue == 0 && Q.CanCast(target))
+            {
+                var prediction = Q.GetPrediction(target);
+                if (prediction.HitChance >= Q.MinimumHitChance)
                 {
                     if (Q.IsCharging)
                     {
-                        Q.Cast(target);
+                        Q.Cast(prediction.CastPosition);
                         return;
                     }
                     Q.StartCharging();
+                    return;
+                }
+            }
+            if (ComboMenu["QLogic"].Cast<ComboBox>().CurrentValue == 1 && Q.CanCast(target))
+            {
+                if (target.GetBuffCount("varuswdebuff") == 3)
+                {
+                    var prediction = Q.GetPrediction(target);
+                    if (prediction.HitChance >= Q.MinimumHitChance)
+                    {
+                        if (Q.IsCharging)
+                        {
+                            Q.Cast(prediction.CastPosition);
+                            return;
+                        }
+                        Q.StartCharging();
+                    }
                 }
             }
         }
 
-        public static void ComboR()
+        public static
+            void ComboR()
         {
+            var distance = ComboMenu["useRRange"].Cast<Slider>().CurrentValue;
             var rCount = ComboMenu["Rcount"].Cast<Slider>().CurrentValue;
-            var comboR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
-            var useRcomboHp = ComboMenu["UseRcomboHP"].Cast<CheckBox>().CurrentValue;
-            var rhp = ComboMenu["RHP"].Cast<Slider>().CurrentValue;
+            var rpred = ComboMenu["rpred"].Cast<Slider>().CurrentValue;
+            var useR = ComboMenu["useRcombo"].Cast<CheckBox>().CurrentValue;
+            var hp = ComboMenu["Hp"].Cast<Slider>().CurrentValue;
             var targetR = TargetSelector.GetTarget(R.Range, DamageType.Magical);
 
-            if (comboR && Player.CountEnemiesInRange(Player.AttackRange + 250) >= rCount && R.IsReady()
-                && targetR != null)
+            if (targetR == null || !targetR.IsValidTarget()) return;
+            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 0 && useR)
             {
-                var predrcount = R.GetPrediction(targetR);
-                if (predrcount.HitChance >= HitChance.Medium)
+                if (R.IsReady() && targetR.Distance(Player) <= distance && targetR.HealthPercent <= hp &&
+                    !targetR.IsUnderEnemyturret())
                 {
-                    R.Cast(predrcount.CastPosition);
+                    var predR = R.GetPrediction(targetR);
+                    if (predR.HitChancePercent >= rpred)
+                    {
+                        R.Cast(predR.CastPosition);
+                    }
                 }
             }
-            if (targetR != null && (useRcomboHp && targetR.HealthPercent <= rhp && R.IsReady() && targetR.IsValidTarget(R.Range)))
+            if (ComboMenu["Rlogic"].Cast<ComboBox>().CurrentValue == 1 && useR && targetR.Distance(Player) <= distance &&
+                !targetR.IsUnderEnemyturret())
+            {
                 {
-                        R.Cast(targetR);
+                    R.CastIfItWillHit(rCount, rpred);
                 }
-           }
-            
+            }
+        }
+
         public static
             void UseRTarget()
         {
@@ -735,18 +709,107 @@ namespace Varus_The_Troll
                  !EloBuddy.Player.HasBuff("VarusR"))) R.Cast(target.Position);
         }
 
+        public static void Drawing_OnDraw(EventArgs args)
+        {
+
+
+            {
+                if (DrawMenu["drawRange"].Cast<CheckBox>().CurrentValue)
+                {
+                    if (Q.IsReady()) new Circle {Color = Color.Purple, Radius = Q.Range}.Draw(Player.Position);
+                    else if (Q.IsOnCooldown)
+                        new Circle {Color = Color.Gray, Radius = Q.Range}.Draw(Player.Position);
+                }
+
+                if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
+                {
+                    if (E.IsReady()) new Circle {Color = Color.Purple, Radius = E.Range}.Draw(Player.Position);
+                    else if (W.IsOnCooldown)
+                        new Circle {Color = Color.Gray, Radius = E.Range}.Draw(Player.Position);
+                }
+
+                if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
+                {
+                    if (R.IsReady()) new Circle {Color = Color.Purple, Radius = R.Range}.Draw(Player.Position);
+                    else if (R.IsOnCooldown)
+                        new Circle {Color = Color.Gray, Radius = R.Range}.Draw(Player.Position);
+                }
+                DamageIndicator.HealthbarEnabled =
+                    DrawMenu["healthbar"].Cast<CheckBox>().CurrentValue;
+                DamageIndicator.PercentEnabled = DrawMenu["percent"].Cast<CheckBox>().CurrentValue;
+            }
+            if (DrawMenu["howaa"].Cast<CheckBox>().CurrentValue)
+            {
+                // double temp = 0;
+                foreach (
+                    var noob in
+                        ObjectManager.Get<AIHeroClient>().Where(x => x.IsVisible && x.IsEnemy && x.IsValid))
+                {
+                    var dmg = Player.GetAutoAttackDamage(noob);
+
+                    var howmanyaa = noob.Health/dmg;
+                    if (howmanyaa >= 10)
+                    {
+                        Drawing.DrawText(noob.HPBarPosition.X, noob.HPBarPosition.Y - 44, Color.Yellow,
+                            "" + "  How Many AA: " + string.Format("{0:0.00}", howmanyaa));
+                    }
+                    if (howmanyaa < 8)
+                    {
+                        Drawing.DrawText(noob.HPBarPosition.X, noob.HPBarPosition.Y - 44, Color.LawnGreen,
+                            "" + "  How Many AA: " + string.Format("{0:0.00}", howmanyaa));
+                    }
+                }
+            }
+            foreach (
+                var noob in
+                    ObjectManager.Get<AIHeroClient>().Where(x => x.IsVisible && x.IsEnemy && x.IsValid))
+                if (DrawMenu["Rkill"].Cast<CheckBox>().CurrentValue && R.IsReady())
+                {
+                    var ft = Drawing.WorldToScreen(noob.Position);
+                    if (noob.IsValidTarget(R.Range) &&
+                        Player.GetSpellDamage(noob, SpellSlot.R) > noob.Health + noob.AttackShield)
+                    {
+                        DrawFont(Thm, "Use R  Killable " + noob.ChampionName, ft[0] - 140,
+                            ft[1] + 80, SharpDX.Color.LawnGreen);
+                    }
+                }
+        }
+
+        public static void DrawFont(Font vFont, string vText, float vPosX, float vPosY, ColorBGRA vColor)
+        {
+            vFont.DrawText(null, vText, (int) vPosX, (int) vPosY, vColor);
+        }
+
+        #region dmg calc
+
         public static float ComboDamage(AIHeroClient target)
         {
-            var damage = Player.GetAutoAttackDamage(target);
-            if (R.IsReady())
-                damage = Player.GetSpellDamage(target, SpellSlot.R);
-            if (E.IsReady())
-                damage = Player.GetSpellDamage(target, SpellSlot.E);
-            if (W.IsReady())
-                damage = Player.GetSpellDamage(target, SpellSlot.W);
-            if (Q.IsReady())
-                damage = Player.GetSpellDamage(target, SpellSlot.Q);
-
+            float damage = 0;
+            if (target != null)
+            {
+                if (Q.IsReady())
+                {
+                    damage += Player.GetSpellDamage(target, SpellSlot.Q);
+                    damage += Player.GetAutoAttackDamage(target);
+                }
+                if (E.IsReady())
+                {
+                    damage += Player.GetSpellDamage(target, SpellSlot.E);
+                    damage += Player.GetAutoAttackDamage(target);
+                }
+                if (W.IsReady())
+                {
+                    damage += Player.GetSpellDamage(target, SpellSlot.W);
+                    damage += Player.GetAutoAttackDamage(target);
+                }
+                if (R.IsReady())
+                {
+                    damage += Player.GetSpellDamage(target, SpellSlot.R);
+                    damage += Player.GetAutoAttackDamage(target);
+                }
+                if (ObjectManager.Player.CanAttack)
+                    damage += ObjectManager.Player.GetAutoAttackDamage(target);
+            }
             return damage;
         }
 
@@ -779,35 +842,6 @@ namespace Varus_The_Troll
                 (float) new double[] {100, 175, 250}[R.Level - 1] + 1*EloBuddy.Player.Instance.FlatMagicDamageMod);
         }
 
-        public static void Drawing_OnDraw(EventArgs args)
-        {
-
-
-            {
-                if (DrawMenu["drawRange"].Cast<CheckBox>().CurrentValue)
-                {
-                    if (Q.IsReady()) new Circle {Color = Color.Purple, Radius = Q.Range}.Draw(Player.Position);
-                    else if (Q.IsOnCooldown)
-                        new Circle {Color = Color.Gray, Radius = Q.Range}.Draw(Player.Position);
-                }
-
-                if (DrawMenu["drawE"].Cast<CheckBox>().CurrentValue)
-                {
-                    if (E.IsReady()) new Circle {Color = Color.Purple, Radius = E.Range}.Draw(Player.Position);
-                    else if (W.IsOnCooldown)
-                        new Circle {Color = Color.Gray, Radius = E.Range}.Draw(Player.Position);
-                }
-
-                if (DrawMenu["drawR"].Cast<CheckBox>().CurrentValue)
-                {
-                    if (R.IsReady()) new Circle {Color = Color.Purple, Radius = R.Range}.Draw(Player.Position);
-                    else if (R.IsOnCooldown)
-                        new Circle {Color = Color.Gray, Radius = R.Range}.Draw(Player.Position);
-                }
-                DamageIndicator.HealthbarEnabled =
-                    DrawMenu["healthbar"].Cast<CheckBox>().CurrentValue;
-                DamageIndicator.PercentEnabled = DrawMenu["percent"].Cast<CheckBox>().CurrentValue;
-            }
-        }
+        #endregion dmg calc
     }
 }

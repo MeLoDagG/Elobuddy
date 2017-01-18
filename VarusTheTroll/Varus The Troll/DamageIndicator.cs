@@ -33,7 +33,7 @@ namespace Varus_The_Troll
         {
             // Apply needed field delegate for damage calculation
             DamageToUnit = damageToUnit;
-            DrawingColor = Color.Aqua;
+            DrawingColor = Color.Yellow;
             HealthbarEnabled = true;
 
             // Register event handlers
@@ -83,7 +83,7 @@ namespace Varus_The_Troll
                     {
                         // Get damage in percent and draw next to the health bar
                         Drawing.DrawText(unit.HPBarPosition - new Vector2(0, 12),
-                            unit.TotalShieldHealth() < damage ? Color.LawnGreen : Color.Red,
+                            unit.TotalShieldHealth() < damage ? Color.LawnGreen : Color.Yellow,
                             string.Concat(Math.Ceiling((damage/unit.TotalShieldHealth())*100), "%"), 10);
                     }
                 }
