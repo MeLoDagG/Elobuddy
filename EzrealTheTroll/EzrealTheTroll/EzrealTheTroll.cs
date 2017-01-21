@@ -281,7 +281,7 @@ namespace Ezreal_The_Troll
             JungleLaneMenu.Add("useQMana", new Slider("Min Mana {0}(%)", 70, 0, 100));
 
             FleEMenu = Menu.AddSubMenu("Flee Settings", "FleEMenu");
-            FleEMenu.Add("FleeQ", new CheckBox("Use W"));
+            FleEMenu.Add("FleeE", new CheckBox("Use E"));
 
             KillsecureMenu = Menu.AddSubMenu("KillSecure Settings", "MiscSettings");
             KillsecureMenu.AddLabel("KillSecure Settings:");
@@ -677,12 +677,11 @@ namespace Ezreal_The_Troll
 
         public static void Flee()
         {
-            var targetW = TargetSelector.GetTarget(W.Range, DamageType.Physical);
-            var fleeQ = FleEMenu["FleeQ"].Cast<CheckBox>().CurrentValue;
+           var fleeE = FleEMenu["FleeE"].Cast<CheckBox>().CurrentValue;
 
-            if (fleeQ && W.IsReady() && targetW.IsValidTarget(W.Range))
+            if (fleeE && E.IsReady())
             {
-                W.Cast(targetW);
+                EloBuddy.Player.CastSpell(SpellSlot.E, Game.CursorPos);
             }
         }
 
@@ -849,7 +848,7 @@ namespace Ezreal_The_Troll
     public static void On_Unkillable_Minion(Obj_AI_Base unit, Orbwalker.UnkillableMinionArgs args)
         {
             if (unit == null
-                || Orbwalker.ActiveModes.Combo.IsActive()) return;
+                && Orbwalker.ActiveModes.Combo.IsActive()) return;
             if (args.RemainingHealth <= SpellDamage.Qdamage(unit) && Q.IsReady() &&
                 JungleLaneMenu["UseQUnkillableMinion"].Cast<CheckBox>().CurrentValue && JungleLaneMenu["Unkillablemana"].Cast<Slider>().CurrentValue > Player.Instance.ManaPercent)
             {
