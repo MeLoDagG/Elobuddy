@@ -32,7 +32,7 @@ namespace Lucian_The_Troll
         {
             ComboMenu = _myMenu.AddSubMenu("Combo settings", "Combo");
             ComboMenu.AddGroupLabel("Combo Settings");
-            ComboMenu.Add("ComboLogic", new ComboBox("ComboLogic", 0, "Smooth", "Fast", "AArange"));
+            ComboMenu.Add("ComboLogic", new ComboBox("ComboLogic", 0, "Smooth", "Fast", "AA-E-AA-Q-AA-W-AA-E-AA"));
             //  ComboMenu.Add("useQcombo", new CheckBox("Use Q"));
             //   ComboMenu.AddLabel("W Settings:");
             //   ComboMenu.Add("useWcombo", new CheckBox("Use W"));
@@ -177,6 +177,9 @@ namespace Lucian_The_Troll
                 new CheckBox("Draw E"));
             DrawMeNu.Add("draw.R",
                 new CheckBox("Draw R"));
+            DrawMeNu.AddLabel("Damage indicators");
+            DrawMeNu.Add("healthbar", new CheckBox("Healthbar overlay"));
+            DrawMeNu.Add("percent", new CheckBox("Damage percent info"));
         }
 
 

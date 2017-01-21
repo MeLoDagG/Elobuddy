@@ -33,15 +33,15 @@ namespace Lucian_The_Troll.Utility
 
         public static float LucianPassive()
         {
-            if (ObjectManager.Player.Level >= 1 && ObjectManager.Player.Level < 6)
+            if (ObjectManager.Player.Level >= 1 && ObjectManager.Player.Level < 7)
             {
                 return ObjectManager.Player.TotalAttackDamage*0.3f;
             }
-            if (ObjectManager.Player.Level >= 6 && ObjectManager.Player.Level < 11)
+            if (ObjectManager.Player.Level >= 7 && ObjectManager.Player.Level < 13)
             {
                 return ObjectManager.Player.TotalAttackDamage*0.4f;
             }
-            if (ObjectManager.Player.Level >= 11 && ObjectManager.Player.Level < 16)
+            if (ObjectManager.Player.Level >= 13 && ObjectManager.Player.Level < 16)
             {
                 return ObjectManager.Player.TotalAttackDamage*0.5f;
             }
@@ -56,7 +56,7 @@ namespace Lucian_The_Troll.Utility
         {
             return ObjectManager.Player.CalculateDamageOnUnit(target, DamageType.Physical,
                 (float)
-                    (new[] {0, 80, 110, 140, 170, 200}[Program.Q.Level] +
+                    (new[] {0, 80, 115, 150, 185, 220}[Program.Q.Level] +
                      new[] {0, 0.6, 0.7, 0.8, 0.9, 1.0}[Program.Q.Level]*ObjectManager.Player.FlatPhysicalDamageMod));
         }
 
