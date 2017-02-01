@@ -40,7 +40,7 @@ namespace AsheTheTroll
         private static List<BuffType> DeBuffsList = new List<BuffType>
             {
             BuffType.Blind, BuffType.Charm, BuffType.Fear, BuffType.Knockback, BuffType.Knockup, BuffType.NearSight,
-            BuffType.Poison, BuffType.Polymorph, BuffType.Silence, BuffType.Shred, BuffType.Sleep, BuffType.Slow, BuffType.Snare,
+            BuffType.Poison, BuffType.Polymorph, BuffType.Silence, BuffType.Shred, BuffType.Slow, BuffType.Snare,
             BuffType.Stun, BuffType.Suppression, BuffType.Taunt, 
             };
 
@@ -431,7 +431,11 @@ namespace AsheTheTroll
                     if (interruptableSpellEventArgs.DangerLevel == DangerLevel.Low && R.IsReady() &&
                         sender.Distance(_Player) <= MiscMenu["distinter"].Cast<Slider>().CurrentValue)
                     {
-                        R.Cast(sender.Position);
+                        var prediction = R.GetPrediction(sender);
+                        if (prediction.HitChancePercent >= 80)
+                        {
+                            R.Cast(prediction.CastPosition);
+                        }
                     }
                 }
             }
