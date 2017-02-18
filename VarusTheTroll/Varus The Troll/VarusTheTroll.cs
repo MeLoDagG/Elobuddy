@@ -48,7 +48,7 @@ namespace Varus_The_Troll
             BuffType.Polymorph,
             BuffType.Silence,
             BuffType.Shred,
-            BuffType.Sleep,
+          //  BuffType.Sleep,
             BuffType.Slow,
             BuffType.Snare,
             BuffType.Stun,
