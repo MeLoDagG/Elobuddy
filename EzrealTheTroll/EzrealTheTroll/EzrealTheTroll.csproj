@@ -48,6 +48,9 @@
     <Reference Include="SharpDX.Direct3D9">
       <HintPath>..\..\..\..\..\Desktop\EloBuddyconsole\EloBuddy\System\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.XInput">
+      <HintPath>..\..\..\EloBuddyconsole\EloBuddy\System\SharpDX.XInput.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
